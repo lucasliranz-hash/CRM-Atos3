@@ -1,11 +1,10 @@
 import { Link, useLocation } from 'react-router-dom'
 import {
   LayoutDashboard,
+  Building2,
   Users,
-  Kanban,
   Activity,
-  CheckSquare,
-  FileText,
+  Kanban,
   BarChart,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
@@ -16,12 +15,11 @@ import {
 } from '@/components/ui/tooltip'
 
 const navItems = [
-  { icon: LayoutDashboard, label: 'Dashboard', path: '/' },
-  { icon: Users, label: 'Leads', path: '/leads' },
-  { icon: Kanban, label: 'Pipeline', path: '/pipeline' },
+  { icon: LayoutDashboard, label: 'Today', path: '/' },
+  { icon: Building2, label: 'Contas', path: '/accounts' },
+  { icon: Users, label: 'Contatos', path: '/contacts' },
   { icon: Activity, label: 'Atividades', path: '/activities' },
-  { icon: CheckSquare, label: 'Tarefas', path: '/tasks' },
-  { icon: FileText, label: 'Propostas', path: '/proposals' },
+  { icon: Kanban, label: 'Pipeline', path: '/pipeline' },
   { icon: BarChart, label: 'Relatórios', path: '/reports' },
 ]
 
