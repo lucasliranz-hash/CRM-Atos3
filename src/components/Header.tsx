@@ -1,32 +1,27 @@
-import { Bell, Mail, Search } from 'lucide-react'
+import { Bell, Mail, Search, Truck } from 'lucide-react'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Link, useLocation } from 'react-router-dom'
 import { cn } from '@/lib/utils'
 
 const navLinks = [
-  { name: 'Resumo', href: '/' },
-  { name: 'Fundadores', href: '/founders' },
-  { name: 'Finanças', href: '/finance' },
-  { name: 'Contatos', href: '/leads' },
-  { name: 'Crescimento', href: '/growth' },
-  { name: 'Projetos', href: '/projects' },
+  { name: 'Dashboard', href: '/' },
+  { name: 'Leads', href: '/leads' },
+  { name: 'Contratos', href: '/finance' },
+  { name: 'Frota', href: '/projects' },
 ]
 
 export function Header() {
   const location = useLocation()
 
   return (
-    <header className="flex items-center justify-between px-6 py-4 md:px-10 glass-card mx-4 mt-4 rounded-full sticky top-4 z-40">
+    <header className="flex items-center justify-between px-6 py-4 md:px-10 glass-card mx-4 mt-4 rounded-full sticky top-4 z-40 border border-white/60">
       <div className="flex items-center gap-8">
-        <Link to="/" className="flex items-center gap-2">
-          <div className="h-8 w-8 bg-black rounded-lg flex items-center justify-center">
-            <div
-              className="h-4 w-4 border-2 border-white rounded-full border-t-transparent animate-spin"
-              style={{ animationDuration: '3s' }}
-            />
+        <Link to="/" className="flex items-center gap-2 group">
+          <div className="h-8 w-8 bg-black rounded-lg flex items-center justify-center text-white group-hover:bg-gray-800 transition-colors">
+            <Truck className="w-4 h-4" />
           </div>
           <span className="font-bold text-xl tracking-tight hidden sm:block">
-            Salesforce
+            Transport CRM
           </span>
         </Link>
 
@@ -53,7 +48,7 @@ export function Header() {
           <Search className="w-4 h-4 text-gray-500 mr-2" />
           <input
             type="text"
-            placeholder="Buscar..."
+            placeholder="Buscar leads..."
             className="bg-transparent border-none outline-none text-sm w-32 focus:w-48 transition-all placeholder:text-gray-400"
           />
         </div>
@@ -69,15 +64,15 @@ export function Header() {
 
         <div className="flex items-center gap-3 pl-2 border-l border-gray-200">
           <div className="text-right hidden xl:block">
-            <p className="text-sm font-bold leading-none">Eva Robinson</p>
-            <p className="text-xs text-muted-foreground">Admin</p>
+            <p className="text-sm font-bold leading-none">Carlos Mendes</p>
+            <p className="text-xs text-muted-foreground">Manager</p>
           </div>
           <Avatar className="h-9 w-9 border-2 border-white shadow-sm cursor-pointer hover:scale-105 transition-transform">
             <AvatarImage
-              src="https://img.usecurling.com/ppl/medium?gender=female&seed=1"
-              alt="Eva"
+              src="https://img.usecurling.com/ppl/medium?gender=male&seed=42"
+              alt="Carlos"
             />
-            <AvatarFallback>ER</AvatarFallback>
+            <AvatarFallback>CM</AvatarFallback>
           </Avatar>
         </div>
       </div>

@@ -1,11 +1,13 @@
 import React, { createContext, useContext, useState, ReactNode } from 'react'
 
 export type LeadStatus =
-  | 'Novo'
-  | 'Qualificado'
-  | 'Em Negociação'
-  | 'Perdido'
-  | 'Ganho'
+  | 'Prospect'
+  | 'Contacted'
+  | 'Proposal Sent'
+  | 'Closed Won'
+  | 'Closed Lost'
+
+export type VehicleType = 'Bus' | 'Truck' | 'Mixed Fleet'
 
 export interface Lead {
   id: string
@@ -13,9 +15,8 @@ export interface Lead {
   contact: string
   email: string
   phone: string
-  segment: string
-  size: string
-  source: string
+  fleetSize: number
+  vehicleType: VehicleType
   status: LeadStatus
   createdAt: Date
 }
@@ -31,39 +32,47 @@ const LeadsContext = createContext<LeadsContextType | undefined>(undefined)
 const initialLeads: Lead[] = [
   {
     id: '1',
-    company: 'TechSolutions Ltd',
+    company: 'Viação Estrela',
     contact: 'Roberto Silva',
-    email: 'roberto@techsolutions.com',
+    email: 'roberto@viacaoestrela.com.br',
     phone: '(11) 99999-1234',
-    segment: 'Tecnologia',
-    size: '51-200',
-    source: 'LinkedIn',
-    status: 'Novo',
-    createdAt: new Date('2023-10-01'),
+    fleetSize: 120,
+    vehicleType: 'Bus',
+    status: 'Prospect',
+    createdAt: new Date(),
   },
   {
     id: '2',
-    company: 'Varejo Express',
+    company: 'TransCarga Logística',
     contact: 'Ana Souza',
-    email: 'ana@varejoexpress.com.br',
+    email: 'ana@transcarga.com.br',
     phone: '(21) 98888-5678',
-    segment: 'Varejo',
-    size: '201+',
-    source: 'Indicação',
-    status: 'Qualificado',
-    createdAt: new Date('2023-10-03'),
+    fleetSize: 45,
+    vehicleType: 'Truck',
+    status: 'Proposal Sent',
+    createdAt: new Date(Date.now() - 86400000 * 2),
   },
   {
     id: '3',
-    company: 'Indústrias Metal',
+    company: 'LogMista SA',
     contact: 'Carlos Oliveira',
-    email: 'carlos@indmetal.com',
+    email: 'carlos@logmista.com.br',
     phone: '(31) 97777-4321',
-    segment: 'Indústria',
-    size: '11-50',
-    source: 'Site',
-    status: 'Em Negociação',
-    createdAt: new Date('2023-10-05'),
+    fleetSize: 200,
+    vehicleType: 'Mixed Fleet',
+    status: 'Closed Won',
+    createdAt: new Date(Date.now() - 86400000 * 10),
+  },
+  {
+    id: '4',
+    company: 'Rodovias do Norte',
+    contact: 'Fernando Costa',
+    email: 'fernando@rodoviasnorte.com',
+    phone: '(41) 96666-4321',
+    fleetSize: 15,
+    vehicleType: 'Truck',
+    status: 'Contacted',
+    createdAt: new Date(Date.now() - 86400000 * 5),
   },
 ]
 
@@ -73,7 +82,7 @@ export function LeadsProvider({ children }: { children: ReactNode }) {
   const addLead = (leadData: Omit<Lead, 'id' | 'createdAt'>) => {
     const newLead: Lead = {
       ...leadData,
-      id: Math.random().toString(36).substr(2, 9),
+      id: Math.random().toString(36).substring(2, 9),
       createdAt: new Date(),
     }
     setLeads((prev) => [newLead, ...prev])

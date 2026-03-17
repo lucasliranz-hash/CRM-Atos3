@@ -4,9 +4,9 @@ import {
   Calendar,
   Linkedin,
   MessageSquare,
-  Twitter,
   Edit2,
   ArrowUpRight,
+  Truck,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
@@ -14,7 +14,7 @@ import { Separator } from '@/components/ui/separator'
 
 export function RightPanel() {
   return (
-    <div className="hidden xl:flex flex-col w-80 glass-panel h-[calc(100vh-2rem)] sticky top-4 rounded-[32px] p-6 ml-4">
+    <div className="hidden xl:flex flex-col w-80 glass-panel h-[calc(100vh-2rem)] sticky top-4 rounded-[32px] p-6 ml-4 border border-white/60">
       <div className="flex justify-between mb-8">
         <Button variant="ghost" size="icon" className="rounded-full">
           <Edit2 className="w-4 h-4 text-gray-500" />
@@ -27,12 +27,12 @@ export function RightPanel() {
       <div className="flex flex-col items-center text-center mb-8">
         <div className="relative mb-4">
           <Avatar className="w-24 h-24 border-4 border-white shadow-xl">
-            <AvatarImage src="https://img.usecurling.com/ppl/medium?gender=female&seed=1" />
-            <AvatarFallback>ER</AvatarFallback>
+            <AvatarImage src="https://img.usecurling.com/ppl/medium?gender=male&seed=42" />
+            <AvatarFallback>CM</AvatarFallback>
           </Avatar>
         </div>
-        <h2 className="text-xl font-bold text-gray-900">Eva Robinson</h2>
-        <p className="text-sm text-gray-500">CEO, Alabama Machinery & Supply</p>
+        <h2 className="text-xl font-bold text-gray-900 mt-2">Carlos Mendes</h2>
+        <p className="text-sm text-gray-500">Diretor de Frota, LogBrasil</p>
 
         <div className="flex gap-2 mt-6">
           <Button
@@ -59,32 +59,16 @@ export function RightPanel() {
       <Separator className="bg-gray-200 mb-6" />
 
       <div className="space-y-6">
-        <h3 className="font-bold text-gray-800 mb-4">Informação Detalhada</h3>
+        <h3 className="font-bold text-gray-800 mb-4">Informações do Cliente</h3>
 
         <div className="flex items-center gap-4">
           <div className="w-8 flex justify-center">
-            <UsersIcon />
+            <Truck className="w-4 h-4 text-gray-400" />
           </div>
           <div className="flex-1">
-            <p className="text-xs text-gray-500">Primeiro Nome</p>
-            <p className="font-medium">Eva</p>
+            <p className="text-xs text-gray-500">Tamanho da Frota</p>
+            <p className="font-medium">120 Veículos</p>
           </div>
-          <Button variant="ghost" size="icon" className="h-6 w-6">
-            <Edit2 className="w-3 h-3 text-gray-400" />
-          </Button>
-        </div>
-
-        <div className="flex items-center gap-4">
-          <div className="w-8 flex justify-center">
-            <UsersIcon />
-          </div>
-          <div className="flex-1">
-            <p className="text-xs text-gray-500">Sobrenome</p>
-            <p className="font-medium">Robinson</p>
-          </div>
-          <Button variant="ghost" size="icon" className="h-6 w-6">
-            <Edit2 className="w-3 h-3 text-gray-400" />
-          </Button>
         </div>
 
         <div className="flex items-center gap-4">
@@ -94,7 +78,7 @@ export function RightPanel() {
           <div className="flex-1 overflow-hidden">
             <p className="text-xs text-gray-500">Email</p>
             <p className="font-medium text-sm truncate">
-              evaa@alabamamachinery.com
+              cmendes@logbrasil.com.br
             </p>
           </div>
         </div>
@@ -105,7 +89,7 @@ export function RightPanel() {
           </div>
           <div className="flex-1">
             <p className="text-xs text-gray-500">Telefone</p>
-            <p className="font-medium text-sm">+911 120 222 313</p>
+            <p className="font-medium text-sm">+55 (11) 98765-4321</p>
           </div>
         </div>
 
@@ -124,9 +108,6 @@ export function RightPanel() {
               <div className="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center text-blue-600">
                 <Linkedin className="w-3 h-3" />
               </div>
-              <div className="w-6 h-6 bg-indigo-100 rounded-full flex items-center justify-center text-indigo-600">
-                <Twitter className="w-3 h-3" />
-              </div>
             </div>
           </div>
         </div>
@@ -136,31 +117,11 @@ export function RightPanel() {
             <Calendar className="w-4 h-4 text-gray-400" />
           </div>
           <div className="flex-1">
-            <p className="text-xs text-gray-500">Último Contato</p>
-            <p className="font-medium text-sm">06/15/2023 at 7:16 pm</p>
+            <p className="text-xs text-gray-500">Última Reunião</p>
+            <p className="font-medium text-sm">12/10/2023 - 14:30</p>
           </div>
         </div>
       </div>
     </div>
-  )
-}
-
-function UsersIcon() {
-  return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      width="16"
-      height="16"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      className="text-gray-400"
-    >
-      <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" />
-      <circle cx="12" cy="7" r="4" />
-    </svg>
   )
 }

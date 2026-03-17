@@ -16,7 +16,7 @@ import {
 } from '@/components/ui/tooltip'
 
 const navItems = [
-  { icon: LayoutDashboard, label: 'Painel', path: '/' },
+  { icon: LayoutDashboard, label: 'Dashboard', path: '/' },
   { icon: Users, label: 'Leads', path: '/leads' },
   { icon: Kanban, label: 'Pipeline', path: '/pipeline' },
   { icon: Activity, label: 'Atividades', path: '/activities' },
