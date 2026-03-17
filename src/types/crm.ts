@@ -4,9 +4,38 @@ export type AccountStatus =
   | 'Pronto para contato'
   | 'Em prospecção'
   | 'Qualificado'
+  | 'Aguardando retorno'
   | 'Sem fit'
   | 'Perdido'
+
 export type Priority = 'A' | 'B' | 'C'
+
+export type NivelInteresse = 'Frio' | 'Morno' | 'Quente'
+export type PotencialConta = 'Baixo' | 'Médio' | 'Alto'
+
+export interface Account {
+  id: string
+  name: string
+  website?: string
+  phone?: string
+  segment?: string
+  fleetModel?: string
+  fleetEstimate?: number
+  leadSource?: string
+  detailedSource?: string
+  status: AccountStatus
+  priority: Priority
+  icpFit?: string
+  interestLevel?: NivelInteresse
+  accountPotential?: PotencialConta
+  nextAction?: string
+  nextActionDate?: string
+  lastTouchDate?: string
+  cadenceStage?: string
+  createdAt: string
+  updatedAt: string
+}
+
 export type ContactRole =
   | 'Decisor'
   | 'Influenciador'
@@ -14,12 +43,36 @@ export type ContactRole =
   | 'Gatekeeper'
   | 'Financeiro'
   | 'Operações'
+
+export interface Contact {
+  id: string
+  accountId: string
+  name: string
+  role: string
+  processRole: ContactRole
+  linkedin?: string
+  email?: string
+  whatsapp?: string
+  preferredChannel?: string
+  isDecisionMaker: boolean
+  isInfluencer: boolean
+  isChampion: boolean
+  createdAt: string
+  updatedAt: string
+}
+
+export type ActivityChannel =
+  | 'LinkedIn'
+  | 'Telefone'
+  | 'WhatsApp'
+  | 'E-mail'
+  | 'Presencial'
+
 export type ActivityType =
-  | 'Convite LinkedIn'
-  | 'Mensagem LinkedIn'
+  | 'Convite'
+  | 'Mensagem'
   | 'Ligação'
-  | 'E-mail enviado'
-  | 'WhatsApp enviado'
+  | 'E-mail'
   | 'Follow-up'
   | 'Reunião agendada'
   | 'Reunião realizada'
@@ -27,6 +80,7 @@ export type ActivityType =
   | 'Proposta enviada'
   | 'Negociação'
   | 'Pós-venda'
+
 export type ActivityResult =
   | 'Sem resposta'
   | 'Respondeu'
@@ -39,6 +93,21 @@ export type ActivityResult =
   | 'Proposta em andamento'
   | 'Fechado ganho'
   | 'Fechado perdido'
+
+export interface Activity {
+  id: string
+  accountId: string
+  contactId?: string
+  date: string
+  channel: ActivityChannel
+  type: ActivityType
+  result?: ActivityResult
+  nextAction?: string
+  nextActionDate?: string
+  completed: boolean
+  createdAt: string
+}
+
 export type OpportunityStage =
   | 'Diagnóstico'
   | 'Reunião agendada'
@@ -49,55 +118,6 @@ export type OpportunityStage =
   | 'Fechado ganho'
   | 'Fechado perdido'
 
-export interface Account {
-  id: string
-  name: string
-  website?: string
-  linkedin?: string
-  phone?: string
-  city?: string
-  state?: string
-  segment?: string
-  niche?: string
-  fleetEstimate?: number
-  source?: string
-  status: AccountStatus
-  priority: Priority
-  nextAction?: string
-  nextActionDate?: string
-  createdAt: string
-  updatedAt: string
-}
-
-export interface Contact {
-  id: string
-  accountId: string
-  name: string
-  role: string
-  processRole: ContactRole
-  linkedin?: string
-  email?: string
-  phone?: string
-  isDecisionMaker: boolean
-  isInfluencer: boolean
-  isChampion: boolean
-  createdAt: string
-  updatedAt: string
-}
-
-export interface Activity {
-  id: string
-  accountId: string
-  contactId?: string
-  date: string
-  type: ActivityType
-  result?: ActivityResult
-  nextAction?: string
-  nextActionDate?: string
-  completed: boolean
-  createdAt: string
-}
-
 export interface Opportunity {
   id: string
   accountId: string
@@ -107,6 +127,7 @@ export interface Opportunity {
   setup: number
   total: number
   probability: number
+  lossReason?: string
   closeDate?: string
   createdAt: string
 }

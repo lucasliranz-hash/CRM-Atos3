@@ -18,7 +18,11 @@ interface MainStore {
   completeActivity: (id: string) => void
   addContact: (contact: Omit<Contact, 'id' | 'createdAt' | 'updatedAt'>) => void
   addOpportunity: (opp: Omit<Opportunity, 'id' | 'createdAt'>) => void
-  updateOpportunityStage: (id: string, stage: Opportunity['stage']) => void
+  updateOpportunityStage: (
+    id: string,
+    stage: Opportunity['stage'],
+    lossReason?: string,
+  ) => void
 }
 
 const MainContext = createContext<MainStore | undefined>(undefined)
@@ -30,6 +34,14 @@ export function MainProvider({ children }: { children: ReactNode }) {
   const [opportunities, setOpportunities] =
     useState<Opportunity[]>(mockOpportunities)
 
+  const updateAccount = (id: string, acc: Partial<Account>) => {
+    setAccounts((prev) =>
+      prev.map((a) =>
+        a.id === id ? { ...a, ...acc, updatedAt: new Date().toISOString() } : a,
+      ),
+    )
+  }
+
   const addAccount = (acc: Omit<Account, 'id' | 'createdAt' | 'updatedAt'>) => {
     const newAcc: Account = {
       ...acc,
@@ -38,14 +50,6 @@ export function MainProvider({ children }: { children: ReactNode }) {
       updatedAt: new Date().toISOString(),
     }
     setAccounts((prev) => [newAcc, ...prev])
-  }
-
-  const updateAccount = (id: string, acc: Partial<Account>) => {
-    setAccounts((prev) =>
-      prev.map((a) =>
-        a.id === id ? { ...a, ...acc, updatedAt: new Date().toISOString() } : a,
-      ),
-    )
   }
 
   const addActivity = (act: Omit<Activity, 'id' | 'createdAt'>) => {
@@ -57,6 +61,14 @@ export function MainProvider({ children }: { children: ReactNode }) {
       },
       ...prev,
     ])
+
+    updateAccount(act.accountId, {
+      lastTouchDate: new Date().toISOString(),
+      ...(act.nextAction && {
+        nextAction: act.nextAction,
+        nextActionDate: act.nextActionDate,
+      }),
+    })
   }
 
   const completeActivity = (id: string) => {
@@ -90,9 +102,13 @@ export function MainProvider({ children }: { children: ReactNode }) {
     ])
   }
 
-  const updateOpportunityStage = (id: string, stage: Opportunity['stage']) => {
+  const updateOpportunityStage = (
+    id: string,
+    stage: Opportunity['stage'],
+    lossReason?: string,
+  ) => {
     setOpportunities((prev) =>
-      prev.map((o) => (o.id === id ? { ...o, stage } : o)),
+      prev.map((o) => (o.id === id ? { ...o, stage, lossReason } : o)),
     )
   }
 

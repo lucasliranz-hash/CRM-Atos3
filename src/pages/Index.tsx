@@ -2,19 +2,47 @@ import { useMemo } from 'react'
 import useMainStore from '@/stores/main'
 import { isOverdue, isToday } from '@/lib/crm-utils'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
   AlertCircle,
-  Calendar,
   CheckCircle2,
   Clock,
-  Activity as ActivityIcon,
+  Play,
+  AlertTriangle,
+  Building2,
+  TrendingDown,
 } from 'lucide-react'
 import { Link } from 'react-router-dom'
 
+const MiniList = ({
+  title,
+  items,
+  renderItem,
+  emptyText,
+  icon: Icon,
+  headerColor,
+}: any) => (
+  <Card className="shadow-sm rounded-xl overflow-hidden border-gray-200 bg-white">
+    <CardHeader className={`pb-3 ${headerColor} border-b border-gray-100`}>
+      <CardTitle className="text-sm font-bold flex items-center">
+        <Icon className="w-4 h-4 mr-2" /> {title} ({items.length})
+      </CardTitle>
+    </CardHeader>
+    <CardContent className="p-0 max-h-[250px] overflow-y-auto">
+      {items.length === 0 ? (
+        <div className="p-6 text-sm text-gray-500 text-center font-medium">
+          {emptyText}
+        </div>
+      ) : (
+        <div className="divide-y divide-gray-100">{items.map(renderItem)}</div>
+      )}
+    </CardContent>
+  </Card>
+)
+
 export default function Index() {
-  const { activities, accounts, completeActivity } = useMainStore()
+  const { activities, accounts, completeActivity, opportunities } =
+    useMainStore()
 
   const overdue = useMemo(
     () => activities.filter((a) => !a.completed && isOverdue(a.date)),
@@ -24,144 +52,165 @@ export default function Index() {
     () => activities.filter((a) => !a.completed && isToday(a.date)),
     [activities],
   )
-  const noActionAccounts = useMemo(
+  const priorityA = useMemo(
+    () =>
+      accounts.filter(
+        (a) =>
+          a.priority === 'A' &&
+          (!a.lastTouchDate || isOverdue(a.lastTouchDate)),
+      ),
+    [accounts],
+  )
+  const newLeads = useMemo(
+    () =>
+      accounts.filter((a) => a.status === 'Novo' || a.status === 'Em pesquisa'),
+    [accounts],
+  )
+  const noActionAccs = useMemo(
     () => accounts.filter((a) => !a.nextActionDate),
     [accounts],
   )
+  const stalledOpps = useMemo(
+    () => opportunities.filter((o) => !o.stage.includes('Fechado')),
+    [opportunities],
+  )
 
-  const renderActivity = (act: any, type: 'overdue' | 'today') => {
+  const renderAct = (act: any) => {
     const acc = accounts.find((a) => a.id === act.accountId)
     return (
       <div
         key={act.id}
-        className="flex items-center justify-between p-3 bg-white border rounded-xl mb-2 shadow-sm transition-all hover:shadow-md"
+        className="p-3 hover:bg-gray-50 flex items-center justify-between transition-colors"
       >
         <div>
-          <div className="flex items-center gap-2 mb-1">
-            <Badge
-              className={
-                type === 'overdue'
-                  ? 'bg-red-100 text-red-800'
-                  : 'bg-yellow-100 text-yellow-800'
-              }
-            >
+          <div className="font-bold text-sm mb-1 text-black">{acc?.name}</div>
+          <div className="text-xs text-gray-600 flex items-center gap-2">
+            <span className="bg-gray-100 px-1.5 py-0.5 rounded border border-gray-200 font-semibold">
               {act.type}
-            </Badge>
-            <span className="text-sm font-semibold text-gray-900">
-              {acc?.name}
+            </span>
+            <span className="flex items-center">
+              <Clock className="w-3 h-3 mr-1" />
+              {new Date(act.date).toLocaleDateString()}
             </span>
           </div>
-          <p className="text-xs text-muted-foreground flex items-center">
-            <Clock className="w-3 h-3 mr-1" />{' '}
-            {new Date(act.date).toLocaleDateString()}
-          </p>
         </div>
         <Button
           size="sm"
-          variant="outline"
+          variant="ghost"
           onClick={() => completeActivity(act.id)}
-          className="rounded-full hover:bg-green-50 hover:text-green-700 hover:border-green-200"
+          className="h-8 w-8 p-0 rounded-full text-green-600 hover:bg-green-50"
         >
-          <CheckCircle2 className="w-4 h-4 mr-1" /> Feito
+          <CheckCircle2 className="w-5 h-5" />
         </Button>
       </div>
     )
   }
 
+  const renderAcc = (acc: any) => (
+    <div
+      key={acc.id}
+      className="p-3 hover:bg-gray-50 flex items-center justify-between transition-colors"
+    >
+      <div>
+        <div className="font-bold text-sm text-black">{acc.name}</div>
+        <div className="text-xs text-gray-500 mt-1 font-medium">
+          {acc.status}
+        </div>
+      </div>
+      <Link to="/activities">
+        <Button
+          size="sm"
+          variant="outline"
+          className="h-7 text-xs rounded font-semibold text-black border-gray-300"
+        >
+          Ação
+        </Button>
+      </Link>
+    </div>
+  )
+
+  const renderOpp = (opp: any) => (
+    <div
+      key={opp.id}
+      className="p-3 hover:bg-gray-50 flex items-center justify-between transition-colors"
+    >
+      <div>
+        <div className="font-bold text-sm text-black">{opp.name}</div>
+        <div className="text-xs text-gray-500 mt-1 font-medium">
+          Fase: {opp.stage}
+        </div>
+      </div>
+      <Link to="/pipeline">
+        <Button
+          size="sm"
+          variant="outline"
+          className="h-7 text-xs rounded font-semibold text-black border-gray-300"
+        >
+          Ver
+        </Button>
+      </Link>
+    </div>
+  )
+
   return (
-    <div className="space-y-6">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">Visão "Today"</h1>
-        <p className="text-muted-foreground text-lg">
-          Foque na execução. Aqui estão as prioridades do dia para gerar
-          oportunidades.
+    <div className="space-y-6 max-w-7xl mx-auto pb-10">
+      <div>
+        <h1 className="text-3xl font-black text-black">Visão "Hoje"</h1>
+        <p className="text-gray-500 mt-1 font-medium">
+          Foco na execução. Prioridades e gargalos da operação.
         </p>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
-        <div className="space-y-6">
-          <Card className="border-red-200 shadow-sm bg-red-50/30">
-            <CardHeader className="pb-4">
-              <CardTitle className="text-lg flex items-center text-red-800">
-                <AlertCircle className="w-5 h-5 mr-2" /> Atividades Atrasadas (
-                {overdue.length})
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="pt-0 max-h-[350px] overflow-y-auto pr-2">
-              {overdue.length === 0 ? (
-                <p className="text-sm text-gray-500 text-center py-6 bg-white/50 rounded-xl">
-                  Tudo em dia!
-                </p>
-              ) : (
-                overdue.map((a) => renderActivity(a, 'overdue'))
-              )}
-            </CardContent>
-          </Card>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <MiniList
+          title="Atrasadas (Follow-ups vencidos)"
+          icon={AlertCircle}
+          headerColor="bg-red-50 text-red-800"
+          items={overdue}
+          emptyText="Zero atrasos!"
+          renderItem={renderAct}
+        />
+        <MiniList
+          title="Para Hoje"
+          icon={Play}
+          headerColor="bg-yellow-50 text-yellow-800"
+          items={todayActs}
+          emptyText="Livre por hoje."
+          renderItem={renderAct}
+        />
+        <MiniList
+          title="Contas sem Próxima Ação"
+          icon={AlertTriangle}
+          headerColor="bg-gray-100 text-gray-800"
+          items={noActionAccs}
+          emptyText="Todas as contas têm dono."
+          renderItem={renderAcc}
+        />
 
-          <Card className="border-yellow-200 shadow-sm bg-yellow-50/30">
-            <CardHeader className="pb-4">
-              <CardTitle className="text-lg flex items-center text-yellow-800">
-                <ActivityIcon className="w-5 h-5 mr-2" /> Para Hoje (
-                {todayActs.length})
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="pt-0 max-h-[350px] overflow-y-auto pr-2">
-              {todayActs.length === 0 ? (
-                <p className="text-sm text-gray-500 text-center py-6 bg-white/50 rounded-xl">
-                  Nenhuma atividade para hoje.
-                </p>
-              ) : (
-                todayActs.map((a) => renderActivity(a, 'today'))
-              )}
-            </CardContent>
-          </Card>
-        </div>
-
-        <div className="space-y-6">
-          <Card className="shadow-sm border-gray-200">
-            <CardHeader className="bg-gray-50 rounded-t-xl border-b border-gray-100 pb-4">
-              <CardTitle className="text-lg flex items-center text-gray-800">
-                <Calendar className="w-5 h-5 mr-2 text-gray-500" /> Contas sem
-                Próxima Ação ({noActionAccounts.length})
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="pt-4 max-h-[730px] overflow-y-auto pr-2 bg-white">
-              {noActionAccounts.length === 0 ? (
-                <p className="text-sm text-gray-500 text-center py-8">
-                  Todas as contas têm ação definida.
-                </p>
-              ) : (
-                noActionAccounts.map((a) => (
-                  <div
-                    key={a.id}
-                    className="flex justify-between p-4 border-b last:border-0 items-center hover:bg-gray-50 transition-colors"
-                  >
-                    <div>
-                      <span className="font-semibold text-sm block mb-1 text-gray-900">
-                        {a.name}
-                      </span>
-                      <Badge
-                        variant="outline"
-                        className="text-xs text-gray-500"
-                      >
-                        {a.status}
-                      </Badge>
-                    </div>
-                    <Link to={`/activities`}>
-                      <Button
-                        size="sm"
-                        variant="secondary"
-                        className="rounded-full"
-                      >
-                        Agendar Ação
-                      </Button>
-                    </Link>
-                  </div>
-                ))
-              )}
-            </CardContent>
-          </Card>
-        </div>
+        <MiniList
+          title="Prioridade A (S/ Atividade)"
+          icon={AlertTriangle}
+          headerColor="bg-blue-50 text-blue-800"
+          items={priorityA}
+          emptyText="Prioridades A em dia."
+          renderItem={renderAcc}
+        />
+        <MiniList
+          title="Leads Novos e Pesquisa"
+          icon={Building2}
+          headerColor="bg-blue-50 text-blue-800"
+          items={newLeads}
+          emptyText="Nenhum lead novo."
+          renderItem={renderAcc}
+        />
+        <MiniList
+          title="Oportunidades Estagnadas"
+          icon={TrendingDown}
+          headerColor="bg-gray-100 text-gray-800"
+          items={stalledOpps}
+          emptyText="Pipeline fluindo."
+          renderItem={renderOpp}
+        />
       </div>
     </div>
   )

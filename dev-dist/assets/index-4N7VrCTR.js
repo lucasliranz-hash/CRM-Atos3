@@ -17587,7 +17587,7 @@ function createContext2(rootComponentName, defaultContext) {
 	}
 	return [Provider$2, useContext2];
 }
-function createContextScope$1(scopeName, createContextScopeDeps = []) {
+function createContextScope(scopeName, createContextScopeDeps = []) {
 	let defaultContexts = [];
 	function createContext3(rootComponentName, defaultContext) {
 		const BaseContext = import_react.createContext(defaultContext);
@@ -17650,7 +17650,7 @@ function composeContextScopes$1(...scopes) {
 	return createScope;
 }
 /* @__NO_SIDE_EFFECTS__ */
-function createSlot$1(ownerName) {
+function createSlot(ownerName) {
 	const SlotClone = /* @__PURE__ */ createSlotClone$1(ownerName);
 	const Slot2 = import_react.forwardRef((props, forwardedRef) => {
 		const { children, ...slotProps } = props;
@@ -17741,7 +17741,7 @@ function getElementRef$2(element) {
 }
 function createCollection(name) {
 	const PROVIDER_NAME$2 = name + "CollectionProvider";
-	const [createCollectionContext, createCollectionScope$1] = createContextScope$1(PROVIDER_NAME$2);
+	const [createCollectionContext, createCollectionScope$1] = createContextScope(PROVIDER_NAME$2);
 	const [CollectionProviderImpl, useCollectionContext] = createCollectionContext(PROVIDER_NAME$2, {
 		collectionRef: { current: null },
 		itemMap: /* @__PURE__ */ new Map()
@@ -17759,7 +17759,7 @@ function createCollection(name) {
 	};
 	CollectionProvider.displayName = PROVIDER_NAME$2;
 	const COLLECTION_SLOT_NAME = name + "CollectionSlot";
-	const CollectionSlotImpl = /* @__PURE__ */ createSlot$1(COLLECTION_SLOT_NAME);
+	const CollectionSlotImpl = /* @__PURE__ */ createSlot(COLLECTION_SLOT_NAME);
 	const CollectionSlot = import_react.forwardRef((props, forwardedRef) => {
 		const { scope, children } = props;
 		return /* @__PURE__ */ (0, import_jsx_runtime.jsx)(CollectionSlotImpl, {
@@ -17770,7 +17770,7 @@ function createCollection(name) {
 	CollectionSlot.displayName = COLLECTION_SLOT_NAME;
 	const ITEM_SLOT_NAME = name + "CollectionItemSlot";
 	const ITEM_DATA_ATTR = "data-radix-collection-item";
-	const CollectionItemSlotImpl = /* @__PURE__ */ createSlot$1(ITEM_SLOT_NAME);
+	const CollectionItemSlotImpl = /* @__PURE__ */ createSlot(ITEM_SLOT_NAME);
 	const CollectionItemSlot = import_react.forwardRef((props, forwardedRef) => {
 		const { scope, children, ...itemData } = props;
 		const ref = import_react.useRef(null);
@@ -17809,7 +17809,7 @@ function createCollection(name) {
 		createCollectionScope$1
 	];
 }
-var Primitive$1 = [
+var Primitive = [
 	"a",
 	"button",
 	"div",
@@ -17828,10 +17828,10 @@ var Primitive$1 = [
 	"svg",
 	"ul"
 ].reduce((primitive, node) => {
-	const Slot$2 = /* @__PURE__ */ createSlot$1(`Primitive.${node}`);
+	const Slot$3 = /* @__PURE__ */ createSlot(`Primitive.${node}`);
 	const Node$1 = import_react.forwardRef((props, forwardedRef) => {
 		const { asChild, ...primitiveProps } = props;
-		const Comp = asChild ? Slot$2 : node;
+		const Comp = asChild ? Slot$3 : node;
 		if (typeof window !== "undefined") window[Symbol.for("radix-ui")] = true;
 		return /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Comp, {
 			...primitiveProps,
@@ -17943,7 +17943,7 @@ var DismissableLayer = import_react.forwardRef((props, forwardedRef) => {
 		document.addEventListener(CONTEXT_UPDATE, handleUpdate);
 		return () => document.removeEventListener(CONTEXT_UPDATE, handleUpdate);
 	}, []);
-	return /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Primitive$1.div, {
+	return /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Primitive.div, {
 		...layerProps,
 		ref: composedRefs,
 		style: {
@@ -17970,7 +17970,7 @@ var DismissableLayerBranch = import_react.forwardRef((props, forwardedRef) => {
 			};
 		}
 	}, [context.branches]);
-	return /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Primitive$1.div, {
+	return /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Primitive.div, {
 		...props,
 		ref: composedRefs
 	});
@@ -18040,18 +18040,18 @@ var Root$4 = DismissableLayer;
 var Branch = DismissableLayerBranch;
 var useLayoutEffect2 = globalThis?.document ? import_react.useLayoutEffect : () => {};
 var import_react_dom$4 = /* @__PURE__ */ __toESM(require_react_dom(), 1);
-var PORTAL_NAME$2 = "Portal";
+var PORTAL_NAME$3 = "Portal";
 var Portal = import_react.forwardRef((props, forwardedRef) => {
 	const { container: containerProp, ...portalProps } = props;
 	const [mounted, setMounted] = import_react.useState(false);
 	useLayoutEffect2(() => setMounted(true), []);
 	const container = containerProp || mounted && globalThis?.document?.body;
-	return container ? import_react_dom$4.createPortal(/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Primitive$1.div, {
+	return container ? import_react_dom$4.createPortal(/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Primitive.div, {
 		...portalProps,
 		ref: forwardedRef
 	}), container) : null;
 });
-Portal.displayName = PORTAL_NAME$2;
+Portal.displayName = PORTAL_NAME$3;
 function useStateMachine(initialState, machine) {
 	return import_react.useReducer((state, event) => {
 		return machine[state][event] ?? state;
@@ -18217,7 +18217,7 @@ var VISUALLY_HIDDEN_STYLES = Object.freeze({
 });
 var NAME$1 = "VisuallyHidden";
 var VisuallyHidden = import_react.forwardRef((props, forwardedRef) => {
-	return /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Primitive$1.span, {
+	return /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Primitive.span, {
 		...props,
 		ref: forwardedRef,
 		style: {
@@ -18231,7 +18231,7 @@ var Root$3 = VisuallyHidden;
 var import_react_dom$3 = /* @__PURE__ */ __toESM(require_react_dom(), 1);
 var PROVIDER_NAME$1 = "ToastProvider";
 var [Collection, useCollection, createCollectionScope] = createCollection("Toast");
-var [createToastContext, createToastScope] = createContextScope$1("Toast", [createCollectionScope]);
+var [createToastContext, createToastScope] = createContextScope("Toast", [createCollectionScope]);
 var [ToastProviderProvider, useToastProviderContext] = createToastContext(PROVIDER_NAME$1);
 var ToastProvider$1 = (props) => {
 	const { __scopeToast, label = "Notification", duration = 5e3, swipeDirection = "right", swipeThreshold = 50, children } = props;
@@ -18367,7 +18367,7 @@ var ToastViewport$1 = import_react.forwardRef((props, forwardedRef) => {
 			}),
 			/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Collection.Slot, {
 				scope: __scopeToast,
-				children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Primitive$1.ol, {
+				children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Primitive.ol, {
 					tabIndex: -1,
 					...viewportProps,
 					ref: composedRefs
@@ -18532,7 +18532,7 @@ var ToastImpl = import_react.forwardRef((props, forwardedRef) => {
 					if (!context.isFocusedToastEscapeKeyDownRef.current) handleClose();
 					context.isFocusedToastEscapeKeyDownRef.current = false;
 				}),
-				children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Primitive$1.li, {
+				children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Primitive.li, {
 					tabIndex: 0,
 					"data-state": open ? "open" : "closed",
 					"data-swipe-direction": context.swipeDirection,
@@ -18632,7 +18632,7 @@ var ToastAnnounce = (props) => {
 var TITLE_NAME$1 = "ToastTitle";
 var ToastTitle$1 = import_react.forwardRef((props, forwardedRef) => {
 	const { __scopeToast, ...titleProps } = props;
-	return /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Primitive$1.div, {
+	return /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Primitive.div, {
 		...titleProps,
 		ref: forwardedRef
 	});
@@ -18641,7 +18641,7 @@ ToastTitle$1.displayName = TITLE_NAME$1;
 var DESCRIPTION_NAME$1 = "ToastDescription";
 var ToastDescription$1 = import_react.forwardRef((props, forwardedRef) => {
 	const { __scopeToast, ...descriptionProps } = props;
-	return /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Primitive$1.div, {
+	return /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Primitive.div, {
 		...descriptionProps,
 		ref: forwardedRef
 	});
@@ -18664,13 +18664,13 @@ var ToastAction$1 = import_react.forwardRef((props, forwardedRef) => {
 	});
 });
 ToastAction$1.displayName = ACTION_NAME;
-var CLOSE_NAME$1 = "ToastClose";
+var CLOSE_NAME$2 = "ToastClose";
 var ToastClose$1 = import_react.forwardRef((props, forwardedRef) => {
 	const { __scopeToast, ...closeProps } = props;
-	const interactiveContext = useToastInteractiveContext(CLOSE_NAME$1, __scopeToast);
+	const interactiveContext = useToastInteractiveContext(CLOSE_NAME$2, __scopeToast);
 	return /* @__PURE__ */ (0, import_jsx_runtime.jsx)(ToastAnnounceExclude, {
 		asChild: true,
-		children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Primitive$1.button, {
+		children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Primitive.button, {
 			type: "button",
 			...closeProps,
 			ref: forwardedRef,
@@ -18678,10 +18678,10 @@ var ToastClose$1 = import_react.forwardRef((props, forwardedRef) => {
 		})
 	});
 });
-ToastClose$1.displayName = CLOSE_NAME$1;
+ToastClose$1.displayName = CLOSE_NAME$2;
 var ToastAnnounceExclude = import_react.forwardRef((props, forwardedRef) => {
 	const { __scopeToast, altText, ...announceExcludeProps } = props;
-	return /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Primitive$1.div, {
+	return /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Primitive.div, {
 		"data-radix-toast-announce-exclude": "",
 		"data-radix-toast-announce-alt": altText || void 0,
 		...announceExcludeProps,
@@ -18756,7 +18756,7 @@ function focusFirst$1(candidates) {
 }
 var Provider$1 = ToastProvider$1;
 var Viewport = ToastViewport$1;
-var Root2$1 = Toast$2;
+var Root2$2 = Toast$2;
 var Title$1 = ToastTitle$1;
 var Description$1 = ToastDescription$1;
 var Action = ToastAction$1;
@@ -18880,16 +18880,9 @@ var createLucideIcon = (iconName, iconNode) => {
 	Component$2.displayName = toPascalCase(iconName);
 	return Component$2;
 };
-var Activity$1 = createLucideIcon("activity", [["path", {
+var Activity = createLucideIcon("activity", [["path", {
 	d: "M22 12h-2.48a2 2 0 0 0-1.93 1.46l-2.35 8.36a.25.25 0 0 1-.48 0L9.24 2.18a.25.25 0 0 0-.48 0l-2.35 8.36A2 2 0 0 1 4.49 12H2",
 	key: "169zse"
-}]]);
-var Bell = createLucideIcon("bell", [["path", {
-	d: "M10.268 21a2 2 0 0 0 3.464 0",
-	key: "vwvbt9"
-}], ["path", {
-	d: "M3.262 15.326A1 1 0 0 0 4 17h16a1 1 0 0 0 .74-1.673C19.41 13.956 18 12.499 18 8A6 6 0 0 0 6 8c0 4.499-1.411 5.956-2.738 7.326",
-	key: "11g9vi"
 }]]);
 var Building2 = createLucideIcon("building-2", [
 	["path", {
@@ -18911,28 +18904,6 @@ var Building2 = createLucideIcon("building-2", [
 	["path", {
 		d: "M6 21V5a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v16",
 		key: "16ra0t"
-	}]
-]);
-var Calendar = createLucideIcon("calendar", [
-	["path", {
-		d: "M8 2v4",
-		key: "1cmpym"
-	}],
-	["path", {
-		d: "M16 2v4",
-		key: "4m81vk"
-	}],
-	["rect", {
-		width: "18",
-		height: "18",
-		x: "3",
-		y: "4",
-		rx: "2",
-		key: "1hopcy"
-	}],
-	["path", {
-		d: "M3 10h18",
-		key: "8toen8"
 	}]
 ]);
 var ChartNoAxesColumnIncreasing = createLucideIcon("chart-no-axes-column-increasing", [
@@ -19025,18 +18996,18 @@ var Crosshair = createLucideIcon("crosshair", [
 		key: "15g9kq"
 	}]
 ]);
-var ExternalLink = createLucideIcon("external-link", [
+var Download = createLucideIcon("download", [
 	["path", {
-		d: "M15 3h6v6",
-		key: "1q9fwt"
+		d: "M12 15V3",
+		key: "m9g1x1"
 	}],
 	["path", {
-		d: "M10 14 21 3",
-		key: "gplh6r"
+		d: "M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4",
+		key: "ih7n3h"
 	}],
 	["path", {
-		d: "M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6",
-		key: "a6xqqp"
+		d: "m7 10 5 5 5-5",
+		key: "brsn70"
 	}]
 ]);
 var Kanban = createLucideIcon("kanban", [
@@ -19087,43 +19058,35 @@ var LayoutDashboard = createLucideIcon("layout-dashboard", [
 		key: "ldoo1y"
 	}]
 ]);
-var Linkedin = createLucideIcon("linkedin", [
+var List = createLucideIcon("list", [
 	["path", {
-		d: "M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z",
-		key: "c2jq9f"
+		d: "M3 5h.01",
+		key: "18ugdj"
 	}],
-	["rect", {
-		width: "4",
-		height: "12",
-		x: "2",
-		y: "9",
-		key: "mk3on5"
+	["path", {
+		d: "M3 12h.01",
+		key: "nlz23k"
 	}],
-	["circle", {
-		cx: "4",
-		cy: "4",
-		r: "2",
-		key: "bt5ra8"
+	["path", {
+		d: "M3 19h.01",
+		key: "noohij"
+	}],
+	["path", {
+		d: "M8 5h13",
+		key: "1pao27"
+	}],
+	["path", {
+		d: "M8 12h13",
+		key: "1za7za"
+	}],
+	["path", {
+		d: "M8 19h13",
+		key: "m83p4d"
 	}]
 ]);
-var Mail = createLucideIcon("mail", [["path", {
-	d: "m22 7-8.991 5.727a2 2 0 0 1-2.009 0L2 7",
-	key: "132q7q"
-}], ["rect", {
-	x: "2",
-	y: "4",
-	width: "20",
-	height: "16",
-	rx: "2",
-	key: "izxlao"
-}]]);
-var MessageSquare = createLucideIcon("message-square", [["path", {
-	d: "M22 17a2 2 0 0 1-2 2H6.828a2 2 0 0 0-1.414.586l-2.202 2.202A.71.71 0 0 1 2 21.286V5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2z",
-	key: "18887p"
-}]]);
-var Phone = createLucideIcon("phone", [["path", {
-	d: "M13.832 16.568a1 1 0 0 0 1.213-.303l.355-.465A2 2 0 0 1 17 15h3a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2A18 18 0 0 1 2 4a2 2 0 0 1 2-2h3a2 2 0 0 1 2 2v3a2 2 0 0 1-.8 1.6l-.468.351a1 1 0 0 0-.292 1.233 14 14 0 0 0 6.392 6.384",
-	key: "9njp5v"
+var Play = createLucideIcon("play", [["path", {
+	d: "M5 5a2 2 0 0 1 3.008-1.728l11.997 6.998a2 2 0 0 1 .003 3.458l-12 7A2 2 0 0 1 5 19z",
+	key: "10ikf1"
 }]]);
 var Plus = createLucideIcon("plus", [["path", {
 	d: "M5 12h14",
@@ -19141,15 +19104,66 @@ var Search = createLucideIcon("search", [["path", {
 	r: "8",
 	key: "4ej97u"
 }]]);
-var User = createLucideIcon("user", [["path", {
-	d: "M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2",
-	key: "975kel"
-}], ["circle", {
-	cx: "12",
-	cy: "7",
-	r: "4",
-	key: "17ys0d"
+var Trello = createLucideIcon("trello", [
+	["rect", {
+		width: "18",
+		height: "18",
+		x: "3",
+		y: "3",
+		rx: "2",
+		ry: "2",
+		key: "1m3agn"
+	}],
+	["rect", {
+		width: "3",
+		height: "9",
+		x: "7",
+		y: "7",
+		key: "14n3xi"
+	}],
+	["rect", {
+		width: "3",
+		height: "5",
+		x: "14",
+		y: "7",
+		key: "s4azjd"
+	}]
+]);
+var TrendingDown = createLucideIcon("trending-down", [["path", {
+	d: "M16 17h6v-6",
+	key: "t6n2it"
+}], ["path", {
+	d: "m22 17-8.5-8.5-5 5L2 7",
+	key: "x473p"
 }]]);
+var TriangleAlert = createLucideIcon("triangle-alert", [
+	["path", {
+		d: "m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3",
+		key: "wmoenq"
+	}],
+	["path", {
+		d: "M12 9v4",
+		key: "juzpu7"
+	}],
+	["path", {
+		d: "M12 17h.01",
+		key: "p32p05"
+	}]
+]);
+var Upload = createLucideIcon("upload", [
+	["path", {
+		d: "M12 3v12",
+		key: "1x0j5s"
+	}],
+	["path", {
+		d: "m17 8-5-5-5 5",
+		key: "7q97r8"
+	}],
+	["path", {
+		d: "M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4",
+		key: "ih7n3h"
+	}]
+]);
 var Users = createLucideIcon("users", [
 	["path", {
 		d: "M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2",
@@ -20580,13 +20594,13 @@ var toastVariants = cva("group pointer-events-auto relative flex w-full items-ce
 	defaultVariants: { variant: "default" }
 });
 var Toast$1 = import_react.forwardRef(({ className, variant, ...props }, ref) => {
-	return /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Root2$1, {
+	return /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Root2$2, {
 		ref,
 		className: cn(toastVariants({ variant }), className),
 		...props
 	});
 });
-Toast$1.displayName = Root2$1.displayName;
+Toast$1.displayName = Root2$2.displayName;
 var ToastAction = import_react.forwardRef(({ className, ...props }, ref) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Action, {
 	ref,
 	className: cn("inline-flex h-8 shrink-0 items-center justify-center rounded-md border bg-transparent px-3 text-sm font-medium ring-offset-background transition-colors hover:bg-secondary focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 group-[.destructive]:border-muted/40 group-[.destructive]:hover:border-destructive/30 group-[.destructive]:hover:bg-destructive group-[.destructive]:hover:text-destructive-foreground group-[.destructive]:focus:ring-destructive", className),
@@ -20966,10 +20980,10 @@ var Observer = class {
 			if (typeof id !== "string" && typeof id !== "number") return { unwrap };
 			else return Object.assign(id, { unwrap });
 		};
-		this.custom = (jsx$17, data) => {
+		this.custom = (jsx$18, data) => {
 			const id = (data == null ? void 0 : data.id) || toastsCounter++;
 			this.create({
-				jsx: jsx$17(id),
+				jsx: jsx$18(id),
 				id,
 				...data
 			});
@@ -23094,7 +23108,7 @@ var arrow = (options$1, deps) => ({
 var NAME = "Arrow";
 var Arrow$1 = import_react.forwardRef((props, forwardedRef) => {
 	const { children, width = 10, height = 5, ...arrowProps } = props;
-	return /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Primitive$1.svg, {
+	return /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Primitive.svg, {
 		...arrowProps,
 		ref: forwardedRef,
 		width,
@@ -23141,7 +23155,7 @@ function useSize(element) {
 	return size$3;
 }
 var POPPER_NAME = "Popper";
-var [createPopperContext, createPopperScope] = createContextScope$1(POPPER_NAME);
+var [createPopperContext, createPopperScope] = createContextScope(POPPER_NAME);
 var [PopperProvider, usePopperContext] = createPopperContext(POPPER_NAME);
 var Popper = (props) => {
 	const { __scopePopper, children } = props;
@@ -23154,10 +23168,10 @@ var Popper = (props) => {
 	});
 };
 Popper.displayName = POPPER_NAME;
-var ANCHOR_NAME = "PopperAnchor";
+var ANCHOR_NAME$1 = "PopperAnchor";
 var PopperAnchor = import_react.forwardRef((props, forwardedRef) => {
 	const { __scopePopper, virtualRef, ...anchorProps } = props;
-	const context = usePopperContext(ANCHOR_NAME, __scopePopper);
+	const context = usePopperContext(ANCHOR_NAME$1, __scopePopper);
 	const ref = import_react.useRef(null);
 	const composedRefs = useComposedRefs(forwardedRef, ref);
 	const anchorRef = import_react.useRef(null);
@@ -23166,17 +23180,17 @@ var PopperAnchor = import_react.forwardRef((props, forwardedRef) => {
 		anchorRef.current = virtualRef?.current || ref.current;
 		if (previousAnchor !== anchorRef.current) context.onAnchorChange(anchorRef.current);
 	});
-	return virtualRef ? null : /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Primitive$1.div, {
+	return virtualRef ? null : /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Primitive.div, {
 		...anchorProps,
 		ref: composedRefs
 	});
 });
-PopperAnchor.displayName = ANCHOR_NAME;
-var CONTENT_NAME$2 = "PopperContent";
-var [PopperContentProvider, useContentContext] = createPopperContext(CONTENT_NAME$2);
+PopperAnchor.displayName = ANCHOR_NAME$1;
+var CONTENT_NAME$3 = "PopperContent";
+var [PopperContentProvider, useContentContext] = createPopperContext(CONTENT_NAME$3);
 var PopperContent = import_react.forwardRef((props, forwardedRef) => {
 	const { __scopePopper, side = "bottom", sideOffset = 0, align = "center", alignOffset = 0, arrowPadding = 0, avoidCollisions = true, collisionBoundary = [], collisionPadding: collisionPaddingProp = 0, sticky = "partial", hideWhenDetached = false, updatePositionStrategy = "optimized", onPlaced, ...contentProps } = props;
-	const context = usePopperContext(CONTENT_NAME$2, __scopePopper);
+	const context = usePopperContext(CONTENT_NAME$3, __scopePopper);
 	const [content, setContent] = import_react.useState(null);
 	const composedRefs = useComposedRefs(forwardedRef, (node) => setContent(node));
 	const [arrow$3, setArrow] = import_react.useState(null);
@@ -23276,7 +23290,7 @@ var PopperContent = import_react.forwardRef((props, forwardedRef) => {
 			arrowX,
 			arrowY,
 			shouldHideArrow: cannotCenterArrow,
-			children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Primitive$1.div, {
+			children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Primitive.div, {
 				"data-side": placedSide,
 				"data-align": placedAlign,
 				...contentProps,
@@ -23289,8 +23303,8 @@ var PopperContent = import_react.forwardRef((props, forwardedRef) => {
 		})
 	});
 });
-PopperContent.displayName = CONTENT_NAME$2;
-var ARROW_NAME$1 = "PopperArrow";
+PopperContent.displayName = CONTENT_NAME$3;
+var ARROW_NAME$2 = "PopperArrow";
 var OPPOSITE_SIDE = {
 	top: "bottom",
 	right: "left",
@@ -23299,7 +23313,7 @@ var OPPOSITE_SIDE = {
 };
 var PopperArrow = import_react.forwardRef(function PopperArrow2(props, forwardedRef) {
 	const { __scopePopper, ...arrowProps } = props;
-	const contentContext = useContentContext(ARROW_NAME$1, __scopePopper);
+	const contentContext = useContentContext(ARROW_NAME$2, __scopePopper);
 	const baseSide = OPPOSITE_SIDE[contentContext.placedSide];
 	return /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
 		ref: contentContext.onArrowChange,
@@ -23332,7 +23346,7 @@ var PopperArrow = import_react.forwardRef(function PopperArrow2(props, forwarded
 		})
 	});
 });
-PopperArrow.displayName = ARROW_NAME$1;
+PopperArrow.displayName = ARROW_NAME$2;
 function isNotNull(value) {
 	return value !== null;
 }
@@ -23377,12 +23391,12 @@ function getSideAndAlignFromPlacement(placement) {
 	const [side, align = "center"] = placement.split("-");
 	return [side, align];
 }
-var Root2 = Popper;
+var Root2$1 = Popper;
 var Anchor = PopperAnchor;
 var Content$1 = PopperContent;
 var Arrow = PopperArrow;
-var [createTooltipContext, createTooltipScope] = createContextScope$1("Tooltip", [createPopperScope]);
-var usePopperScope = createPopperScope();
+var [createTooltipContext, createTooltipScope] = createContextScope("Tooltip", [createPopperScope]);
+var usePopperScope$1 = createPopperScope();
 var PROVIDER_NAME = "TooltipProvider";
 var DEFAULT_DELAY_DURATION = 700;
 var TOOLTIP_OPEN = "tooltip.open";
@@ -23422,7 +23436,7 @@ var [TooltipContextProvider, useTooltipContext] = createTooltipContext(TOOLTIP_N
 var Tooltip$2 = (props) => {
 	const { __scopeTooltip, children, open: openProp, defaultOpen, onOpenChange, disableHoverableContent: disableHoverableContentProp, delayDuration: delayDurationProp } = props;
 	const providerContext = useTooltipProviderContext(TOOLTIP_NAME, props.__scopeTooltip);
-	const popperScope = usePopperScope(__scopeTooltip);
+	const popperScope = usePopperScope$1(__scopeTooltip);
 	const [trigger, setTrigger] = import_react.useState(null);
 	const contentId = useId();
 	const openTimerRef = import_react.useRef(0);
@@ -23471,7 +23485,7 @@ var Tooltip$2 = (props) => {
 			}
 		};
 	}, []);
-	return /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Root2, {
+	return /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Root2$1, {
 		...popperScope,
 		children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(TooltipContextProvider, {
 			scope: __scopeTooltip,
@@ -23503,12 +23517,12 @@ var Tooltip$2 = (props) => {
 	});
 };
 Tooltip$2.displayName = TOOLTIP_NAME;
-var TRIGGER_NAME$1 = "TooltipTrigger";
+var TRIGGER_NAME$2 = "TooltipTrigger";
 var TooltipTrigger$1 = import_react.forwardRef((props, forwardedRef) => {
 	const { __scopeTooltip, ...triggerProps } = props;
-	const context = useTooltipContext(TRIGGER_NAME$1, __scopeTooltip);
-	const providerContext = useTooltipProviderContext(TRIGGER_NAME$1, __scopeTooltip);
-	const popperScope = usePopperScope(__scopeTooltip);
+	const context = useTooltipContext(TRIGGER_NAME$2, __scopeTooltip);
+	const providerContext = useTooltipProviderContext(TRIGGER_NAME$2, __scopeTooltip);
+	const popperScope = usePopperScope$1(__scopeTooltip);
 	const composedRefs = useComposedRefs(forwardedRef, import_react.useRef(null), context.onTriggerChange);
 	const isPointerDownRef = import_react.useRef(false);
 	const hasPointerMoveOpenedRef = import_react.useRef(false);
@@ -23519,7 +23533,7 @@ var TooltipTrigger$1 = import_react.forwardRef((props, forwardedRef) => {
 	return /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Anchor, {
 		asChild: true,
 		...popperScope,
-		children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Primitive$1.button, {
+		children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Primitive.button, {
 			"aria-describedby": context.open ? context.contentId : void 0,
 			"data-state": context.stateAttribute,
 			...triggerProps,
@@ -23548,13 +23562,13 @@ var TooltipTrigger$1 = import_react.forwardRef((props, forwardedRef) => {
 		})
 	});
 });
-TooltipTrigger$1.displayName = TRIGGER_NAME$1;
-var PORTAL_NAME$1 = "TooltipPortal";
-var [PortalProvider$1, usePortalContext$1] = createTooltipContext(PORTAL_NAME$1, { forceMount: void 0 });
+TooltipTrigger$1.displayName = TRIGGER_NAME$2;
+var PORTAL_NAME$2 = "TooltipPortal";
+var [PortalProvider$2, usePortalContext$2] = createTooltipContext(PORTAL_NAME$2, { forceMount: void 0 });
 var TooltipPortal = (props) => {
 	const { __scopeTooltip, forceMount, children, container } = props;
-	const context = useTooltipContext(PORTAL_NAME$1, __scopeTooltip);
-	return /* @__PURE__ */ (0, import_jsx_runtime.jsx)(PortalProvider$1, {
+	const context = useTooltipContext(PORTAL_NAME$2, __scopeTooltip);
+	return /* @__PURE__ */ (0, import_jsx_runtime.jsx)(PortalProvider$2, {
 		scope: __scopeTooltip,
 		forceMount,
 		children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Presence, {
@@ -23567,12 +23581,12 @@ var TooltipPortal = (props) => {
 		})
 	});
 };
-TooltipPortal.displayName = PORTAL_NAME$1;
-var CONTENT_NAME$1 = "TooltipContent";
+TooltipPortal.displayName = PORTAL_NAME$2;
+var CONTENT_NAME$2 = "TooltipContent";
 var TooltipContent$1 = import_react.forwardRef((props, forwardedRef) => {
-	const portalContext = usePortalContext$1(CONTENT_NAME$1, props.__scopeTooltip);
+	const portalContext = usePortalContext$2(CONTENT_NAME$2, props.__scopeTooltip);
 	const { forceMount = portalContext.forceMount, side = "top", ...contentProps } = props;
-	const context = useTooltipContext(CONTENT_NAME$1, props.__scopeTooltip);
+	const context = useTooltipContext(CONTENT_NAME$2, props.__scopeTooltip);
 	return /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Presence, {
 		present: forceMount || context.open,
 		children: context.disableHoverableContent ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)(TooltipContentImpl, {
@@ -23587,8 +23601,8 @@ var TooltipContent$1 = import_react.forwardRef((props, forwardedRef) => {
 	});
 });
 var TooltipContentHoverable = import_react.forwardRef((props, forwardedRef) => {
-	const context = useTooltipContext(CONTENT_NAME$1, props.__scopeTooltip);
-	const providerContext = useTooltipProviderContext(CONTENT_NAME$1, props.__scopeTooltip);
+	const context = useTooltipContext(CONTENT_NAME$2, props.__scopeTooltip);
+	const providerContext = useTooltipProviderContext(CONTENT_NAME$2, props.__scopeTooltip);
 	const ref = import_react.useRef(null);
 	const composedRefs = useComposedRefs(forwardedRef, ref);
 	const [pointerGraceArea, setPointerGraceArea] = import_react.useState(null);
@@ -23665,8 +23679,8 @@ var [VisuallyHiddenContentContextProvider, useVisuallyHiddenContentContext] = cr
 var Slottable = /* @__PURE__ */ createSlottable("TooltipContent");
 var TooltipContentImpl = import_react.forwardRef((props, forwardedRef) => {
 	const { __scopeTooltip, children, "aria-label": ariaLabel, onEscapeKeyDown, onPointerDownOutside, ...contentProps } = props;
-	const context = useTooltipContext(CONTENT_NAME$1, __scopeTooltip);
-	const popperScope = usePopperScope(__scopeTooltip);
+	const context = useTooltipContext(CONTENT_NAME$2, __scopeTooltip);
+	const popperScope = usePopperScope$1(__scopeTooltip);
 	const { onClose } = context;
 	import_react.useEffect(() => {
 		document.addEventListener(TOOLTIP_OPEN, onClose);
@@ -23713,18 +23727,18 @@ var TooltipContentImpl = import_react.forwardRef((props, forwardedRef) => {
 		})
 	});
 });
-TooltipContent$1.displayName = CONTENT_NAME$1;
-var ARROW_NAME = "TooltipArrow";
+TooltipContent$1.displayName = CONTENT_NAME$2;
+var ARROW_NAME$1 = "TooltipArrow";
 var TooltipArrow = import_react.forwardRef((props, forwardedRef) => {
 	const { __scopeTooltip, ...arrowProps } = props;
-	const popperScope = usePopperScope(__scopeTooltip);
-	return useVisuallyHiddenContentContext(ARROW_NAME, __scopeTooltip).isInside ? null : /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Arrow, {
+	const popperScope = usePopperScope$1(__scopeTooltip);
+	return useVisuallyHiddenContentContext(ARROW_NAME$1, __scopeTooltip).isInside ? null : /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Arrow, {
 		...popperScope,
 		...arrowProps,
 		ref: forwardedRef
 	});
 });
-TooltipArrow.displayName = ARROW_NAME;
+TooltipArrow.displayName = ARROW_NAME$1;
 function getExitSideFromRect(point$3, rect) {
 	const top = Math.abs(rect.top - point$3.y);
 	const bottom = Math.abs(rect.bottom - point$3.y);
@@ -23857,18 +23871,18 @@ function getHullPresorted(points) {
 }
 var Provider = TooltipProvider$1;
 var Root3 = Tooltip$2;
-var Trigger$1 = TooltipTrigger$1;
-var Content2 = TooltipContent$1;
+var Trigger$2 = TooltipTrigger$1;
+var Content2$1 = TooltipContent$1;
 var TooltipProvider = Provider;
 var Tooltip = Root3;
-var TooltipTrigger = Trigger$1;
-var TooltipContent = import_react.forwardRef(({ className, sideOffset = 4, ...props }, ref) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Content2, {
+var TooltipTrigger = Trigger$2;
+var TooltipContent = import_react.forwardRef(({ className, sideOffset = 4, ...props }, ref) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Content2$1, {
 	ref,
 	sideOffset,
 	className: cn("z-50 overflow-hidden rounded-md border bg-popover px-3 py-1.5 text-sm text-popover-foreground shadow-md animate-in fade-in-0 zoom-in-95 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 origin-[--radix-tooltip-content-transform-origin]", className),
 	...props
 }));
-TooltipContent.displayName = Content2.displayName;
+TooltipContent.displayName = Content2$1.displayName;
 var today = /* @__PURE__ */ new Date();
 var yesterday = new Date(today);
 yesterday.setDate(yesterday.getDate() - 1);
@@ -23879,10 +23893,21 @@ const mockAccounts = [
 		id: "a1",
 		name: "Logística Alfa",
 		website: "logisticaalfa.com",
+		phone: "11999999999",
+		segment: "Transporte",
+		fleetModel: "Própria",
+		fleetEstimate: 50,
+		leadSource: "Inbound",
+		detailedSource: "Google Ads",
 		status: "Em prospecção",
 		priority: "A",
+		icpFit: "Alto",
+		interestLevel: "Quente",
+		accountPotential: "Alto",
 		nextAction: "Ligar para Diretor",
 		nextActionDate: yesterday.toISOString(),
+		lastTouchDate: yesterday.toISOString(),
+		cadenceStage: "Toque 2",
 		createdAt: today.toISOString(),
 		updatedAt: today.toISOString()
 	},
@@ -23892,6 +23917,7 @@ const mockAccounts = [
 		website: "transbeta.com.br",
 		status: "Qualificado",
 		priority: "B",
+		accountPotential: "Médio",
 		nextAction: "Enviar Proposta",
 		nextActionDate: today.toISOString(),
 		createdAt: today.toISOString(),
@@ -23900,7 +23926,6 @@ const mockAccounts = [
 	{
 		id: "a3",
 		name: "Viação Gama",
-		website: "viacaogama.com",
 		status: "Novo",
 		priority: "C",
 		createdAt: today.toISOString(),
@@ -23913,41 +23938,36 @@ const mockContacts = [{
 	name: "João Silva",
 	role: "Diretor de Frota",
 	processRole: "Decisor",
+	email: "joao@alfa.com",
 	isDecisionMaker: true,
 	isInfluencer: false,
 	isChampion: true,
 	createdAt: today.toISOString(),
 	updatedAt: today.toISOString()
 }];
-const mockActivities = [
-	{
-		id: "act1",
-		accountId: "a1",
-		contactId: "c1",
-		type: "Ligação",
-		date: yesterday.toISOString(),
-		completed: false,
-		createdAt: today.toISOString()
-	},
-	{
-		id: "act2",
-		accountId: "a2",
-		type: "E-mail enviado",
-		date: today.toISOString(),
-		completed: false,
-		nextAction: "Follow-up",
-		nextActionDate: tomorrow.toISOString(),
-		createdAt: today.toISOString()
-	},
-	{
-		id: "act3",
-		accountId: "a3",
-		type: "Convite LinkedIn",
-		date: tomorrow.toISOString(),
-		completed: false,
-		createdAt: today.toISOString()
-	}
-];
+const mockActivities = [{
+	id: "act1",
+	accountId: "a1",
+	contactId: "c1",
+	channel: "Telefone",
+	type: "Ligação",
+	result: "Agendou reunião",
+	date: yesterday.toISOString(),
+	completed: true,
+	nextAction: "Reunião",
+	nextActionDate: today.toISOString(),
+	createdAt: today.toISOString()
+}, {
+	id: "act2",
+	accountId: "a2",
+	channel: "E-mail",
+	type: "E-mail",
+	date: today.toISOString(),
+	completed: false,
+	nextAction: "Follow-up",
+	nextActionDate: tomorrow.toISOString(),
+	createdAt: today.toISOString()
+}];
 const mockOpportunities = [{
 	id: "o1",
 	accountId: "a2",
@@ -23958,16 +23978,6 @@ const mockOpportunities = [{
 	total: 60500,
 	probability: 60,
 	createdAt: today.toISOString()
-}, {
-	id: "o2",
-	accountId: "a1",
-	name: "Consultoria Logística",
-	stage: "Diagnóstico",
-	mrr: 2e3,
-	setup: 0,
-	total: 24e3,
-	probability: 20,
-	createdAt: today.toISOString()
 }];
 var MainContext = (0, import_react.createContext)(void 0);
 function MainProvider({ children }) {
@@ -23975,6 +23985,13 @@ function MainProvider({ children }) {
 	const [contacts, setContacts] = (0, import_react.useState)(mockContacts);
 	const [activities, setActivities] = (0, import_react.useState)(mockActivities);
 	const [opportunities, setOpportunities] = (0, import_react.useState)(mockOpportunities);
+	const updateAccount = (id, acc) => {
+		setAccounts((prev) => prev.map((a$1) => a$1.id === id ? {
+			...a$1,
+			...acc,
+			updatedAt: (/* @__PURE__ */ new Date()).toISOString()
+		} : a$1));
+	};
 	const addAccount = (acc) => {
 		const newAcc = {
 			...acc,
@@ -23984,19 +24001,19 @@ function MainProvider({ children }) {
 		};
 		setAccounts((prev) => [newAcc, ...prev]);
 	};
-	const updateAccount = (id, acc) => {
-		setAccounts((prev) => prev.map((a$1) => a$1.id === id ? {
-			...a$1,
-			...acc,
-			updatedAt: (/* @__PURE__ */ new Date()).toISOString()
-		} : a$1));
-	};
 	const addActivity = (act) => {
 		setActivities((prev) => [{
 			...act,
 			id: Math.random().toString(36).substring(7),
 			createdAt: (/* @__PURE__ */ new Date()).toISOString()
 		}, ...prev]);
+		updateAccount(act.accountId, {
+			lastTouchDate: (/* @__PURE__ */ new Date()).toISOString(),
+			...act.nextAction && {
+				nextAction: act.nextAction,
+				nextActionDate: act.nextActionDate
+			}
+		});
 	};
 	const completeActivity = (id) => {
 		setActivities((prev) => prev.map((a$1) => a$1.id === id ? {
@@ -24019,10 +24036,11 @@ function MainProvider({ children }) {
 			createdAt: (/* @__PURE__ */ new Date()).toISOString()
 		}, ...prev]);
 	};
-	const updateOpportunityStage = (id, stage) => {
+	const updateOpportunityStage = (id, stage, lossReason) => {
 		setOpportunities((prev) => prev.map((o) => o.id === id ? {
 			...o,
-			stage
+			stage,
+			lossReason
 		} : o));
 	};
 	return /* @__PURE__ */ (0, import_jsx_runtime.jsx)(MainContext.Provider, {
@@ -24080,6 +24098,18 @@ function formatCurrency(value) {
 		currency: "BRL"
 	}).format(value);
 }
+function getStatusColor(status) {
+	return {
+		Novo: "bg-blue-50 text-blue-700",
+		"Em pesquisa": "bg-purple-50 text-purple-700",
+		"Pronto para contato": "bg-indigo-50 text-indigo-700",
+		"Em prospecção": "bg-yellow-50 text-yellow-700",
+		Qualificado: "bg-green-50 text-green-700",
+		"Aguardando retorno": "bg-orange-50 text-orange-700",
+		"Sem fit": "bg-gray-100 text-gray-600",
+		Perdido: "bg-red-50 text-red-700"
+	}[status] || "bg-gray-100 text-gray-800";
+}
 var Card = import_react.forwardRef(({ className, ...props }, ref) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
 	ref,
 	className: cn("rounded-lg border bg-card text-card-foreground shadow-sm", className),
@@ -24116,21 +24146,6 @@ var CardFooter = import_react.forwardRef(({ className, ...props }, ref) => /* @_
 	...props
 }));
 CardFooter.displayName = "CardFooter";
-var badgeVariants = cva("inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2", {
-	variants: { variant: {
-		default: "border-transparent bg-primary text-primary-foreground hover:bg-primary/80",
-		secondary: "border-transparent bg-secondary text-secondary-foreground hover:bg-secondary/80",
-		destructive: "border-transparent bg-destructive text-destructive-foreground hover:bg-destructive/80",
-		outline: "text-foreground"
-	} },
-	defaultVariants: { variant: "default" }
-});
-function Badge({ className, variant, ...props }) {
-	return /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
-		className: cn(badgeVariants({ variant }), className),
-		...props
-	});
-}
 var REACT_LAZY_TYPE = Symbol.for("react.lazy");
 var use = import_react[" use ".trim().toString()];
 function isPromiseLike(value) {
@@ -24140,7 +24155,7 @@ function isLazyComponent(element) {
 	return element != null && typeof element === "object" && "$$typeof" in element && element.$$typeof === REACT_LAZY_TYPE && "_payload" in element && isPromiseLike(element._payload);
 }
 /* @__NO_SIDE_EFFECTS__ */
-function createSlot(ownerName) {
+function createSlot$1(ownerName) {
 	const SlotClone = /* @__PURE__ */ createSlotClone(ownerName);
 	const Slot2 = import_react.forwardRef((props, forwardedRef) => {
 		let { children, ...slotProps } = props;
@@ -24170,7 +24185,7 @@ function createSlot(ownerName) {
 	Slot2.displayName = `${ownerName}.Slot`;
 	return Slot2;
 }
-var Slot$1 = /* @__PURE__ */ createSlot("Slot");
+var Slot$2 = /* @__PURE__ */ createSlot$1("Slot");
 /* @__NO_SIDE_EFFECTS__ */
 function createSlotClone(ownerName) {
 	const SlotClone = import_react.forwardRef((props, forwardedRef) => {
@@ -24246,7 +24261,7 @@ var buttonVariants = cva("inline-flex items-center justify-center gap-2 whitespa
 	}
 });
 var Button = import_react.forwardRef(({ className, variant, size: size$3, asChild = false, ...props }, ref) => {
-	return /* @__PURE__ */ (0, import_jsx_runtime.jsx)(asChild ? Slot$1 : "button", {
+	return /* @__PURE__ */ (0, import_jsx_runtime.jsx)(asChild ? Slot$2 : "button", {
 		className: cn(buttonVariants({
 			variant,
 			size: size$3,
@@ -24257,138 +24272,160 @@ var Button = import_react.forwardRef(({ className, variant, size: size$3, asChil
 	});
 });
 Button.displayName = "Button";
+var MiniList = ({ title, items, renderItem, emptyText, icon: Icon$1, headerColor }) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(Card, {
+	className: "shadow-sm rounded-xl overflow-hidden border-gray-200 bg-white",
+	children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(CardHeader, {
+		className: `pb-3 ${headerColor} border-b border-gray-100`,
+		children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(CardTitle, {
+			className: "text-sm font-bold flex items-center",
+			children: [
+				/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Icon$1, { className: "w-4 h-4 mr-2" }),
+				" ",
+				title,
+				" (",
+				items.length,
+				")"
+			]
+		})
+	}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)(CardContent, {
+		className: "p-0 max-h-[250px] overflow-y-auto",
+		children: items.length === 0 ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+			className: "p-6 text-sm text-gray-500 text-center font-medium",
+			children: emptyText
+		}) : /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+			className: "divide-y divide-gray-100",
+			children: items.map(renderItem)
+		})
+	})]
+});
 function Index() {
-	const { activities, accounts, completeActivity } = useMainStore();
+	const { activities, accounts, completeActivity, opportunities } = useMainStore();
 	const overdue = (0, import_react.useMemo)(() => activities.filter((a$1) => !a$1.completed && isOverdue(a$1.date)), [activities]);
 	const todayActs = (0, import_react.useMemo)(() => activities.filter((a$1) => !a$1.completed && isToday(a$1.date)), [activities]);
-	const noActionAccounts = (0, import_react.useMemo)(() => accounts.filter((a$1) => !a$1.nextActionDate), [accounts]);
-	const renderActivity = (act, type) => {
-		const acc = accounts.find((a$1) => a$1.id === act.accountId);
+	const priorityA = (0, import_react.useMemo)(() => accounts.filter((a$1) => a$1.priority === "A" && (!a$1.lastTouchDate || isOverdue(a$1.lastTouchDate))), [accounts]);
+	const newLeads = (0, import_react.useMemo)(() => accounts.filter((a$1) => a$1.status === "Novo" || a$1.status === "Em pesquisa"), [accounts]);
+	const noActionAccs = (0, import_react.useMemo)(() => accounts.filter((a$1) => !a$1.nextActionDate), [accounts]);
+	const stalledOpps = (0, import_react.useMemo)(() => opportunities.filter((o) => !o.stage.includes("Fechado")), [opportunities]);
+	const renderAct = (act) => {
 		return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-			className: "flex items-center justify-between p-3 bg-white border rounded-xl mb-2 shadow-sm transition-all hover:shadow-md",
-			children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-				className: "flex items-center gap-2 mb-1",
-				children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Badge, {
-					className: type === "overdue" ? "bg-red-100 text-red-800" : "bg-yellow-100 text-yellow-800",
+			className: "p-3 hover:bg-gray-50 flex items-center justify-between transition-colors",
+			children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+				className: "font-bold text-sm mb-1 text-black",
+				children: accounts.find((a$1) => a$1.id === act.accountId)?.name
+			}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+				className: "text-xs text-gray-600 flex items-center gap-2",
+				children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+					className: "bg-gray-100 px-1.5 py-0.5 rounded border border-gray-200 font-semibold",
 					children: act.type
-				}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
-					className: "text-sm font-semibold text-gray-900",
-					children: acc?.name
+				}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", {
+					className: "flex items-center",
+					children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Clock, { className: "w-3 h-3 mr-1" }), new Date(act.date).toLocaleDateString()]
 				})]
-			}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("p", {
-				className: "text-xs text-muted-foreground flex items-center",
-				children: [
-					/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Clock, { className: "w-3 h-3 mr-1" }),
-					" ",
-					new Date(act.date).toLocaleDateString()
-				]
-			})] }), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(Button, {
+			})] }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Button, {
 				size: "sm",
-				variant: "outline",
+				variant: "ghost",
 				onClick: () => completeActivity(act.id),
-				className: "rounded-full hover:bg-green-50 hover:text-green-700 hover:border-green-200",
-				children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(CircleCheck, { className: "w-4 h-4 mr-1" }), " Feito"]
+				className: "h-8 w-8 p-0 rounded-full text-green-600 hover:bg-green-50",
+				children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(CircleCheck, { className: "w-5 h-5" })
 			})]
 		}, act.id);
 	};
-	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-		className: "space-y-6",
-		children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-			className: "mb-8",
-			children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("h1", {
-				className: "text-3xl font-bold text-gray-900 mb-2",
-				children: "Visão \"Today\""
-			}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
-				className: "text-muted-foreground text-lg",
-				children: "Foque na execução. Aqui estão as prioridades do dia para gerar oportunidades."
-			})]
+	const renderAcc = (acc) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+		className: "p-3 hover:bg-gray-50 flex items-center justify-between transition-colors",
+		children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+			className: "font-bold text-sm text-black",
+			children: acc.name
+		}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+			className: "text-xs text-gray-500 mt-1 font-medium",
+			children: acc.status
+		})] }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Link, {
+			to: "/activities",
+			children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Button, {
+				size: "sm",
+				variant: "outline",
+				className: "h-7 text-xs rounded font-semibold text-black border-gray-300",
+				children: "Ação"
+			})
+		})]
+	}, acc.id);
+	const renderOpp = (opp) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+		className: "p-3 hover:bg-gray-50 flex items-center justify-between transition-colors",
+		children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+			className: "font-bold text-sm text-black",
+			children: opp.name
 		}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-			className: "grid grid-cols-1 lg:grid-cols-2 gap-6 items-start",
-			children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-				className: "space-y-6",
-				children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)(Card, {
-					className: "border-red-200 shadow-sm bg-red-50/30",
-					children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(CardHeader, {
-						className: "pb-4",
-						children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(CardTitle, {
-							className: "text-lg flex items-center text-red-800",
-							children: [
-								/* @__PURE__ */ (0, import_jsx_runtime.jsx)(CircleAlert, { className: "w-5 h-5 mr-2" }),
-								" Atividades Atrasadas (",
-								overdue.length,
-								")"
-							]
-						})
-					}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)(CardContent, {
-						className: "pt-0 max-h-[350px] overflow-y-auto pr-2",
-						children: overdue.length === 0 ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
-							className: "text-sm text-gray-500 text-center py-6 bg-white/50 rounded-xl",
-							children: "Tudo em dia!"
-						}) : overdue.map((a$1) => renderActivity(a$1, "overdue"))
-					})]
-				}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(Card, {
-					className: "border-yellow-200 shadow-sm bg-yellow-50/30",
-					children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(CardHeader, {
-						className: "pb-4",
-						children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(CardTitle, {
-							className: "text-lg flex items-center text-yellow-800",
-							children: [
-								/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Activity$1, { className: "w-5 h-5 mr-2" }),
-								" Para Hoje (",
-								todayActs.length,
-								")"
-							]
-						})
-					}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)(CardContent, {
-						className: "pt-0 max-h-[350px] overflow-y-auto pr-2",
-						children: todayActs.length === 0 ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
-							className: "text-sm text-gray-500 text-center py-6 bg-white/50 rounded-xl",
-							children: "Nenhuma atividade para hoje."
-						}) : todayActs.map((a$1) => renderActivity(a$1, "today"))
-					})]
-				})]
-			}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
-				className: "space-y-6",
-				children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(Card, {
-					className: "shadow-sm border-gray-200",
-					children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(CardHeader, {
-						className: "bg-gray-50 rounded-t-xl border-b border-gray-100 pb-4",
-						children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(CardTitle, {
-							className: "text-lg flex items-center text-gray-800",
-							children: [
-								/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Calendar, { className: "w-5 h-5 mr-2 text-gray-500" }),
-								" Contas sem Próxima Ação (",
-								noActionAccounts.length,
-								")"
-							]
-						})
-					}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)(CardContent, {
-						className: "pt-4 max-h-[730px] overflow-y-auto pr-2 bg-white",
-						children: noActionAccounts.length === 0 ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
-							className: "text-sm text-gray-500 text-center py-8",
-							children: "Todas as contas têm ação definida."
-						}) : noActionAccounts.map((a$1) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-							className: "flex justify-between p-4 border-b last:border-0 items-center hover:bg-gray-50 transition-colors",
-							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
-								className: "font-semibold text-sm block mb-1 text-gray-900",
-								children: a$1.name
-							}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Badge, {
-								variant: "outline",
-								className: "text-xs text-gray-500",
-								children: a$1.status
-							})] }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Link, {
-								to: `/activities`,
-								children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Button, {
-									size: "sm",
-									variant: "secondary",
-									className: "rounded-full",
-									children: "Agendar Ação"
-								})
-							})]
-						}, a$1.id))
-					})]
+			className: "text-xs text-gray-500 mt-1 font-medium",
+			children: ["Fase: ", opp.stage]
+		})] }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Link, {
+			to: "/pipeline",
+			children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Button, {
+				size: "sm",
+				variant: "outline",
+				className: "h-7 text-xs rounded font-semibold text-black border-gray-300",
+				children: "Ver"
+			})
+		})]
+	}, opp.id);
+	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+		className: "space-y-6 max-w-7xl mx-auto pb-10",
+		children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("h1", {
+			className: "text-3xl font-black text-black",
+			children: "Visão \"Hoje\""
+		}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+			className: "text-gray-500 mt-1 font-medium",
+			children: "Foco na execução. Prioridades e gargalos da operação."
+		})] }), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+			className: "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6",
+			children: [
+				/* @__PURE__ */ (0, import_jsx_runtime.jsx)(MiniList, {
+					title: "Atrasadas (Follow-ups vencidos)",
+					icon: CircleAlert,
+					headerColor: "bg-red-50 text-red-800",
+					items: overdue,
+					emptyText: "Zero atrasos!",
+					renderItem: renderAct
+				}),
+				/* @__PURE__ */ (0, import_jsx_runtime.jsx)(MiniList, {
+					title: "Para Hoje",
+					icon: Play,
+					headerColor: "bg-yellow-50 text-yellow-800",
+					items: todayActs,
+					emptyText: "Livre por hoje.",
+					renderItem: renderAct
+				}),
+				/* @__PURE__ */ (0, import_jsx_runtime.jsx)(MiniList, {
+					title: "Contas sem Próxima Ação",
+					icon: TriangleAlert,
+					headerColor: "bg-gray-100 text-gray-800",
+					items: noActionAccs,
+					emptyText: "Todas as contas têm dono.",
+					renderItem: renderAcc
+				}),
+				/* @__PURE__ */ (0, import_jsx_runtime.jsx)(MiniList, {
+					title: "Prioridade A (S/ Atividade)",
+					icon: TriangleAlert,
+					headerColor: "bg-blue-50 text-blue-800",
+					items: priorityA,
+					emptyText: "Prioridades A em dia.",
+					renderItem: renderAcc
+				}),
+				/* @__PURE__ */ (0, import_jsx_runtime.jsx)(MiniList, {
+					title: "Leads Novos e Pesquisa",
+					icon: Building2,
+					headerColor: "bg-blue-50 text-blue-800",
+					items: newLeads,
+					emptyText: "Nenhum lead novo.",
+					renderItem: renderAcc
+				}),
+				/* @__PURE__ */ (0, import_jsx_runtime.jsx)(MiniList, {
+					title: "Oportunidades Estagnadas",
+					icon: TrendingDown,
+					headerColor: "bg-gray-100 text-gray-800",
+					items: stalledOpps,
+					emptyText: "Pipeline fluindo.",
+					renderItem: renderOpp
 				})
-			})]
+			]
 		})]
 	});
 }
@@ -24452,6 +24489,21 @@ var TableCaption = import_react.forwardRef(({ className, ...props }, ref) => /* 
 	...props
 }));
 TableCaption.displayName = "TableCaption";
+var badgeVariants = cva("inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2", {
+	variants: { variant: {
+		default: "border-transparent bg-primary text-primary-foreground hover:bg-primary/80",
+		secondary: "border-transparent bg-secondary text-secondary-foreground hover:bg-secondary/80",
+		destructive: "border-transparent bg-destructive text-destructive-foreground hover:bg-destructive/80",
+		outline: "text-foreground"
+	} },
+	defaultVariants: { variant: "default" }
+});
+function Badge({ className, variant, ...props }) {
+	return /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+		className: cn(badgeVariants({ variant }), className),
+		...props
+	});
+}
 var AUTOFOCUS_ON_MOUNT = "focusScope.autoFocusOnMount";
 var AUTOFOCUS_ON_UNMOUNT = "focusScope.autoFocusOnUnmount";
 var EVENT_OPTIONS = {
@@ -24563,7 +24615,7 @@ var FocusScope = import_react.forwardRef((props, forwardedRef) => {
 		trapped,
 		focusScope.paused
 	]);
-	return /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Primitive$1.div, {
+	return /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Primitive.div, {
 		tabIndex: -1,
 		...scopeProps,
 		ref: composedRefs,
@@ -25355,7 +25407,7 @@ var hideOthers = function(originalTarget, parentNode, markerName) {
 	return applyAttributeToOthers(targets, activeParentNode, markerName, "aria-hidden");
 };
 var DIALOG_NAME = "Dialog";
-var [createDialogContext, createDialogScope] = createContextScope$1(DIALOG_NAME);
+var [createDialogContext, createDialogScope] = createContextScope(DIALOG_NAME);
 var [DialogProvider, useDialogContext] = createDialogContext(DIALOG_NAME);
 var Dialog$1 = (props) => {
 	const { __scopeDialog, children, open: openProp, defaultOpen, onOpenChange, modal = true } = props;
@@ -25382,29 +25434,29 @@ var Dialog$1 = (props) => {
 	});
 };
 Dialog$1.displayName = DIALOG_NAME;
-var TRIGGER_NAME = "DialogTrigger";
+var TRIGGER_NAME$1 = "DialogTrigger";
 var DialogTrigger$1 = import_react.forwardRef((props, forwardedRef) => {
 	const { __scopeDialog, ...triggerProps } = props;
-	const context = useDialogContext(TRIGGER_NAME, __scopeDialog);
+	const context = useDialogContext(TRIGGER_NAME$1, __scopeDialog);
 	const composedTriggerRef = useComposedRefs(forwardedRef, context.triggerRef);
-	return /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Primitive$1.button, {
+	return /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Primitive.button, {
 		type: "button",
 		"aria-haspopup": "dialog",
 		"aria-expanded": context.open,
 		"aria-controls": context.contentId,
-		"data-state": getState(context.open),
+		"data-state": getState$1(context.open),
 		...triggerProps,
 		ref: composedTriggerRef,
 		onClick: composeEventHandlers(props.onClick, context.onOpenToggle)
 	});
 });
-DialogTrigger$1.displayName = TRIGGER_NAME;
-var PORTAL_NAME = "DialogPortal";
-var [PortalProvider, usePortalContext] = createDialogContext(PORTAL_NAME, { forceMount: void 0 });
+DialogTrigger$1.displayName = TRIGGER_NAME$1;
+var PORTAL_NAME$1 = "DialogPortal";
+var [PortalProvider$1, usePortalContext$1] = createDialogContext(PORTAL_NAME$1, { forceMount: void 0 });
 var DialogPortal$1 = (props) => {
 	const { __scopeDialog, forceMount, children, container } = props;
-	const context = useDialogContext(PORTAL_NAME, __scopeDialog);
-	return /* @__PURE__ */ (0, import_jsx_runtime.jsx)(PortalProvider, {
+	const context = useDialogContext(PORTAL_NAME$1, __scopeDialog);
+	return /* @__PURE__ */ (0, import_jsx_runtime.jsx)(PortalProvider$1, {
 		scope: __scopeDialog,
 		forceMount,
 		children: import_react.Children.map(children, (child) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Presence, {
@@ -25417,10 +25469,10 @@ var DialogPortal$1 = (props) => {
 		}))
 	});
 };
-DialogPortal$1.displayName = PORTAL_NAME;
+DialogPortal$1.displayName = PORTAL_NAME$1;
 var OVERLAY_NAME = "DialogOverlay";
 var DialogOverlay$1 = import_react.forwardRef((props, forwardedRef) => {
-	const portalContext = usePortalContext(OVERLAY_NAME, props.__scopeDialog);
+	const portalContext = usePortalContext$1(OVERLAY_NAME, props.__scopeDialog);
 	const { forceMount = portalContext.forceMount, ...overlayProps } = props;
 	const context = useDialogContext(OVERLAY_NAME, props.__scopeDialog);
 	return context.modal ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Presence, {
@@ -25432,16 +25484,16 @@ var DialogOverlay$1 = import_react.forwardRef((props, forwardedRef) => {
 	}) : null;
 });
 DialogOverlay$1.displayName = OVERLAY_NAME;
-var Slot = /* @__PURE__ */ createSlot$1("DialogOverlay.RemoveScroll");
+var Slot$1 = /* @__PURE__ */ createSlot("DialogOverlay.RemoveScroll");
 var DialogOverlayImpl = import_react.forwardRef((props, forwardedRef) => {
 	const { __scopeDialog, ...overlayProps } = props;
 	const context = useDialogContext(OVERLAY_NAME, __scopeDialog);
 	return /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Combination_default, {
-		as: Slot,
+		as: Slot$1,
 		allowPinchZoom: true,
 		shards: [context.contentRef],
-		children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Primitive$1.div, {
-			"data-state": getState(context.open),
+		children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Primitive.div, {
+			"data-state": getState$1(context.open),
 			...overlayProps,
 			ref: forwardedRef,
 			style: {
@@ -25451,11 +25503,11 @@ var DialogOverlayImpl = import_react.forwardRef((props, forwardedRef) => {
 		})
 	});
 });
-var CONTENT_NAME = "DialogContent";
+var CONTENT_NAME$1 = "DialogContent";
 var DialogContent$1 = import_react.forwardRef((props, forwardedRef) => {
-	const portalContext = usePortalContext(CONTENT_NAME, props.__scopeDialog);
+	const portalContext = usePortalContext$1(CONTENT_NAME$1, props.__scopeDialog);
 	const { forceMount = portalContext.forceMount, ...contentProps } = props;
-	const context = useDialogContext(CONTENT_NAME, props.__scopeDialog);
+	const context = useDialogContext(CONTENT_NAME$1, props.__scopeDialog);
 	return /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Presence, {
 		present: forceMount || context.open,
 		children: context.modal ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)(DialogContentModal, {
@@ -25467,9 +25519,9 @@ var DialogContent$1 = import_react.forwardRef((props, forwardedRef) => {
 		})
 	});
 });
-DialogContent$1.displayName = CONTENT_NAME;
+DialogContent$1.displayName = CONTENT_NAME$1;
 var DialogContentModal = import_react.forwardRef((props, forwardedRef) => {
-	const context = useDialogContext(CONTENT_NAME, props.__scopeDialog);
+	const context = useDialogContext(CONTENT_NAME$1, props.__scopeDialog);
 	const contentRef = import_react.useRef(null);
 	const composedRefs = useComposedRefs(forwardedRef, context.contentRef, contentRef);
 	import_react.useEffect(() => {
@@ -25494,7 +25546,7 @@ var DialogContentModal = import_react.forwardRef((props, forwardedRef) => {
 	});
 });
 var DialogContentNonModal = import_react.forwardRef((props, forwardedRef) => {
-	const context = useDialogContext(CONTENT_NAME, props.__scopeDialog);
+	const context = useDialogContext(CONTENT_NAME$1, props.__scopeDialog);
 	const hasInteractedOutsideRef = import_react.useRef(false);
 	const hasPointerDownOutsideRef = import_react.useRef(false);
 	return /* @__PURE__ */ (0, import_jsx_runtime.jsx)(DialogContentImpl, {
@@ -25525,7 +25577,7 @@ var DialogContentNonModal = import_react.forwardRef((props, forwardedRef) => {
 });
 var DialogContentImpl = import_react.forwardRef((props, forwardedRef) => {
 	const { __scopeDialog, trapFocus, onOpenAutoFocus, onCloseAutoFocus, ...contentProps } = props;
-	const context = useDialogContext(CONTENT_NAME, __scopeDialog);
+	const context = useDialogContext(CONTENT_NAME$1, __scopeDialog);
 	const contentRef = import_react.useRef(null);
 	const composedRefs = useComposedRefs(forwardedRef, contentRef);
 	useFocusGuards();
@@ -25540,7 +25592,7 @@ var DialogContentImpl = import_react.forwardRef((props, forwardedRef) => {
 			id: context.contentId,
 			"aria-describedby": context.descriptionId,
 			"aria-labelledby": context.titleId,
-			"data-state": getState(context.open),
+			"data-state": getState$1(context.open),
 			...contentProps,
 			ref: composedRefs,
 			onDismiss: () => context.onOpenChange(false)
@@ -25554,7 +25606,7 @@ var TITLE_NAME = "DialogTitle";
 var DialogTitle$1 = import_react.forwardRef((props, forwardedRef) => {
 	const { __scopeDialog, ...titleProps } = props;
 	const context = useDialogContext(TITLE_NAME, __scopeDialog);
-	return /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Primitive$1.h2, {
+	return /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Primitive.h2, {
 		id: context.titleId,
 		...titleProps,
 		ref: forwardedRef
@@ -25565,31 +25617,31 @@ var DESCRIPTION_NAME = "DialogDescription";
 var DialogDescription$1 = import_react.forwardRef((props, forwardedRef) => {
 	const { __scopeDialog, ...descriptionProps } = props;
 	const context = useDialogContext(DESCRIPTION_NAME, __scopeDialog);
-	return /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Primitive$1.p, {
+	return /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Primitive.p, {
 		id: context.descriptionId,
 		...descriptionProps,
 		ref: forwardedRef
 	});
 });
 DialogDescription$1.displayName = DESCRIPTION_NAME;
-var CLOSE_NAME = "DialogClose";
+var CLOSE_NAME$1 = "DialogClose";
 var DialogClose$1 = import_react.forwardRef((props, forwardedRef) => {
 	const { __scopeDialog, ...closeProps } = props;
-	const context = useDialogContext(CLOSE_NAME, __scopeDialog);
-	return /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Primitive$1.button, {
+	const context = useDialogContext(CLOSE_NAME$1, __scopeDialog);
+	return /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Primitive.button, {
 		type: "button",
 		...closeProps,
 		ref: forwardedRef,
 		onClick: composeEventHandlers(props.onClick, () => context.onOpenChange(false))
 	});
 });
-DialogClose$1.displayName = CLOSE_NAME;
-function getState(open) {
+DialogClose$1.displayName = CLOSE_NAME$1;
+function getState$1(open) {
 	return open ? "open" : "closed";
 }
 var TITLE_WARNING_NAME = "DialogTitleWarning";
 var [WarningProvider, useWarningContext] = createContext2(TITLE_WARNING_NAME, {
-	contentName: CONTENT_NAME,
+	contentName: CONTENT_NAME$1,
 	titleName: TITLE_NAME,
 	docsSlug: "dialog"
 });
@@ -25623,16 +25675,16 @@ var DescriptionWarning = ({ contentRef, descriptionId }) => {
 	return null;
 };
 var Root$1 = Dialog$1;
-var Trigger = DialogTrigger$1;
-var Portal$1 = DialogPortal$1;
+var Trigger$1 = DialogTrigger$1;
+var Portal$2 = DialogPortal$1;
 var Overlay = DialogOverlay$1;
 var Content = DialogContent$1;
 var Title = DialogTitle$1;
 var Description = DialogDescription$1;
 var Close = DialogClose$1;
 var Dialog = Root$1;
-var DialogTrigger = Trigger;
-var DialogPortal = Portal$1;
+var DialogTrigger = Trigger$1;
+var DialogPortal = Portal$2;
 var DialogOverlay = import_react.forwardRef(({ className, ...props }, ref) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Overlay, {
 	ref,
 	className: cn("fixed inset-0 z-50 bg-black/80 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0", className),
@@ -25675,462 +25727,1067 @@ var DialogDescription = import_react.forwardRef(({ className, ...props }, ref) =
 }));
 DialogDescription.displayName = Description.displayName;
 function Accounts() {
-	const { accounts, addAccount } = useMainStore();
-	const [isOpen, setIsOpen] = (0, import_react.useState)(false);
+	const { accounts, contacts, addAccount } = useMainStore();
+	const { toast: toast$2 } = useToast();
 	const [search, setSearch] = (0, import_react.useState)("");
-	const [name, setName] = (0, import_react.useState)("");
-	const [website, setWebsite] = (0, import_react.useState)("");
+	const [isOpen, setIsOpen] = (0, import_react.useState)(false);
 	const filtered = accounts.filter((a$1) => a$1.name.toLowerCase().includes(search.toLowerCase()));
 	const handleCreate = (e) => {
 		e.preventDefault();
-		if (!name) return;
+		const fd = new FormData(e.target);
 		addAccount({
-			name,
-			website,
-			status: "Novo",
-			priority: "B"
+			name: fd.get("name"),
+			website: fd.get("website"),
+			phone: fd.get("phone"),
+			segment: fd.get("segment"),
+			fleetModel: fd.get("fleetModel"),
+			fleetEstimate: Number(fd.get("fleetEstimate")) || 0,
+			leadSource: fd.get("leadSource"),
+			detailedSource: fd.get("detailedSource"),
+			status: fd.get("status"),
+			priority: fd.get("priority"),
+			icpFit: fd.get("icpFit"),
+			interestLevel: fd.get("interestLevel"),
+			accountPotential: fd.get("accountPotential")
 		});
 		setIsOpen(false);
-		setName("");
-		setWebsite("");
+		toast$2({ title: "Conta criada com sucesso!" });
 	};
+	const mockAction = (action) => toast$2({
+		title: action,
+		description: "Funcionalidade simulada no protótipo."
+	});
 	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-		className: "space-y-6",
+		className: "space-y-6 max-w-7xl mx-auto pb-10",
 		children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
 			className: "flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4",
 			children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("h1", {
-				className: "text-3xl font-bold text-gray-900",
+				className: "text-3xl font-black text-black",
 				children: "Contas e Leads"
 			}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
-				className: "text-muted-foreground",
-				children: "Gerencie sua base de empresas prospectadas"
+				className: "text-gray-500 mt-1 font-medium",
+				children: "Gestão da base de prospectos"
+			})] }), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+				className: "flex items-center gap-2",
+				children: [
+					/* @__PURE__ */ (0, import_jsx_runtime.jsxs)(Button, {
+						variant: "outline",
+						onClick: () => mockAction("Importar CSV"),
+						className: "rounded font-bold border-gray-300 text-black hidden sm:flex",
+						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Upload, { className: "w-4 h-4 mr-2" }), " Importar"]
+					}),
+					/* @__PURE__ */ (0, import_jsx_runtime.jsxs)(Button, {
+						variant: "outline",
+						onClick: () => mockAction("Exportar"),
+						className: "rounded font-bold border-gray-300 text-black hidden sm:flex",
+						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Download, { className: "w-4 h-4 mr-2" }), " Exportar"]
+					}),
+					/* @__PURE__ */ (0, import_jsx_runtime.jsxs)(Dialog, {
+						open: isOpen,
+						onOpenChange: setIsOpen,
+						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(DialogTrigger, {
+							asChild: true,
+							children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(Button, {
+								className: "bg-black text-white rounded font-bold hover:bg-gray-800",
+								children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Plus, { className: "w-4 h-4 mr-2" }), " Nova Conta"]
+							})
+						}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(DialogContent, {
+							className: "sm:max-w-[700px]",
+							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(DialogHeader, { children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(DialogTitle, { children: "Criar Nova Conta" }) }), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("form", {
+								onSubmit: handleCreate,
+								className: "space-y-6 mt-2",
+								children: [
+									/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+										className: "grid grid-cols-2 gap-4 border border-gray-100 p-4 rounded-xl bg-gray-50/50",
+										children: [
+											/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+												className: "space-y-1 col-span-2 sm:col-span-1",
+												children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", {
+													className: "text-xs font-bold text-gray-700",
+													children: "Empresa *"
+												}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Input, {
+													name: "name",
+													required: true,
+													placeholder: "Ex: Logística Alfa",
+													className: "bg-white"
+												})]
+											}),
+											/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+												className: "space-y-1 col-span-2 sm:col-span-1",
+												children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", {
+													className: "text-xs font-bold text-gray-700",
+													children: "Website"
+												}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Input, {
+													name: "website",
+													placeholder: "exemplo.com.br",
+													className: "bg-white"
+												})]
+											}),
+											/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+												className: "space-y-1 col-span-2 sm:col-span-1",
+												children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", {
+													className: "text-xs font-bold text-gray-700",
+													children: "Telefone Geral"
+												}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Input, {
+													name: "phone",
+													placeholder: "(00) 0000-0000",
+													className: "bg-white"
+												})]
+											}),
+											/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+												className: "space-y-1 col-span-2 sm:col-span-1",
+												children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", {
+													className: "text-xs font-bold text-gray-700",
+													children: "Status *"
+												}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("select", {
+													name: "status",
+													required: true,
+													className: "flex h-10 w-full rounded-md border border-input bg-white px-3 py-2 text-sm focus:ring-2 focus:ring-black",
+													children: [
+														/* @__PURE__ */ (0, import_jsx_runtime.jsx)("option", {
+															value: "Novo",
+															children: "Novo"
+														}),
+														/* @__PURE__ */ (0, import_jsx_runtime.jsx)("option", {
+															value: "Em pesquisa",
+															children: "Em pesquisa"
+														}),
+														/* @__PURE__ */ (0, import_jsx_runtime.jsx)("option", {
+															value: "Pronto para contato",
+															children: "Pronto para contato"
+														}),
+														/* @__PURE__ */ (0, import_jsx_runtime.jsx)("option", {
+															value: "Em prospecção",
+															children: "Em prospecção"
+														})
+													]
+												})]
+											})
+										]
+									}),
+									/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+										className: "grid grid-cols-3 gap-4",
+										children: [
+											/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+												className: "space-y-1",
+												children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", {
+													className: "text-xs font-bold text-gray-700",
+													children: "Segmento"
+												}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Input, {
+													name: "segment",
+													placeholder: "Ex: Transporte"
+												})]
+											}),
+											/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+												className: "space-y-1",
+												children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", {
+													className: "text-xs font-bold text-gray-700",
+													children: "Modelo Frota"
+												}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Input, {
+													name: "fleetModel",
+													placeholder: "Ex: Própria"
+												})]
+											}),
+											/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+												className: "space-y-1",
+												children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", {
+													className: "text-xs font-bold text-gray-700",
+													children: "Tam. Frota"
+												}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Input, {
+													name: "fleetEstimate",
+													type: "number",
+													placeholder: "0"
+												})]
+											}),
+											/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+												className: "space-y-1",
+												children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", {
+													className: "text-xs font-bold text-gray-700",
+													children: "Fonte do Lead"
+												}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Input, {
+													name: "leadSource",
+													placeholder: "Ex: Inbound"
+												})]
+											}),
+											/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+												className: "space-y-1",
+												children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", {
+													className: "text-xs font-bold text-gray-700",
+													children: "Prioridade"
+												}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("select", {
+													name: "priority",
+													className: "flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm",
+													children: [
+														/* @__PURE__ */ (0, import_jsx_runtime.jsx)("option", {
+															value: "B",
+															children: "B - Média"
+														}),
+														/* @__PURE__ */ (0, import_jsx_runtime.jsx)("option", {
+															value: "A",
+															children: "A - Alta"
+														}),
+														/* @__PURE__ */ (0, import_jsx_runtime.jsx)("option", {
+															value: "C",
+															children: "C - Baixa"
+														})
+													]
+												})]
+											}),
+											/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+												className: "space-y-1",
+												children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", {
+													className: "text-xs font-bold text-gray-700",
+													children: "Potencial"
+												}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("select", {
+													name: "accountPotential",
+													className: "flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm",
+													children: [
+														/* @__PURE__ */ (0, import_jsx_runtime.jsx)("option", {
+															value: "Médio",
+															children: "Médio"
+														}),
+														/* @__PURE__ */ (0, import_jsx_runtime.jsx)("option", {
+															value: "Alto",
+															children: "Alto"
+														}),
+														/* @__PURE__ */ (0, import_jsx_runtime.jsx)("option", {
+															value: "Baixo",
+															children: "Baixo"
+														})
+													]
+												})]
+											})
+										]
+									}),
+									/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Button, {
+										type: "submit",
+										className: "w-full bg-black text-white font-bold",
+										children: "Salvar Conta"
+									})
+								]
+							})]
+						})]
+					})
+				]
+			})]
+		}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+			className: "bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm",
+			children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+				className: "p-4 border-b border-gray-100 flex items-center bg-gray-50/50",
+				children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Search, { className: "w-4 h-4 text-gray-400 mr-2" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", {
+					className: "bg-transparent font-medium border-none outline-none text-sm w-full placeholder:text-gray-400",
+					placeholder: "Buscar contas...",
+					value: search,
+					onChange: (e) => setSearch(e.target.value)
+				})]
+			}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(Table, { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(TableHeader, { children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(TableRow, {
+				className: "bg-gray-50",
+				children: [
+					/* @__PURE__ */ (0, import_jsx_runtime.jsx)(TableHead, {
+						className: "font-bold text-black",
+						children: "Empresa"
+					}),
+					/* @__PURE__ */ (0, import_jsx_runtime.jsx)(TableHead, {
+						className: "font-bold text-black",
+						children: "Status / Prioridade"
+					}),
+					/* @__PURE__ */ (0, import_jsx_runtime.jsx)(TableHead, {
+						className: "font-bold text-black",
+						children: "Contatos"
+					}),
+					/* @__PURE__ */ (0, import_jsx_runtime.jsx)(TableHead, {
+						className: "font-bold text-black",
+						children: "Próxima Ação"
+					})
+				]
+			}) }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)(TableBody, { children: filtered.map((acc) => {
+				const accContacts = contacts.filter((c$1) => c$1.accountId === acc.id);
+				const alertNoContact = accContacts.length === 0;
+				const alertNoAction = !acc.nextActionDate;
+				return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(TableRow, {
+					className: "hover:bg-gray-50/50",
+					children: [
+						/* @__PURE__ */ (0, import_jsx_runtime.jsxs)(TableCell, { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+							className: "font-bold text-black",
+							children: acc.name
+						}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+							className: "text-xs text-gray-500 mt-1 font-medium",
+							children: acc.website || acc.segment || "-"
+						})] }),
+						/* @__PURE__ */ (0, import_jsx_runtime.jsx)(TableCell, { children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+							className: "flex items-center gap-2",
+							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Badge, {
+								className: `${getStatusColor(acc.status)} border-0 shadow-none font-bold rounded`,
+								children: acc.status
+							}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(Badge, {
+								variant: "outline",
+								className: "border-gray-200 text-gray-600 font-bold rounded",
+								children: ["Prio ", acc.priority]
+							})]
+						}) }),
+						/* @__PURE__ */ (0, import_jsx_runtime.jsx)(TableCell, { children: alertNoContact ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+							className: "text-red-600 text-xs font-bold border border-red-200 bg-red-50 px-2 py-1 rounded",
+							children: "Sem contatos"
+						}) : /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", {
+							className: "text-sm font-semibold text-gray-700",
+							children: [accContacts.length, " pessoa(s)"]
+						}) }),
+						/* @__PURE__ */ (0, import_jsx_runtime.jsx)(TableCell, { children: alertNoAction ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+							className: "text-gray-500 text-xs font-bold italic",
+							children: "Ação Pendente"
+						}) : /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+							className: "flex flex-col items-start gap-1",
+							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+								className: "text-xs font-bold text-black",
+								children: acc.nextAction
+							}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Badge, {
+								className: `${getActionColor(acc.nextActionDate)} border-0 shadow-none rounded font-bold text-[10px] px-1.5 py-0`,
+								children: new Date(acc.nextActionDate).toLocaleDateString()
+							})]
+						}) })
+					]
+				}, acc.id);
+			}) })] })]
+		})]
+	});
+}
+function Contacts() {
+	const { contacts, accounts, addContact } = useMainStore();
+	const { toast: toast$2 } = useToast();
+	const [isOpen, setIsOpen] = (0, import_react.useState)(false);
+	const handleCreate = (e) => {
+		e.preventDefault();
+		const fd = new FormData(e.target);
+		addContact({
+			accountId: fd.get("accountId"),
+			name: fd.get("name"),
+			role: fd.get("role"),
+			processRole: fd.get("processRole"),
+			email: fd.get("email"),
+			whatsapp: fd.get("whatsapp"),
+			linkedin: fd.get("linkedin"),
+			isDecisionMaker: fd.get("processRole") === "Decisor",
+			isInfluencer: fd.get("processRole") === "Influenciador",
+			isChampion: fd.get("processRole") === "Campeão"
+		});
+		setIsOpen(false);
+		toast$2({ title: "Contato adicionado com sucesso!" });
+	};
+	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+		className: "space-y-6 max-w-7xl mx-auto pb-10",
+		children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+			className: "flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4",
+			children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("h1", {
+				className: "text-3xl font-black text-black",
+				children: "Contatos"
+			}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+				className: "text-gray-500 mt-1 font-medium",
+				children: "Pessoas e decisores vinculados às contas"
 			})] }), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(Dialog, {
 				open: isOpen,
 				onOpenChange: setIsOpen,
 				children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(DialogTrigger, {
 					asChild: true,
 					children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(Button, {
-						className: "bg-black text-white hover:bg-gray-800 rounded-full px-6 shadow-lg",
-						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Plus, { className: "w-4 h-4 mr-2" }), " Criar Conta Rápida"]
+						className: "bg-black text-white rounded font-bold hover:bg-gray-800",
+						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Plus, { className: "w-4 h-4 mr-2" }), " Novo Contato"]
 					})
 				}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(DialogContent, {
-					className: "sm:max-w-[425px]",
-					children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(DialogHeader, { children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(DialogTitle, { children: "Nova Conta" }) }), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("form", {
+					className: "sm:max-w-[600px]",
+					children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(DialogHeader, { children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(DialogTitle, { children: "Adicionar Contato" }) }), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("form", {
 						onSubmit: handleCreate,
-						className: "space-y-4 mt-4",
+						className: "space-y-4 mt-2",
+						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+							className: "grid grid-cols-2 gap-4",
+							children: [
+								/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+									className: "space-y-1 col-span-2 sm:col-span-1",
+									children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", {
+										className: "text-xs font-bold text-gray-700",
+										children: "Conta *"
+									}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("select", {
+										name: "accountId",
+										required: true,
+										className: "flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:ring-2 focus:ring-black",
+										children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("option", {
+											value: "",
+											children: "Selecione..."
+										}), accounts.map((a$1) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)("option", {
+											value: a$1.id,
+											children: a$1.name
+										}, a$1.id))]
+									})]
+								}),
+								/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+									className: "space-y-1 col-span-2 sm:col-span-1",
+									children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", {
+										className: "text-xs font-bold text-gray-700",
+										children: "Papel no Processo *"
+									}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("select", {
+										name: "processRole",
+										required: true,
+										className: "flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:ring-2 focus:ring-black",
+										children: [
+											/* @__PURE__ */ (0, import_jsx_runtime.jsx)("option", {
+												value: "Decisor",
+												children: "Decisor"
+											}),
+											/* @__PURE__ */ (0, import_jsx_runtime.jsx)("option", {
+												value: "Influenciador",
+												children: "Influenciador"
+											}),
+											/* @__PURE__ */ (0, import_jsx_runtime.jsx)("option", {
+												value: "Campeão",
+												children: "Campeão"
+											}),
+											/* @__PURE__ */ (0, import_jsx_runtime.jsx)("option", {
+												value: "Gatekeeper",
+												children: "Gatekeeper"
+											}),
+											/* @__PURE__ */ (0, import_jsx_runtime.jsx)("option", {
+												value: "Financeiro",
+												children: "Financeiro"
+											}),
+											/* @__PURE__ */ (0, import_jsx_runtime.jsx)("option", {
+												value: "Operações",
+												children: "Operações"
+											})
+										]
+									})]
+								}),
+								/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+									className: "space-y-1 col-span-2 sm:col-span-1",
+									children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", {
+										className: "text-xs font-bold text-gray-700",
+										children: "Nome *"
+									}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Input, {
+										name: "name",
+										required: true,
+										placeholder: "Nome completo"
+									})]
+								}),
+								/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+									className: "space-y-1 col-span-2 sm:col-span-1",
+									children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", {
+										className: "text-xs font-bold text-gray-700",
+										children: "Cargo"
+									}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Input, {
+										name: "role",
+										placeholder: "Ex: CEO"
+									})]
+								}),
+								/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+									className: "space-y-1 col-span-2 sm:col-span-1",
+									children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", {
+										className: "text-xs font-bold text-gray-700",
+										children: "E-mail"
+									}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Input, {
+										name: "email",
+										type: "email",
+										placeholder: "contato@empresa.com"
+									})]
+								}),
+								/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+									className: "space-y-1 col-span-2 sm:col-span-1",
+									children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", {
+										className: "text-xs font-bold text-gray-700",
+										children: "WhatsApp"
+									}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Input, {
+										name: "whatsapp",
+										placeholder: "(00) 00000-0000"
+									})]
+								}),
+								/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+									className: "space-y-1 col-span-2",
+									children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", {
+										className: "text-xs font-bold text-gray-700",
+										children: "LinkedIn URL"
+									}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Input, {
+										name: "linkedin",
+										placeholder: "https://linkedin.com/in/..."
+									})]
+								})
+							]
+						}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Button, {
+							type: "submit",
+							className: "w-full bg-black text-white font-bold mt-2",
+							children: "Salvar Contato"
+						})]
+					})]
+				})]
+			})]
+		}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+			className: "bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm",
+			children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(Table, { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(TableHeader, { children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(TableRow, {
+				className: "bg-gray-50",
+				children: [
+					/* @__PURE__ */ (0, import_jsx_runtime.jsx)(TableHead, {
+						className: "font-bold text-black",
+						children: "Nome / Cargo"
+					}),
+					/* @__PURE__ */ (0, import_jsx_runtime.jsx)(TableHead, {
+						className: "font-bold text-black",
+						children: "Conta"
+					}),
+					/* @__PURE__ */ (0, import_jsx_runtime.jsx)(TableHead, {
+						className: "font-bold text-black",
+						children: "Papel"
+					}),
+					/* @__PURE__ */ (0, import_jsx_runtime.jsx)(TableHead, {
+						className: "font-bold text-black",
+						children: "Contato"
+					})
+				]
+			}) }), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(TableBody, { children: [contacts.map((c$1) => {
+				const acc = accounts.find((a$1) => a$1.id === c$1.accountId);
+				return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(TableRow, {
+					className: "hover:bg-gray-50/50",
+					children: [
+						/* @__PURE__ */ (0, import_jsx_runtime.jsxs)(TableCell, { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+							className: "font-bold text-black",
+							children: c$1.name
+						}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+							className: "text-xs text-gray-500 font-medium mt-0.5",
+							children: c$1.role || "-"
+						})] }),
+						/* @__PURE__ */ (0, import_jsx_runtime.jsx)(TableCell, {
+							className: "text-sm font-semibold text-gray-700",
+							children: acc?.name
+						}),
+						/* @__PURE__ */ (0, import_jsx_runtime.jsx)(TableCell, { children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+							className: `px-2 py-1 rounded text-xs font-bold ${c$1.isDecisionMaker ? "bg-green-100 text-green-800" : "bg-gray-100 text-gray-800"}`,
+							children: c$1.processRole
+						}) }),
+						/* @__PURE__ */ (0, import_jsx_runtime.jsx)(TableCell, { children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+							className: "text-xs text-gray-600 space-y-1",
+							children: [c$1.email && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { children: c$1.email }), c$1.whatsapp && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { children: c$1.whatsapp })]
+						}) })
+					]
+				}, c$1.id);
+			}), contacts.length === 0 && /* @__PURE__ */ (0, import_jsx_runtime.jsx)(TableRow, { children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(TableCell, {
+				colSpan: 4,
+				className: "text-center py-8 text-gray-500",
+				children: "Nenhum contato cadastrado."
+			}) })] })] })
+		})]
+	});
+}
+function Activities() {
+	const { activities, accounts, addActivity, completeActivity } = useMainStore();
+	const { toast: toast$2 } = useToast();
+	const [isOpen, setIsOpen] = (0, import_react.useState)(false);
+	const handleCreate = (e) => {
+		e.preventDefault();
+		const fd = new FormData(e.target);
+		addActivity({
+			accountId: fd.get("accountId"),
+			type: fd.get("type"),
+			channel: fd.get("channel"),
+			result: fd.get("result"),
+			date: (/* @__PURE__ */ new Date()).toISOString(),
+			completed: true,
+			nextAction: fd.get("nextAction"),
+			nextActionDate: fd.get("nextActionDate")
+		});
+		setIsOpen(false);
+		toast$2({
+			title: "Atividade registrada!",
+			description: "Ação seguinte agendada na conta."
+		});
+	};
+	const sortedActivities = [...activities].sort((a$1, b$1) => new Date(b$1.date).getTime() - new Date(a$1.date).getTime());
+	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+		className: "space-y-6 max-w-7xl mx-auto pb-10",
+		children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+			className: "flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4",
+			children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("h1", {
+				className: "text-3xl font-black text-black",
+				children: "Log de Atividades"
+			}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+				className: "text-gray-500 mt-1 font-medium",
+				children: "Registros de touchpoints e follow-ups"
+			})] }), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(Dialog, {
+				open: isOpen,
+				onOpenChange: setIsOpen,
+				children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(DialogTrigger, {
+					asChild: true,
+					children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(Button, {
+						className: "bg-black text-white rounded font-bold hover:bg-gray-800",
+						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Plus, { className: "w-4 h-4 mr-2" }), " Registrar Atividade"]
+					})
+				}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(DialogContent, {
+					className: "sm:max-w-[500px]",
+					children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(DialogHeader, { children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(DialogTitle, { children: "Nova Atividade" }) }), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("form", {
+						onSubmit: handleCreate,
+						className: "space-y-4",
 						children: [
 							/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-								className: "space-y-2",
-								children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("label", {
-									className: "text-sm font-medium",
-									children: ["Nome da Empresa ", /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
-										className: "text-red-500",
-										children: "*"
-									})]
-								}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Input, {
-									value: name,
-									onChange: (e) => setName(e.target.value),
+								className: "space-y-1",
+								children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", {
+									className: "text-xs font-bold text-gray-700",
+									children: "Conta Relacionada *"
+								}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("select", {
+									name: "accountId",
 									required: true,
-									placeholder: "Ex: Logística Alfa"
+									className: "flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:ring-2 focus:ring-black",
+									children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("option", {
+										value: "",
+										children: "Selecione..."
+									}), accounts.map((a$1) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)("option", {
+										value: a$1.id,
+										children: a$1.name
+									}, a$1.id))]
 								})]
 							}),
 							/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-								className: "space-y-2",
-								children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", {
-									className: "text-sm font-medium",
-									children: "Website"
-								}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Input, {
-									value: website,
-									onChange: (e) => setWebsite(e.target.value),
-									placeholder: "exemplo.com.br"
-								})]
+								className: "grid grid-cols-2 gap-4",
+								children: [
+									/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+										className: "space-y-1",
+										children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", {
+											className: "text-xs font-bold text-gray-700",
+											children: "Canal *"
+										}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("select", {
+											name: "channel",
+											required: true,
+											className: "flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:ring-2 focus:ring-black",
+											children: [
+												/* @__PURE__ */ (0, import_jsx_runtime.jsx)("option", {
+													value: "LinkedIn",
+													children: "LinkedIn"
+												}),
+												/* @__PURE__ */ (0, import_jsx_runtime.jsx)("option", {
+													value: "Telefone",
+													children: "Telefone"
+												}),
+												/* @__PURE__ */ (0, import_jsx_runtime.jsx)("option", {
+													value: "E-mail",
+													children: "E-mail"
+												}),
+												/* @__PURE__ */ (0, import_jsx_runtime.jsx)("option", {
+													value: "WhatsApp",
+													children: "WhatsApp"
+												}),
+												/* @__PURE__ */ (0, import_jsx_runtime.jsx)("option", {
+													value: "Presencial",
+													children: "Presencial"
+												})
+											]
+										})]
+									}),
+									/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+										className: "space-y-1",
+										children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", {
+											className: "text-xs font-bold text-gray-700",
+											children: "Tipo *"
+										}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("select", {
+											name: "type",
+											required: true,
+											className: "flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:ring-2 focus:ring-black",
+											children: [
+												/* @__PURE__ */ (0, import_jsx_runtime.jsx)("option", {
+													value: "Ligação",
+													children: "Ligação"
+												}),
+												/* @__PURE__ */ (0, import_jsx_runtime.jsx)("option", {
+													value: "E-mail",
+													children: "E-mail"
+												}),
+												/* @__PURE__ */ (0, import_jsx_runtime.jsx)("option", {
+													value: "Mensagem",
+													children: "Mensagem"
+												}),
+												/* @__PURE__ */ (0, import_jsx_runtime.jsx)("option", {
+													value: "Convite",
+													children: "Convite"
+												}),
+												/* @__PURE__ */ (0, import_jsx_runtime.jsx)("option", {
+													value: "Reunião realizada",
+													children: "Reunião realizada"
+												}),
+												/* @__PURE__ */ (0, import_jsx_runtime.jsx)("option", {
+													value: "Follow-up",
+													children: "Follow-up"
+												})
+											]
+										})]
+									}),
+									/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+										className: "space-y-1 col-span-2",
+										children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", {
+											className: "text-xs font-bold text-gray-700",
+											children: "Resultado Alcançado"
+										}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("select", {
+											name: "result",
+											className: "flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:ring-2 focus:ring-black",
+											children: [
+												/* @__PURE__ */ (0, import_jsx_runtime.jsx)("option", {
+													value: "",
+													children: "Selecione..."
+												}),
+												/* @__PURE__ */ (0, import_jsx_runtime.jsx)("option", {
+													value: "Sem resposta",
+													children: "Sem resposta"
+												}),
+												/* @__PURE__ */ (0, import_jsx_runtime.jsx)("option", {
+													value: "Respondeu",
+													children: "Respondeu"
+												}),
+												/* @__PURE__ */ (0, import_jsx_runtime.jsx)("option", {
+													value: "Agendou reunião",
+													children: "Agendou reunião"
+												}),
+												/* @__PURE__ */ (0, import_jsx_runtime.jsx)("option", {
+													value: "Não interessado",
+													children: "Não interessado"
+												}),
+												/* @__PURE__ */ (0, import_jsx_runtime.jsx)("option", {
+													value: "Pediu retorno",
+													children: "Pediu retorno"
+												})
+											]
+										})]
+									})
+								]
 							}),
-							/* @__PURE__ */ (0, import_jsx_runtime.jsxs)(DialogFooter, {
-								className: "mt-6",
-								children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Button, {
-									type: "button",
-									variant: "outline",
-									onClick: () => setIsOpen(false),
-									children: "Cancelar"
-								}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Button, {
-									type: "submit",
-									className: "bg-black text-white hover:bg-gray-800",
-									children: "Salvar Conta"
-								})]
+							/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+								className: "bg-gray-100 p-4 rounded-xl border border-gray-200 mt-6 space-y-4",
+								children: [
+									/* @__PURE__ */ (0, import_jsx_runtime.jsx)("h4", {
+										className: "font-black text-sm text-black",
+										children: "Passo Seguinte (Obrigatório)"
+									}),
+									/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+										className: "text-xs text-gray-500 leading-tight",
+										children: "O sistema exige uma próxima ação para não perder o lead de vista."
+									}),
+									/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+										className: "space-y-1",
+										children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", {
+											className: "text-xs font-bold text-gray-700",
+											children: "Ação Seguinte *"
+										}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Input, {
+											name: "nextAction",
+											required: true,
+											placeholder: "Ex: Ligar novamente para validar proposta",
+											className: "bg-white"
+										})]
+									}),
+									/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+										className: "space-y-1",
+										children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", {
+											className: "text-xs font-bold text-gray-700",
+											children: "Data Limite *"
+										}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Input, {
+											name: "nextActionDate",
+											type: "date",
+											required: true,
+											className: "bg-white"
+										})]
+									})
+								]
+							}),
+							/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Button, {
+								type: "submit",
+								className: "w-full bg-black text-white font-bold mt-4",
+								children: "Salvar Atividade"
 							})
 						]
 					})]
 				})]
 			})]
-		}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-			className: "bg-white rounded-2xl p-6 border border-gray-200 shadow-sm overflow-hidden",
-			children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-				className: "mb-6 relative w-full md:w-96",
-				children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Search, { className: "w-4 h-4 absolute left-3 top-3 text-gray-400" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Input, {
-					className: "pl-9 bg-gray-50 border-gray-200 rounded-xl focus-visible:ring-1",
-					placeholder: "Buscar contas...",
-					value: search,
-					onChange: (e) => setSearch(e.target.value)
-				})]
-			}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
-				className: "rounded-xl border overflow-hidden",
-				children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(Table, { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(TableHeader, {
-					className: "bg-gray-50",
-					children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(TableRow, { children: [
-						/* @__PURE__ */ (0, import_jsx_runtime.jsx)(TableHead, {
-							className: "font-semibold text-gray-700",
-							children: "Empresa"
-						}),
-						/* @__PURE__ */ (0, import_jsx_runtime.jsx)(TableHead, {
-							className: "font-semibold text-gray-700",
-							children: "Website"
-						}),
-						/* @__PURE__ */ (0, import_jsx_runtime.jsx)(TableHead, {
-							className: "font-semibold text-gray-700",
-							children: "Status"
-						}),
-						/* @__PURE__ */ (0, import_jsx_runtime.jsx)(TableHead, {
-							className: "font-semibold text-gray-700",
-							children: "Prioridade"
-						}),
-						/* @__PURE__ */ (0, import_jsx_runtime.jsx)(TableHead, {
-							className: "font-semibold text-gray-700 text-right",
-							children: "Próxima Ação"
-						})
-					] })
-				}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)(TableBody, { children: filtered.length === 0 ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)(TableRow, { children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(TableCell, {
-					colSpan: 5,
-					className: "text-center py-8 text-muted-foreground",
-					children: "Nenhuma conta encontrada."
-				}) }) : filtered.map((acc) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(TableRow, {
-					className: "hover:bg-gray-50/50 transition-colors",
+		}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+			className: "bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm",
+			children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(Table, { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(TableHeader, { children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(TableRow, {
+				className: "bg-gray-50",
+				children: [
+					/* @__PURE__ */ (0, import_jsx_runtime.jsx)(TableHead, {
+						className: "font-bold text-black",
+						children: "Data"
+					}),
+					/* @__PURE__ */ (0, import_jsx_runtime.jsx)(TableHead, {
+						className: "font-bold text-black",
+						children: "Detalhes"
+					}),
+					/* @__PURE__ */ (0, import_jsx_runtime.jsx)(TableHead, {
+						className: "font-bold text-black",
+						children: "Resultado"
+					}),
+					/* @__PURE__ */ (0, import_jsx_runtime.jsx)(TableHead, {
+						className: "font-bold text-black text-right",
+						children: "Status"
+					})
+				]
+			}) }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)(TableBody, { children: sortedActivities.map((act) => {
+				const acc = accounts.find((a$1) => a$1.id === act.accountId);
+				return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(TableRow, {
+					className: "hover:bg-gray-50/50",
 					children: [
-						/* @__PURE__ */ (0, import_jsx_runtime.jsxs)(TableCell, {
-							className: "font-medium flex items-center gap-2",
-							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
-								className: "w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center",
-								children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Building2, { className: "w-4 h-4 text-gray-500" })
-							}), acc.name]
+						/* @__PURE__ */ (0, import_jsx_runtime.jsx)(TableCell, {
+							className: "text-sm font-semibold text-gray-700 whitespace-nowrap",
+							children: new Date(act.date).toLocaleDateString()
 						}),
-						/* @__PURE__ */ (0, import_jsx_runtime.jsx)(TableCell, { children: acc.website && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", {
-							className: "text-blue-600 hover:underline flex items-center gap-1 text-sm",
+						/* @__PURE__ */ (0, import_jsx_runtime.jsxs)(TableCell, { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+							className: "font-bold text-black",
+							children: acc?.name
+						}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+							className: "text-xs text-gray-500 font-medium mt-0.5",
 							children: [
-								/* @__PURE__ */ (0, import_jsx_runtime.jsx)(ExternalLink, { className: "w-3 h-3" }),
-								" ",
-								acc.website
+								act.type,
+								" via ",
+								act.channel
 							]
-						}) }),
-						/* @__PURE__ */ (0, import_jsx_runtime.jsx)(TableCell, { children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Badge, {
-							variant: "outline",
-							className: "bg-white",
-							children: acc.status
-						}) }),
-						/* @__PURE__ */ (0, import_jsx_runtime.jsx)(TableCell, { children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Badge, {
-							className: acc.priority === "A" ? "bg-red-100 text-red-800 hover:bg-red-200 border-0" : "bg-gray-100 text-gray-800 border-0 hover:bg-gray-200",
-							children: acc.priority
-						}) }),
+						})] }),
+						/* @__PURE__ */ (0, import_jsx_runtime.jsx)(TableCell, {
+							className: "text-sm font-semibold text-gray-700",
+							children: act.result || "-"
+						}),
 						/* @__PURE__ */ (0, import_jsx_runtime.jsx)(TableCell, {
 							className: "text-right",
-							children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Badge, {
+							children: act.completed ? /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", {
+								className: "text-green-600 text-xs font-bold inline-flex items-center justify-end",
+								children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(CircleCheck, { className: "w-4 h-4 mr-1" }), " Feito"]
+							}) : /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Button, {
+								size: "sm",
 								variant: "outline",
-								className: getActionColor(acc.nextActionDate),
-								children: acc.nextActionDate ? new Date(acc.nextActionDate).toLocaleDateString() : "Sem ação"
+								onClick: () => completeActivity(act.id),
+								className: "h-7 text-xs font-bold rounded text-black border-gray-300",
+								children: "Concluir"
 							})
 						})
 					]
-				}, acc.id)) })] })
-			})]
-		})]
-	});
-}
-function Contacts() {
-	const { contacts, accounts } = useMainStore();
-	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-		className: "space-y-6",
-		children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-			className: "flex justify-between items-center",
-			children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("h1", {
-				className: "text-3xl font-bold text-gray-900",
-				children: "Contatos"
-			}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
-				className: "text-muted-foreground",
-				children: "Pessoas e decisores vinculados às contas"
-			})] }), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(Button, {
-				className: "bg-black text-white rounded-full px-6 shadow-lg",
-				children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Plus, { className: "w-4 h-4 mr-2" }), " Novo Contato"]
-			})]
-		}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
-			className: "bg-white rounded-2xl p-6 border border-gray-200 shadow-sm",
-			children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
-				className: "rounded-xl border overflow-hidden",
-				children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(Table, { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(TableHeader, {
-					className: "bg-gray-50",
-					children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(TableRow, { children: [
-						/* @__PURE__ */ (0, import_jsx_runtime.jsx)(TableHead, {
-							className: "font-semibold text-gray-700",
-							children: "Nome"
-						}),
-						/* @__PURE__ */ (0, import_jsx_runtime.jsx)(TableHead, {
-							className: "font-semibold text-gray-700",
-							children: "Conta Relacionada"
-						}),
-						/* @__PURE__ */ (0, import_jsx_runtime.jsx)(TableHead, {
-							className: "font-semibold text-gray-700",
-							children: "Cargo"
-						}),
-						/* @__PURE__ */ (0, import_jsx_runtime.jsx)(TableHead, {
-							className: "font-semibold text-gray-700",
-							children: "Papel no Processo"
-						}),
-						/* @__PURE__ */ (0, import_jsx_runtime.jsx)(TableHead, {
-							className: "font-semibold text-gray-700 text-center",
-							children: "Decisor?"
-						})
-					] })
-				}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)(TableBody, { children: contacts.length === 0 ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)(TableRow, { children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(TableCell, {
-					colSpan: 5,
-					className: "text-center py-8 text-muted-foreground",
-					children: "Nenhum contato cadastrado."
-				}) }) : contacts.map((c$1) => {
-					const acc = accounts.find((a$1) => a$1.id === c$1.accountId);
-					return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(TableRow, {
-						className: "hover:bg-gray-50/50 transition-colors",
-						children: [
-							/* @__PURE__ */ (0, import_jsx_runtime.jsxs)(TableCell, {
-								className: "font-medium flex items-center gap-3",
-								children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
-									className: "w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center",
-									children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(User, { className: "w-4 h-4 text-gray-500" })
-								}), c$1.name]
-							}),
-							/* @__PURE__ */ (0, import_jsx_runtime.jsxs)(TableCell, {
-								className: "text-gray-600 flex items-center gap-2 mt-1.5",
-								children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Building2, { className: "w-3.5 h-3.5" }), acc?.name]
-							}),
-							/* @__PURE__ */ (0, import_jsx_runtime.jsx)(TableCell, {
-								className: "text-gray-800",
-								children: c$1.role
-							}),
-							/* @__PURE__ */ (0, import_jsx_runtime.jsx)(TableCell, { children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Badge, {
-								variant: "secondary",
-								className: "bg-blue-50 text-blue-700 hover:bg-blue-100 border-0",
-								children: c$1.processRole
-							}) }),
-							/* @__PURE__ */ (0, import_jsx_runtime.jsx)(TableCell, {
-								className: "text-center",
-								children: c$1.isDecisionMaker ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Badge, {
-									className: "bg-green-100 text-green-800 hover:bg-green-200 border-0",
-									children: "Sim"
-								}) : /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
-									className: "text-gray-400 text-sm",
-									children: "Não"
-								})
-							})
-						]
-					}, c$1.id);
-				}) })] })
-			})
-		})]
-	});
-}
-var iconMap = {
-	Ligação: Phone,
-	"E-mail enviado": Mail,
-	"Convite LinkedIn": Linkedin,
-	"Mensagem LinkedIn": Linkedin,
-	"WhatsApp enviado": MessageSquare,
-	"Reunião agendada": Calendar,
-	"Reunião realizada": Calendar
-};
-function Activities() {
-	const { activities, accounts, completeActivity } = useMainStore();
-	const sortedActivities = [...activities].sort((a$1, b$1) => new Date(b$1.date).getTime() - new Date(a$1.date).getTime());
-	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-		className: "space-y-6",
-		children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-			className: "flex justify-between items-center",
-			children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("h1", {
-				className: "text-3xl font-bold text-gray-900",
-				children: "Registro de Atividades"
-			}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
-				className: "text-muted-foreground",
-				children: "Acompanhe todos os touchpoints com seus leads"
-			})] }), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(Button, {
-				className: "bg-black text-white rounded-full px-6 shadow-lg",
-				children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Plus, { className: "w-4 h-4 mr-2" }), " Nova Atividade"]
-			})]
-		}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
-			className: "bg-white rounded-2xl p-6 border border-gray-200 shadow-sm",
-			children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
-				className: "rounded-xl border overflow-hidden",
-				children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(Table, { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(TableHeader, {
-					className: "bg-gray-50",
-					children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(TableRow, { children: [
-						/* @__PURE__ */ (0, import_jsx_runtime.jsx)(TableHead, {
-							className: "font-semibold text-gray-700",
-							children: "Data"
-						}),
-						/* @__PURE__ */ (0, import_jsx_runtime.jsx)(TableHead, {
-							className: "font-semibold text-gray-700",
-							children: "Tipo"
-						}),
-						/* @__PURE__ */ (0, import_jsx_runtime.jsx)(TableHead, {
-							className: "font-semibold text-gray-700",
-							children: "Conta"
-						}),
-						/* @__PURE__ */ (0, import_jsx_runtime.jsx)(TableHead, {
-							className: "font-semibold text-gray-700",
-							children: "Resultado"
-						}),
-						/* @__PURE__ */ (0, import_jsx_runtime.jsx)(TableHead, {
-							className: "font-semibold text-gray-700",
-							children: "Status"
-						}),
-						/* @__PURE__ */ (0, import_jsx_runtime.jsx)(TableHead, {
-							className: "text-right font-semibold text-gray-700",
-							children: "Ação"
-						})
-					] })
-				}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)(TableBody, { children: sortedActivities.length === 0 ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)(TableRow, { children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(TableCell, {
-					colSpan: 6,
-					className: "text-center py-8 text-muted-foreground",
-					children: "Nenhuma atividade registrada."
-				}) }) : sortedActivities.map((act) => {
-					const acc = accounts.find((a$1) => a$1.id === act.accountId);
-					const Icon$1 = iconMap[act.type] || Activity;
-					return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(TableRow, {
-						className: "hover:bg-gray-50/50 transition-colors",
-						children: [
-							/* @__PURE__ */ (0, import_jsx_runtime.jsx)(TableCell, {
-								className: "text-gray-600 font-medium",
-								children: new Date(act.date).toLocaleDateString()
-							}),
-							/* @__PURE__ */ (0, import_jsx_runtime.jsx)(TableCell, { children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-								className: "flex items-center gap-2",
-								children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
-									className: "p-1.5 bg-gray-100 rounded-md",
-									children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Icon$1, { className: "w-3.5 h-3.5 text-gray-600" })
-								}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
-									className: "text-sm font-medium",
-									children: act.type
-								})]
-							}) }),
-							/* @__PURE__ */ (0, import_jsx_runtime.jsx)(TableCell, {
-								className: "font-semibold text-gray-900",
-								children: acc?.name
-							}),
-							/* @__PURE__ */ (0, import_jsx_runtime.jsx)(TableCell, {
-								className: "text-gray-600",
-								children: act.result || "-"
-							}),
-							/* @__PURE__ */ (0, import_jsx_runtime.jsx)(TableCell, { children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Badge, {
-								variant: "outline",
-								className: getActionColor(act.date, act.completed),
-								children: act.completed ? "Concluída" : "Pendente"
-							}) }),
-							/* @__PURE__ */ (0, import_jsx_runtime.jsx)(TableCell, {
-								className: "text-right",
-								children: !act.completed ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Button, {
-									size: "sm",
-									variant: "ghost",
-									onClick: () => completeActivity(act.id),
-									className: "text-green-600 hover:text-green-700 hover:bg-green-50 rounded-full",
-									children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(CircleCheck, { className: "w-5 h-5" })
-								}) : /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
-									className: "text-xs text-gray-400 italic pr-4",
-									children: "Feito"
-								})
-							})
-						]
-					}, act.id);
-				}) })] })
-			})
+				}, act.id);
+			}) })] })
 		})]
 	});
 }
 var STAGES = [
 	"Diagnóstico",
 	"Reunião agendada",
+	"Reunião realizada",
+	"Piloto",
 	"Proposta",
 	"Negociação",
-	"Fechado ganho"
+	"Fechado ganho",
+	"Fechado perdido"
 ];
 function Pipeline() {
-	const { opportunities, accounts } = useMainStore();
+	const { opportunities, accounts, updateOpportunityStage } = useMainStore();
+	const { toast: toast$2 } = useToast();
+	const [view, setView] = (0, import_react.useState)("kanban");
+	const [selectedOpp, setSelectedOpp] = (0, import_react.useState)(null);
+	const handleUpdateStage = (e) => {
+		e.preventDefault();
+		const fd = new FormData(e.target);
+		const stage = fd.get("stage");
+		const lossReason = fd.get("lossReason");
+		if (stage === "Fechado perdido" && !lossReason) {
+			toast$2({
+				title: "Atenção",
+				description: "Motivo de perda é obrigatório.",
+				variant: "destructive"
+			});
+			return;
+		}
+		updateOpportunityStage(selectedOpp.id, stage, lossReason);
+		setSelectedOpp(null);
+		toast$2({ title: "Fase atualizada" });
+	};
 	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-		className: "space-y-6 h-full flex flex-col min-h-[80vh]",
-		children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-			className: "mb-2",
-			children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("h1", {
-				className: "text-3xl font-bold text-gray-900",
-				children: "Pipeline de Vendas"
-			}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
-				className: "text-muted-foreground",
-				children: "Visualize e mova oportunidades ativas"
-			})]
-		}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
-			className: "flex-1 flex gap-4 overflow-x-auto pb-4 pt-2",
-			children: STAGES.map((stage) => {
-				const opps = opportunities.filter((o) => o.stage === stage);
-				const totalValue = opps.reduce((sum, o) => sum + o.total, 0);
-				return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-					className: "min-w-[320px] w-[320px] flex flex-col bg-gray-100/50 rounded-2xl p-4 border border-gray-200",
-					children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-						className: "flex justify-between items-center mb-4 px-1",
-						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h3", {
-							className: "font-bold text-sm text-gray-700 uppercase tracking-wider",
-							children: [
-								stage,
-								" ",
-								/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Badge, {
-									variant: "secondary",
-									className: "ml-2 bg-white",
-									children: opps.length
-								})
-							]
-						}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
-							className: "text-xs font-semibold text-gray-500 bg-white px-2 py-1 rounded-md shadow-sm border",
-							children: formatCurrency(totalValue)
-						})]
-					}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
-						className: "flex-1 space-y-3 overflow-y-auto",
-						children: opps.length === 0 ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
-							className: "h-24 border-2 border-dashed border-gray-200 rounded-xl flex items-center justify-center text-xs text-gray-400 font-medium",
-							children: "Nenhuma op."
-						}) : opps.map((opp) => {
-							const acc = accounts.find((a$1) => a$1.id === opp.accountId);
-							return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-								className: "bg-white p-4 rounded-xl shadow-sm border border-gray-200 hover:border-gray-300 hover:shadow-md transition-all cursor-grab group",
+		className: "space-y-6 h-full flex flex-col max-w-[1400px] mx-auto pb-10",
+		children: [
+			/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+				className: "flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4",
+				children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("h1", {
+					className: "text-3xl font-black text-black",
+					children: "Pipeline de Vendas"
+				}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+					className: "text-gray-500 mt-1 font-medium",
+					children: "Gestão de oportunidades ativas"
+				})] }), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+					className: "flex bg-gray-100 p-1 rounded-lg border border-gray-200",
+					children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)(Button, {
+						variant: "ghost",
+						size: "sm",
+						onClick: () => setView("kanban"),
+						className: `rounded font-bold h-8 px-4 ${view === "kanban" ? "bg-white shadow-sm text-black" : "text-gray-500"}`,
+						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Trello, { className: "w-4 h-4 mr-2" }), " Kanban"]
+					}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(Button, {
+						variant: "ghost",
+						size: "sm",
+						onClick: () => setView("table"),
+						className: `rounded font-bold h-8 px-4 ${view === "table" ? "bg-white shadow-sm text-black" : "text-gray-500"}`,
+						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(List, { className: "w-4 h-4 mr-2" }), " Lista"]
+					})]
+				})]
+			}),
+			view === "kanban" ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+				className: "flex-1 flex gap-4 overflow-x-auto pb-4 pt-2",
+				children: STAGES.map((stage) => {
+					const opps = opportunities.filter((o) => o.stage === stage);
+					const stageTotal = opps.reduce((sum, o) => sum + o.total, 0);
+					return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+						className: "min-w-[320px] w-[320px] flex flex-col bg-gray-50/80 rounded-xl p-3 border border-gray-200",
+						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+							className: "flex justify-between items-center mb-4",
+							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h3", {
+								className: "font-black text-sm text-black uppercase tracking-wider",
 								children: [
-									/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-										className: "flex items-center gap-1.5 text-xs text-muted-foreground mb-2",
-										children: [
-											/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Building2, { className: "w-3 h-3" }),
-											" ",
-											acc?.name
-										]
-									}),
-									/* @__PURE__ */ (0, import_jsx_runtime.jsx)("h4", {
-										className: "font-semibold text-sm leading-tight mb-4 text-gray-900",
-										children: opp.name
-									}),
-									/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-										className: "flex justify-between items-end",
-										children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
-											className: "font-bold text-gray-900 text-sm",
-											children: formatCurrency(opp.total)
-										}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", {
-											className: "bg-blue-50 text-blue-700 border border-blue-100 px-2 py-0.5 rounded-md text-xs font-semibold",
-											children: [opp.probability, "% win"]
-										})]
+									stage,
+									" ",
+									/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Badge, {
+										variant: "secondary",
+										className: "ml-1 bg-white border border-gray-200",
+										children: opps.length
 									})
 								]
-							}, opp.id);
+							}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+								className: "text-xs font-bold text-gray-500",
+								children: formatCurrency(stageTotal)
+							})]
+						}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+							className: "space-y-3",
+							children: [opps.map((opp) => {
+								const acc = accounts.find((a$1) => a$1.id === opp.accountId);
+								return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+									onClick: () => setSelectedOpp(opp),
+									className: "bg-white p-4 rounded-xl shadow-sm border border-gray-200 cursor-pointer hover:border-gray-400 transition-colors group",
+									children: [
+										/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+											className: "text-xs font-bold text-gray-500 mb-2 flex items-center gap-1 group-hover:text-black transition-colors",
+											children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Building2, { className: "w-3 h-3" }), acc?.name]
+										}),
+										/* @__PURE__ */ (0, import_jsx_runtime.jsx)("h4", {
+											className: "font-black text-sm text-black mb-3",
+											children: opp.name
+										}),
+										/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+											className: "flex justify-between items-center",
+											children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+												className: "font-black text-black",
+												children: formatCurrency(opp.total)
+											}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", {
+												className: "text-[10px] font-bold bg-gray-100 px-2 py-1 rounded text-gray-600",
+												children: [opp.probability, "% WIN"]
+											})]
+										})
+									]
+								}, opp.id);
+							}), opps.length === 0 && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+								className: "h-20 border-2 border-dashed border-gray-200 rounded-xl flex items-center justify-center text-xs font-bold text-gray-400",
+								children: "Vazio"
+							})]
+						})]
+					}, stage);
+				})
+			}) : /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+				className: "bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm",
+				children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(Table, { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(TableHeader, { children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(TableRow, {
+					className: "bg-gray-50",
+					children: [
+						/* @__PURE__ */ (0, import_jsx_runtime.jsx)(TableHead, {
+							className: "font-bold text-black",
+							children: "Oportunidade"
+						}),
+						/* @__PURE__ */ (0, import_jsx_runtime.jsx)(TableHead, {
+							className: "font-bold text-black",
+							children: "Conta"
+						}),
+						/* @__PURE__ */ (0, import_jsx_runtime.jsx)(TableHead, {
+							className: "font-bold text-black",
+							children: "Fase"
+						}),
+						/* @__PURE__ */ (0, import_jsx_runtime.jsx)(TableHead, {
+							className: "font-bold text-black",
+							children: "Valor Total"
+						}),
+						/* @__PURE__ */ (0, import_jsx_runtime.jsx)(TableHead, {
+							className: "font-bold text-black text-right",
+							children: "Ação"
 						})
+					]
+				}) }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)(TableBody, { children: opportunities.map((opp) => {
+					const acc = accounts.find((a$1) => a$1.id === opp.accountId);
+					return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(TableRow, {
+						className: "hover:bg-gray-50/50",
+						children: [
+							/* @__PURE__ */ (0, import_jsx_runtime.jsx)(TableCell, {
+								className: "font-bold text-sm text-black",
+								children: opp.name
+							}),
+							/* @__PURE__ */ (0, import_jsx_runtime.jsx)(TableCell, {
+								className: "text-sm font-semibold text-gray-700",
+								children: acc?.name
+							}),
+							/* @__PURE__ */ (0, import_jsx_runtime.jsx)(TableCell, { children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Badge, {
+								variant: "outline",
+								className: "border-gray-300 font-bold rounded",
+								children: opp.stage
+							}) }),
+							/* @__PURE__ */ (0, import_jsx_runtime.jsx)(TableCell, {
+								className: "font-black text-black",
+								children: formatCurrency(opp.total)
+							}),
+							/* @__PURE__ */ (0, import_jsx_runtime.jsx)(TableCell, {
+								className: "text-right",
+								children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Button, {
+									size: "sm",
+									variant: "ghost",
+									onClick: () => setSelectedOpp(opp),
+									className: "h-8 text-xs font-bold rounded hover:bg-gray-100",
+									children: "Editar"
+								})
+							})
+						]
+					}, opp.id);
+				}) })] })
+			}),
+			selectedOpp && /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Dialog, {
+				open: !!selectedOpp,
+				onOpenChange: () => setSelectedOpp(null),
+				children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(DialogContent, {
+					className: "sm:max-w-[400px]",
+					children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(DialogHeader, { children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(DialogTitle, { children: "Atualizar Oportunidade" }) }), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("form", {
+						onSubmit: handleUpdateStage,
+						className: "space-y-4 mt-2",
+						children: [
+							/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+								className: "space-y-1",
+								children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", {
+									className: "text-xs font-bold text-gray-700",
+									children: "Fase Atual *"
+								}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("select", {
+									name: "stage",
+									defaultValue: selectedOpp.stage,
+									required: true,
+									className: "flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:ring-2 focus:ring-black",
+									children: STAGES.map((s$1) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)("option", {
+										value: s$1,
+										children: s$1
+									}, s$1))
+								})]
+							}),
+							/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+								className: "space-y-1",
+								children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", {
+									className: "text-xs font-bold text-gray-700",
+									children: "Motivo de Perda (Obrigatório se Perdido)"
+								}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Input, {
+									name: "lossReason",
+									defaultValue: selectedOpp.lossReason || "",
+									placeholder: "Ex: Preço alto, Sem budget..."
+								})]
+							}),
+							/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Button, {
+								type: "submit",
+								className: "w-full bg-black text-white font-bold mt-4",
+								children: "Salvar Alteração"
+							})
+						]
 					})]
-				}, stage);
+				})
 			})
-		})]
+		]
 	});
 }
 var require_isArray = /* @__PURE__ */ __commonJSMin(((exports, module) => {
@@ -26708,7 +27365,7 @@ var require_react_is_development$1 = /* @__PURE__ */ __commonJSMin(((exports) =>
 		var Fragment$2 = REACT_FRAGMENT_TYPE;
 		var Lazy = REACT_LAZY_TYPE$1;
 		var Memo = REACT_MEMO_TYPE;
-		var Portal$2 = REACT_PORTAL_TYPE;
+		var Portal$3 = REACT_PORTAL_TYPE;
 		var Profiler = REACT_PROFILER_TYPE;
 		var StrictMode = REACT_STRICT_MODE_TYPE;
 		var Suspense = REACT_SUSPENSE_TYPE;
@@ -26772,7 +27429,7 @@ var require_react_is_development$1 = /* @__PURE__ */ __commonJSMin(((exports) =>
 		exports.Fragment = Fragment$2;
 		exports.Lazy = Lazy;
 		exports.Memo = Memo;
-		exports.Portal = Portal$2;
+		exports.Portal = Portal$3;
 		exports.Profiler = Profiler;
 		exports.StrictMode = StrictMode;
 		exports.Suspense = Suspense;
@@ -38244,7 +38901,7 @@ var require_react_is_development = /* @__PURE__ */ __commonJSMin(((exports) => {
 		var Fragment$2 = REACT_FRAGMENT_TYPE;
 		var Lazy = REACT_LAZY_TYPE$1;
 		var Memo = REACT_MEMO_TYPE;
-		var Portal$2 = REACT_PORTAL_TYPE;
+		var Portal$3 = REACT_PORTAL_TYPE;
 		var Profiler = REACT_PROFILER_TYPE;
 		var StrictMode = REACT_STRICT_MODE_TYPE;
 		var Suspense = REACT_SUSPENSE_TYPE;
@@ -38301,7 +38958,7 @@ var require_react_is_development = /* @__PURE__ */ __commonJSMin(((exports) => {
 		exports.Fragment = Fragment$2;
 		exports.Lazy = Lazy;
 		exports.Memo = Memo;
-		exports.Portal = Portal$2;
+		exports.Portal = Portal$3;
 		exports.Profiler = Profiler;
 		exports.StrictMode = StrictMode;
 		exports.Suspense = Suspense;
@@ -46607,7 +47264,7 @@ function Reports() {
 		},
 		{
 			stage: "Contatados",
-			count: activities.length > 0 ? accounts.length - 1 : accounts.length
+			count: activities.length > 0 ? accounts.length - (accounts.length > 1 ? 1 : 0) : accounts.length
 		},
 		{
 			stage: "Oportunidades",
@@ -46623,17 +47280,18 @@ function Reports() {
 		color: "hsl(var(--primary))"
 	} };
 	const wonValue = opportunities.filter((o) => o.stage === "Fechado ganho").reduce((s$1, o) => s$1 + o.total, 0);
-	const pipelineValue = opportunities.reduce((s$1, o) => s$1 + o.total, 0);
+	const pipelineValue = opportunities.filter((o) => !o.stage.includes("Fechado")).reduce((s$1, o) => s$1 + o.total, 0);
+	const leadsThisMonth = accounts.length;
 	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-		className: "space-y-6",
+		className: "space-y-6 max-w-7xl mx-auto pb-10",
 		children: [
 			/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
 				className: "mb-6",
 				children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("h1", {
-					className: "text-3xl font-bold text-gray-900",
-					children: "Dashboard Estratégico"
+					className: "text-3xl font-black text-black",
+					children: "Dashboard & KPIs"
 				}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
-					className: "text-muted-foreground",
+					className: "text-gray-500 mt-1 font-medium",
 					children: "Métricas e performance da operação comercial"
 				})]
 			}),
@@ -46641,79 +47299,79 @@ function Reports() {
 				className: "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8",
 				children: [
 					/* @__PURE__ */ (0, import_jsx_runtime.jsxs)(Card, {
-						className: "shadow-sm border-gray-200",
+						className: "shadow-sm border-gray-200 rounded-xl bg-white",
 						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(CardHeader, {
 							className: "pb-2",
 							children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(CardTitle, {
-								className: "text-xs uppercase tracking-wider text-gray-500",
-								children: "Leads Totais"
+								className: "text-[10px] font-black uppercase tracking-widest text-gray-500",
+								children: "Leads no Mês"
 							})
 						}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)(CardContent, { children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
-							className: "text-3xl font-bold text-gray-900",
-							children: accounts.length
+							className: "text-3xl font-black text-black",
+							children: leadsThisMonth
 						}) })]
 					}),
 					/* @__PURE__ */ (0, import_jsx_runtime.jsxs)(Card, {
-						className: "shadow-sm border-gray-200",
+						className: "shadow-sm border-gray-200 rounded-xl bg-white",
 						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(CardHeader, {
 							className: "pb-2",
 							children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(CardTitle, {
-								className: "text-xs uppercase tracking-wider text-gray-500",
-								children: "Atividades Logadas"
+								className: "text-[10px] font-black uppercase tracking-widest text-gray-500",
+								children: "Volume de Atividades"
 							})
 						}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)(CardContent, { children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
-							className: "text-3xl font-bold text-blue-600",
+							className: "text-3xl font-black text-black",
 							children: activities.length
 						}) })]
 					}),
 					/* @__PURE__ */ (0, import_jsx_runtime.jsxs)(Card, {
-						className: "shadow-sm border-gray-200",
+						className: "shadow-sm border-gray-200 rounded-xl bg-white",
 						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(CardHeader, {
 							className: "pb-2",
 							children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(CardTitle, {
-								className: "text-xs uppercase tracking-wider text-gray-500",
-								children: "Valor em Pipeline"
+								className: "text-[10px] font-black uppercase tracking-widest text-gray-500",
+								children: "Pipeline Ativo"
 							})
 						}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)(CardContent, { children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
-							className: "text-2xl font-bold text-gray-900",
+							className: "text-2xl font-black text-black",
 							children: formatCurrency(pipelineValue)
 						}) })]
 					}),
 					/* @__PURE__ */ (0, import_jsx_runtime.jsxs)(Card, {
-						className: "shadow-sm border-gray-200 bg-green-50/50 border-green-100",
+						className: "shadow-sm border-gray-200 rounded-xl bg-black text-white",
 						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(CardHeader, {
 							className: "pb-2",
 							children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(CardTitle, {
-								className: "text-xs uppercase tracking-wider text-green-700",
+								className: "text-[10px] font-black uppercase tracking-widest text-gray-400",
 								children: "Total Ganho"
 							})
 						}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)(CardContent, { children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
-							className: "text-2xl font-bold text-green-700",
+							className: "text-2xl font-black text-white",
 							children: formatCurrency(wonValue)
 						}) })]
 					})
 				]
 			}),
 			/* @__PURE__ */ (0, import_jsx_runtime.jsxs)(Card, {
-				className: "shadow-sm border-gray-200 overflow-hidden",
+				className: "shadow-sm border-gray-200 overflow-hidden rounded-xl bg-white",
 				children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(CardHeader, {
-					className: "bg-gray-50 border-b pb-4",
+					className: "bg-gray-50/50 border-b border-gray-100 pb-4",
 					children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(CardTitle, {
-						className: "text-lg text-gray-800",
+						className: "text-sm font-black text-black",
 						children: "Funil de Conversão (Volume)"
 					})
 				}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)(CardContent, {
-					className: "pt-6",
+					className: "pt-8 pb-4",
 					children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(ChartContainer, {
 						config: chartConfig,
-						className: "h-[350px] w-full",
+						className: "h-[300px] w-full",
 						children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(ResponsiveContainer, {
 							width: "100%",
 							height: "100%",
 							children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(BarChart, {
 								data: funnelData,
 								margin: {
-									top: 20,
+									top: 0,
 									right: 20,
 									left: -20,
 									bottom: 0
@@ -46730,24 +47388,24 @@ function Reports() {
 										axisLine: false,
 										tickMargin: 10,
 										fontSize: 12,
-										className: "fill-gray-600 font-medium"
+										className: "fill-gray-600 font-bold"
 									}),
 									/* @__PURE__ */ (0, import_jsx_runtime.jsx)(YAxis, {
 										tickLine: false,
 										axisLine: false,
 										fontSize: 12,
-										className: "fill-gray-400"
+										className: "fill-gray-400 font-bold"
 									}),
 									/* @__PURE__ */ (0, import_jsx_runtime.jsx)(ChartTooltip, {
-										cursor: { fill: "transparent" },
+										cursor: { fill: "rgba(0,0,0,0.05)" },
 										content: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(ChartTooltipContent, {})
 									}),
 									/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Bar, {
 										dataKey: "count",
 										fill: "#000",
 										radius: [
-											6,
-											6,
+											4,
+											4,
 											0,
 											0
 										],
@@ -46793,7 +47451,7 @@ var NotFound_default = NotFound;
 var navItems = [
 	{
 		icon: LayoutDashboard,
-		label: "Today",
+		label: "Hoje",
 		path: "/"
 	},
 	{
@@ -46807,7 +47465,7 @@ var navItems = [
 		path: "/contacts"
 	},
 	{
-		icon: Activity$1,
+		icon: Activity,
 		label: "Atividades",
 		path: "/activities"
 	},
@@ -46818,35 +47476,35 @@ var navItems = [
 	},
 	{
 		icon: ChartNoAxesColumnIncreasing,
-		label: "Relatórios",
+		label: "Dashboard",
 		path: "/reports"
 	}
 ];
 function Sidebar() {
 	const location = useLocation();
 	return /* @__PURE__ */ (0, import_jsx_runtime.jsx)("aside", {
-		className: "fixed left-4 top-1/2 -translate-y-1/2 z-50 hidden md:flex flex-col gap-4 bg-black/90 text-white py-6 px-3 rounded-full shadow-2xl shadow-black/20",
+		className: "fixed left-4 top-1/2 -translate-y-1/2 z-50 hidden md:flex flex-col gap-2 bg-black text-white py-6 px-3 rounded-2xl shadow-xl border border-gray-800",
 		children: navItems.map((item) => {
 			const isActive = location.pathname === item.path;
 			return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(Tooltip, { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(TooltipTrigger, {
 				asChild: true,
-				children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(Link, {
+				children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Link, {
 					to: item.path,
-					className: cn("p-3 rounded-full transition-all duration-300 hover:bg-white/20 relative group", isActive ? "bg-white text-black hover:bg-white" : "text-white/70"),
-					children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(item.icon, {
+					className: cn("p-3 rounded-xl transition-all", isActive ? "bg-white text-black" : "text-gray-400 hover:text-white hover:bg-white/10"),
+					children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(item.icon, {
 						size: 20,
 						strokeWidth: isActive ? 2.5 : 2
-					}), isActive && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "absolute inset-0 rounded-full animate-ping opacity-20 bg-white" })]
+					})
 				})
 			}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)(TooltipContent, {
 				side: "right",
-				className: "bg-black text-white border-0 ml-2",
-				children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", { children: item.label })
+				className: "bg-black text-white border-0 ml-2 shadow-lg",
+				children: item.label
 			})] }, item.path);
 		})
 	});
 }
-function createContextScope(scopeName, createContextScopeDeps = []) {
+function createContextScope$1(scopeName, createContextScopeDeps = []) {
 	let defaultContexts = [];
 	function createContext3(rootComponentName, defaultContext) {
 		const BaseContext = import_react.createContext(defaultContext);
@@ -46910,7 +47568,7 @@ function composeContextScopes(...scopes) {
 	return createScope;
 }
 require_react_dom();
-var Primitive = [
+var Primitive$1 = [
 	"a",
 	"button",
 	"div",
@@ -46929,10 +47587,10 @@ var Primitive = [
 	"svg",
 	"ul"
 ].reduce((primitive, node) => {
-	const Slot$2 = /* @__PURE__ */ createSlot(`Primitive.${node}`);
+	const Slot$3 = /* @__PURE__ */ createSlot$1(`Primitive.${node}`);
 	const Node$1 = import_react.forwardRef((props, forwardedRef) => {
 		const { asChild, ...primitiveProps } = props;
-		const Comp = asChild ? Slot$2 : node;
+		const Comp = asChild ? Slot$3 : node;
 		if (typeof window !== "undefined") window[Symbol.for("radix-ui")] = true;
 		return /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Comp, {
 			...primitiveProps,
@@ -46966,7 +47624,7 @@ var require_use_sync_external_store_shim_development = /* @__PURE__ */ __commonJ
 				var cachedValue = getSnapshot();
 				objectIs(value, cachedValue) || (console.error("The result of getSnapshot should be cached to avoid an infinite loop"), didWarnUncachedGetSnapshot = !0);
 			}
-			cachedValue = useState$6({ inst: {
+			cachedValue = useState$9({ inst: {
 				value,
 				getSnapshot
 			} });
@@ -47003,7 +47661,7 @@ var require_use_sync_external_store_shim_development = /* @__PURE__ */ __commonJ
 			return getSnapshot();
 		}
 		"undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ && "function" === typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStart && __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStart(Error());
-		var React$32 = require_react(), objectIs = "function" === typeof Object.is ? Object.is : is, useState$6 = React$32.useState, useEffect$4 = React$32.useEffect, useLayoutEffect$1 = React$32.useLayoutEffect, useDebugValue = React$32.useDebugValue, didWarnOld18Alpha = !1, didWarnUncachedGetSnapshot = !1, shim = "undefined" === typeof window || "undefined" === typeof window.document || "undefined" === typeof window.document.createElement ? useSyncExternalStore$1 : useSyncExternalStore$2;
+		var React$32 = require_react(), objectIs = "function" === typeof Object.is ? Object.is : is, useState$9 = React$32.useState, useEffect$4 = React$32.useEffect, useLayoutEffect$1 = React$32.useLayoutEffect, useDebugValue = React$32.useDebugValue, didWarnOld18Alpha = !1, didWarnUncachedGetSnapshot = !1, shim = "undefined" === typeof window || "undefined" === typeof window.document || "undefined" === typeof window.document.createElement ? useSyncExternalStore$1 : useSyncExternalStore$2;
 		exports.useSyncExternalStore = void 0 !== React$32.useSyncExternalStore ? React$32.useSyncExternalStore : shim;
 		"undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ && "function" === typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop && __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop(Error());
 	})();
@@ -47018,7 +47676,7 @@ function subscribe() {
 	return () => {};
 }
 var AVATAR_NAME = "Avatar";
-var [createAvatarContext, createAvatarScope] = createContextScope(AVATAR_NAME);
+var [createAvatarContext, createAvatarScope] = createContextScope$1(AVATAR_NAME);
 var [AvatarProvider, useAvatarContext] = createAvatarContext(AVATAR_NAME);
 var Avatar$1 = import_react.forwardRef((props, forwardedRef) => {
 	const { __scopeAvatar, ...avatarProps } = props;
@@ -47027,7 +47685,7 @@ var Avatar$1 = import_react.forwardRef((props, forwardedRef) => {
 		scope: __scopeAvatar,
 		imageLoadingStatus,
 		onImageLoadingStatusChange: setImageLoadingStatus,
-		children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Primitive.span, {
+		children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Primitive$1.span, {
 			...avatarProps,
 			ref: forwardedRef
 		})
@@ -47046,7 +47704,7 @@ var AvatarImage$1 = import_react.forwardRef((props, forwardedRef) => {
 	useLayoutEffect2(() => {
 		if (imageLoadingStatus !== "idle") handleLoadingStatusChange(imageLoadingStatus);
 	}, [imageLoadingStatus, handleLoadingStatusChange]);
-	return imageLoadingStatus === "loaded" ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Primitive.img, {
+	return imageLoadingStatus === "loaded" ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Primitive$1.img, {
 		...imageProps,
 		ref: forwardedRef,
 		src
@@ -47064,7 +47722,7 @@ var AvatarFallback$1 = import_react.forwardRef((props, forwardedRef) => {
 			return () => window.clearTimeout(timerId);
 		}
 	}, [delayMs]);
-	return canRender && context.imageLoadingStatus !== "loaded" ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Primitive.span, {
+	return canRender && context.imageLoadingStatus !== "loaded" ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Primitive$1.span, {
 		...fallbackProps,
 		ref: forwardedRef
 	}) : null;
@@ -47131,80 +47789,320 @@ var AvatarFallback = import_react.forwardRef(({ className, ...props }, ref) => /
 	...props
 }));
 AvatarFallback.displayName = Fallback.displayName;
-var navLinks = [
-	{
-		name: "Today",
-		href: "/"
-	},
-	{
-		name: "Contas",
-		href: "/accounts"
-	},
-	{
-		name: "Pipeline",
-		href: "/pipeline"
-	}
-];
+var POPOVER_NAME = "Popover";
+var [createPopoverContext, createPopoverScope] = createContextScope(POPOVER_NAME, [createPopperScope]);
+var usePopperScope = createPopperScope();
+var [PopoverProvider, usePopoverContext] = createPopoverContext(POPOVER_NAME);
+var Popover$1 = (props) => {
+	const { __scopePopover, children, open: openProp, defaultOpen, onOpenChange, modal = false } = props;
+	const popperScope = usePopperScope(__scopePopover);
+	const triggerRef = import_react.useRef(null);
+	const [hasCustomAnchor, setHasCustomAnchor] = import_react.useState(false);
+	const [open, setOpen] = useControllableState({
+		prop: openProp,
+		defaultProp: defaultOpen ?? false,
+		onChange: onOpenChange,
+		caller: POPOVER_NAME
+	});
+	return /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Root2$1, {
+		...popperScope,
+		children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(PopoverProvider, {
+			scope: __scopePopover,
+			contentId: useId(),
+			triggerRef,
+			open,
+			onOpenChange: setOpen,
+			onOpenToggle: import_react.useCallback(() => setOpen((prevOpen) => !prevOpen), [setOpen]),
+			hasCustomAnchor,
+			onCustomAnchorAdd: import_react.useCallback(() => setHasCustomAnchor(true), []),
+			onCustomAnchorRemove: import_react.useCallback(() => setHasCustomAnchor(false), []),
+			modal,
+			children
+		})
+	});
+};
+Popover$1.displayName = POPOVER_NAME;
+var ANCHOR_NAME = "PopoverAnchor";
+var PopoverAnchor = import_react.forwardRef((props, forwardedRef) => {
+	const { __scopePopover, ...anchorProps } = props;
+	const context = usePopoverContext(ANCHOR_NAME, __scopePopover);
+	const popperScope = usePopperScope(__scopePopover);
+	const { onCustomAnchorAdd, onCustomAnchorRemove } = context;
+	import_react.useEffect(() => {
+		onCustomAnchorAdd();
+		return () => onCustomAnchorRemove();
+	}, [onCustomAnchorAdd, onCustomAnchorRemove]);
+	return /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Anchor, {
+		...popperScope,
+		...anchorProps,
+		ref: forwardedRef
+	});
+});
+PopoverAnchor.displayName = ANCHOR_NAME;
+var TRIGGER_NAME = "PopoverTrigger";
+var PopoverTrigger$1 = import_react.forwardRef((props, forwardedRef) => {
+	const { __scopePopover, ...triggerProps } = props;
+	const context = usePopoverContext(TRIGGER_NAME, __scopePopover);
+	const popperScope = usePopperScope(__scopePopover);
+	const composedTriggerRef = useComposedRefs(forwardedRef, context.triggerRef);
+	const trigger = /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Primitive.button, {
+		type: "button",
+		"aria-haspopup": "dialog",
+		"aria-expanded": context.open,
+		"aria-controls": context.contentId,
+		"data-state": getState(context.open),
+		...triggerProps,
+		ref: composedTriggerRef,
+		onClick: composeEventHandlers(props.onClick, context.onOpenToggle)
+	});
+	return context.hasCustomAnchor ? trigger : /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Anchor, {
+		asChild: true,
+		...popperScope,
+		children: trigger
+	});
+});
+PopoverTrigger$1.displayName = TRIGGER_NAME;
+var PORTAL_NAME = "PopoverPortal";
+var [PortalProvider, usePortalContext] = createPopoverContext(PORTAL_NAME, { forceMount: void 0 });
+var PopoverPortal = (props) => {
+	const { __scopePopover, forceMount, children, container } = props;
+	const context = usePopoverContext(PORTAL_NAME, __scopePopover);
+	return /* @__PURE__ */ (0, import_jsx_runtime.jsx)(PortalProvider, {
+		scope: __scopePopover,
+		forceMount,
+		children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Presence, {
+			present: forceMount || context.open,
+			children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Portal, {
+				asChild: true,
+				container,
+				children
+			})
+		})
+	});
+};
+PopoverPortal.displayName = PORTAL_NAME;
+var CONTENT_NAME = "PopoverContent";
+var PopoverContent$1 = import_react.forwardRef((props, forwardedRef) => {
+	const portalContext = usePortalContext(CONTENT_NAME, props.__scopePopover);
+	const { forceMount = portalContext.forceMount, ...contentProps } = props;
+	const context = usePopoverContext(CONTENT_NAME, props.__scopePopover);
+	return /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Presence, {
+		present: forceMount || context.open,
+		children: context.modal ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)(PopoverContentModal, {
+			...contentProps,
+			ref: forwardedRef
+		}) : /* @__PURE__ */ (0, import_jsx_runtime.jsx)(PopoverContentNonModal, {
+			...contentProps,
+			ref: forwardedRef
+		})
+	});
+});
+PopoverContent$1.displayName = CONTENT_NAME;
+var Slot = /* @__PURE__ */ createSlot("PopoverContent.RemoveScroll");
+var PopoverContentModal = import_react.forwardRef((props, forwardedRef) => {
+	const context = usePopoverContext(CONTENT_NAME, props.__scopePopover);
+	const contentRef = import_react.useRef(null);
+	const composedRefs = useComposedRefs(forwardedRef, contentRef);
+	const isRightClickOutsideRef = import_react.useRef(false);
+	import_react.useEffect(() => {
+		const content = contentRef.current;
+		if (content) return hideOthers(content);
+	}, []);
+	return /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Combination_default, {
+		as: Slot,
+		allowPinchZoom: true,
+		children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(PopoverContentImpl, {
+			...props,
+			ref: composedRefs,
+			trapFocus: context.open,
+			disableOutsidePointerEvents: true,
+			onCloseAutoFocus: composeEventHandlers(props.onCloseAutoFocus, (event) => {
+				event.preventDefault();
+				if (!isRightClickOutsideRef.current) context.triggerRef.current?.focus();
+			}),
+			onPointerDownOutside: composeEventHandlers(props.onPointerDownOutside, (event) => {
+				const originalEvent = event.detail.originalEvent;
+				const ctrlLeftClick = originalEvent.button === 0 && originalEvent.ctrlKey === true;
+				isRightClickOutsideRef.current = originalEvent.button === 2 || ctrlLeftClick;
+			}, { checkForDefaultPrevented: false }),
+			onFocusOutside: composeEventHandlers(props.onFocusOutside, (event) => event.preventDefault(), { checkForDefaultPrevented: false })
+		})
+	});
+});
+var PopoverContentNonModal = import_react.forwardRef((props, forwardedRef) => {
+	const context = usePopoverContext(CONTENT_NAME, props.__scopePopover);
+	const hasInteractedOutsideRef = import_react.useRef(false);
+	const hasPointerDownOutsideRef = import_react.useRef(false);
+	return /* @__PURE__ */ (0, import_jsx_runtime.jsx)(PopoverContentImpl, {
+		...props,
+		ref: forwardedRef,
+		trapFocus: false,
+		disableOutsidePointerEvents: false,
+		onCloseAutoFocus: (event) => {
+			props.onCloseAutoFocus?.(event);
+			if (!event.defaultPrevented) {
+				if (!hasInteractedOutsideRef.current) context.triggerRef.current?.focus();
+				event.preventDefault();
+			}
+			hasInteractedOutsideRef.current = false;
+			hasPointerDownOutsideRef.current = false;
+		},
+		onInteractOutside: (event) => {
+			props.onInteractOutside?.(event);
+			if (!event.defaultPrevented) {
+				hasInteractedOutsideRef.current = true;
+				if (event.detail.originalEvent.type === "pointerdown") hasPointerDownOutsideRef.current = true;
+			}
+			const target = event.target;
+			if (context.triggerRef.current?.contains(target)) event.preventDefault();
+			if (event.detail.originalEvent.type === "focusin" && hasPointerDownOutsideRef.current) event.preventDefault();
+		}
+	});
+});
+var PopoverContentImpl = import_react.forwardRef((props, forwardedRef) => {
+	const { __scopePopover, trapFocus, onOpenAutoFocus, onCloseAutoFocus, disableOutsidePointerEvents, onEscapeKeyDown, onPointerDownOutside, onFocusOutside, onInteractOutside, ...contentProps } = props;
+	const context = usePopoverContext(CONTENT_NAME, __scopePopover);
+	const popperScope = usePopperScope(__scopePopover);
+	useFocusGuards();
+	return /* @__PURE__ */ (0, import_jsx_runtime.jsx)(FocusScope, {
+		asChild: true,
+		loop: true,
+		trapped: trapFocus,
+		onMountAutoFocus: onOpenAutoFocus,
+		onUnmountAutoFocus: onCloseAutoFocus,
+		children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(DismissableLayer, {
+			asChild: true,
+			disableOutsidePointerEvents,
+			onInteractOutside,
+			onEscapeKeyDown,
+			onPointerDownOutside,
+			onFocusOutside,
+			onDismiss: () => context.onOpenChange(false),
+			children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Content$1, {
+				"data-state": getState(context.open),
+				role: "dialog",
+				id: context.contentId,
+				...popperScope,
+				...contentProps,
+				ref: forwardedRef,
+				style: {
+					...contentProps.style,
+					"--radix-popover-content-transform-origin": "var(--radix-popper-transform-origin)",
+					"--radix-popover-content-available-width": "var(--radix-popper-available-width)",
+					"--radix-popover-content-available-height": "var(--radix-popper-available-height)",
+					"--radix-popover-trigger-width": "var(--radix-popper-anchor-width)",
+					"--radix-popover-trigger-height": "var(--radix-popper-anchor-height)"
+				}
+			})
+		})
+	});
+});
+var CLOSE_NAME = "PopoverClose";
+var PopoverClose = import_react.forwardRef((props, forwardedRef) => {
+	const { __scopePopover, ...closeProps } = props;
+	const context = usePopoverContext(CLOSE_NAME, __scopePopover);
+	return /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Primitive.button, {
+		type: "button",
+		...closeProps,
+		ref: forwardedRef,
+		onClick: composeEventHandlers(props.onClick, () => context.onOpenChange(false))
+	});
+});
+PopoverClose.displayName = CLOSE_NAME;
+var ARROW_NAME = "PopoverArrow";
+var PopoverArrow = import_react.forwardRef((props, forwardedRef) => {
+	const { __scopePopover, ...arrowProps } = props;
+	const popperScope = usePopperScope(__scopePopover);
+	return /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Arrow, {
+		...popperScope,
+		...arrowProps,
+		ref: forwardedRef
+	});
+});
+PopoverArrow.displayName = ARROW_NAME;
+function getState(open) {
+	return open ? "open" : "closed";
+}
+var Root2 = Popover$1;
+var Trigger = PopoverTrigger$1;
+var Portal$1 = PopoverPortal;
+var Content2 = PopoverContent$1;
+var Popover = Root2;
+var PopoverTrigger = Trigger;
+var PopoverContent = import_react.forwardRef(({ className, align = "center", sideOffset = 4, ...props }, ref) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Portal$1, { children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Content2, {
+	ref,
+	align,
+	sideOffset,
+	className: cn("z-50 w-72 rounded-md border bg-popover p-4 text-popover-foreground shadow-md outline-none data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 origin-[--radix-popover-content-transform-origin]", className),
+	...props
+}) }));
+PopoverContent.displayName = Content2.displayName;
 function Header() {
-	const location = useLocation();
+	const navigate = useNavigate();
 	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("header", {
-		className: "flex items-center justify-between px-6 py-4 md:px-10 bg-white/80 backdrop-blur-md mx-4 mt-4 rounded-full sticky top-4 z-40 border border-gray-200 shadow-sm",
-		children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-			className: "flex items-center gap-8",
-			children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)(Link, {
+		className: "flex items-center justify-between px-6 py-4 bg-white mx-4 mt-4 rounded-xl border border-gray-200 shadow-sm sticky top-4 z-40",
+		children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+			className: "flex items-center gap-6",
+			children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(Link, {
 				to: "/",
-				className: "flex items-center gap-2 group",
+				className: "flex items-center gap-3",
 				children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
-					className: "h-8 w-8 bg-black rounded-lg flex items-center justify-center text-white group-hover:bg-gray-800 transition-colors",
+					className: "h-8 w-8 bg-black rounded flex items-center justify-center text-white shadow-sm",
 					children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Crosshair, { className: "w-4 h-4" })
 				}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
-					className: "font-bold text-xl tracking-tight hidden sm:block text-gray-900",
-					children: "Outbound CRM"
+					className: "font-black text-xl tracking-tight text-black",
+					children: "Atos3 CRM"
 				})]
-			}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("nav", {
-				className: "hidden lg:flex items-center gap-6",
-				children: navLinks.map((link) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Link, {
-					to: link.href,
-					className: cn("text-sm font-medium transition-colors hover:text-black", location.pathname === link.href ? "text-black font-semibold" : "text-gray-500"),
-					children: link.name
-				}, link.name))
-			})]
+			})
 		}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
 			className: "flex items-center gap-4",
 			children: [
+				/* @__PURE__ */ (0, import_jsx_runtime.jsxs)(Popover, { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(PopoverTrigger, {
+					asChild: true,
+					children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(Button, {
+						size: "sm",
+						className: "bg-black text-white hover:bg-gray-800 rounded font-semibold hidden sm:flex",
+						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Plus, { className: "w-4 h-4 mr-1" }), " Ação Rápida"]
+					})
+				}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(PopoverContent, {
+					className: "w-48 p-2 flex flex-col gap-1",
+					align: "end",
+					children: [
+						/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Button, {
+							variant: "ghost",
+							className: "justify-start w-full text-sm h-8",
+							onClick: () => navigate("/accounts"),
+							children: "Nova Conta"
+						}),
+						/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Button, {
+							variant: "ghost",
+							className: "justify-start w-full text-sm h-8",
+							onClick: () => navigate("/contacts"),
+							children: "Novo Contato"
+						}),
+						/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Button, {
+							variant: "ghost",
+							className: "justify-start w-full text-sm h-8",
+							onClick: () => navigate("/activities"),
+							children: "Registrar Atividade"
+						})
+					]
+				})] }),
+				/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "w-px h-6 bg-gray-200 mx-1 hidden sm:block" }),
 				/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-					className: "hidden md:flex items-center bg-gray-100/50 rounded-full px-4 py-2 border border-transparent focus-within:border-gray-300 transition-colors",
-					children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Search, { className: "w-4 h-4 text-gray-500 mr-2" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", {
-						type: "text",
-						placeholder: "Buscar global...",
-						className: "bg-transparent border-none outline-none text-sm w-32 focus:w-48 transition-all placeholder:text-gray-400"
-					})]
-				}),
-				/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
-					className: "p-2 hover:bg-gray-100 rounded-full transition-colors relative",
-					children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Mail, { className: "w-5 h-5 text-gray-600" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border border-white" })]
-				}),
-				/* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
-					className: "p-2 hover:bg-gray-100 rounded-full transition-colors relative",
-					children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Bell, { className: "w-5 h-5 text-gray-600" })
-				}),
-				/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-					className: "flex items-center gap-3 pl-2 border-l border-gray-200",
+					className: "flex items-center gap-3",
 					children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-						className: "text-right hidden xl:block",
+						className: "text-right hidden sm:block",
 						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
-							className: "text-sm font-bold leading-none",
-							children: "Vendedor Solo"
+							className: "text-sm font-bold text-black leading-none",
+							children: "Sales Solo"
 						}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
-							className: "text-xs text-muted-foreground",
-							children: "B2B Sales"
+							className: "text-xs text-gray-500 mt-1",
+							children: "B2B Exec"
 						})]
 					}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(Avatar, {
-						className: "h-9 w-9 border-2 border-white shadow-sm cursor-pointer hover:scale-105 transition-transform",
-						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(AvatarImage, {
-							src: "https://img.usecurling.com/ppl/medium?gender=male&seed=42",
-							alt: "Avatar"
-						}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)(AvatarFallback, { children: "VS" })]
+						className: "h-9 w-9 border border-gray-200",
+						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(AvatarImage, { src: "https://img.usecurling.com/ppl/thumbnail?gender=male&seed=1" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)(AvatarFallback, { children: "S" })]
 					})]
 				})
 			]
@@ -47268,4 +48166,4 @@ var App = () => /* @__PURE__ */ (0, import_jsx_runtime.jsx)(BrowserRouter, {
 var App_default = App;
 (0, import_client.createRoot)(document.getElementById("root")).render(/* @__PURE__ */ (0, import_jsx_runtime.jsx)(App_default, {}));
 
-//# sourceMappingURL=index-BHkGK-eh.js.map
+//# sourceMappingURL=index-4N7VrCTR.js.map

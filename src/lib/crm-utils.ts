@@ -37,3 +37,17 @@ export function formatCurrency(value: number) {
     currency: 'BRL',
   }).format(value)
 }
+
+export function getStatusColor(status: string) {
+  const map: Record<string, string> = {
+    Novo: 'bg-blue-50 text-blue-700',
+    'Em pesquisa': 'bg-purple-50 text-purple-700',
+    'Pronto para contato': 'bg-indigo-50 text-indigo-700',
+    'Em prospecção': 'bg-yellow-50 text-yellow-700',
+    Qualificado: 'bg-green-50 text-green-700',
+    'Aguardando retorno': 'bg-orange-50 text-orange-700',
+    'Sem fit': 'bg-gray-100 text-gray-600',
+    Perdido: 'bg-red-50 text-red-700',
+  }
+  return map[status] || 'bg-gray-100 text-gray-800'
+}
