@@ -14,23 +14,19 @@ import {
 } from 'lucide-react'
 import { Link } from 'react-router-dom'
 
-const MiniList = ({
-  title,
-  items,
-  renderItem,
-  emptyText,
-  icon: Icon,
-  headerColor,
-}: any) => (
+const MiniList = ({ title, items, renderItem, emptyText, icon: Icon }: any) => (
   <Card className="shadow-sm rounded-xl overflow-hidden border-gray-200 bg-white">
-    <CardHeader className={`pb-3 ${headerColor} border-b border-gray-100`}>
-      <CardTitle className="text-sm font-bold flex items-center">
-        <Icon className="w-4 h-4 mr-2" /> {title} ({items.length})
+    <CardHeader className="pb-3 border-b border-gray-100 bg-white">
+      <CardTitle className="text-sm font-bold flex items-center text-black">
+        <Icon className="w-4 h-4 mr-2 text-gray-500" /> {title}{' '}
+        <span className="ml-2 text-gray-400 font-medium text-xs">
+          ({items.length})
+        </span>
       </CardTitle>
     </CardHeader>
-    <CardContent className="p-0 max-h-[250px] overflow-y-auto">
+    <CardContent className="p-0 max-h-[280px] overflow-y-auto">
       {items.length === 0 ? (
-        <div className="p-6 text-sm text-gray-500 text-center font-medium">
+        <div className="p-6 text-sm text-gray-400 text-center font-medium">
           {emptyText}
         </div>
       ) : (
@@ -71,7 +67,12 @@ export default function Index() {
     [accounts],
   )
   const stalledOpps = useMemo(
-    () => opportunities.filter((o) => !o.stage.includes('Fechado')),
+    () =>
+      opportunities.filter(
+        (o) =>
+          !o.stage.includes('Fechado') &&
+          (!o.nextActionDate || isOverdue(o.nextActionDate)),
+      ),
     [opportunities],
   )
 
@@ -80,12 +81,12 @@ export default function Index() {
     return (
       <div
         key={act.id}
-        className="p-3 hover:bg-gray-50 flex items-center justify-between transition-colors"
+        className="p-3 hover:bg-gray-50 flex items-center justify-between transition-colors group"
       >
         <div>
-          <div className="font-bold text-sm mb-1 text-black">{acc?.name}</div>
-          <div className="text-xs text-gray-600 flex items-center gap-2">
-            <span className="bg-gray-100 px-1.5 py-0.5 rounded border border-gray-200 font-semibold">
+          <div className="font-bold text-sm mb-0.5 text-black">{acc?.name}</div>
+          <div className="text-xs text-gray-500 flex items-center gap-2 font-medium">
+            <span className="bg-gray-100 border border-gray-200 px-1.5 py-0.5 rounded text-gray-700">
               {act.type}
             </span>
             <span className="flex items-center">
@@ -98,7 +99,8 @@ export default function Index() {
           size="sm"
           variant="ghost"
           onClick={() => completeActivity(act.id)}
-          className="h-8 w-8 p-0 rounded-full text-green-600 hover:bg-green-50"
+          className="h-8 w-8 p-0 rounded-full text-gray-300 hover:text-black hover:bg-gray-100 transition-colors"
+          title="Concluir"
         >
           <CheckCircle2 className="w-5 h-5" />
         </Button>
@@ -113,15 +115,15 @@ export default function Index() {
     >
       <div>
         <div className="font-bold text-sm text-black">{acc.name}</div>
-        <div className="text-xs text-gray-500 mt-1 font-medium">
-          {acc.status}
+        <div className="text-xs text-gray-500 mt-0.5 font-medium">
+          {acc.status} • Prio {acc.priority}
         </div>
       </div>
       <Link to="/activities">
         <Button
           size="sm"
           variant="outline"
-          className="h-7 text-xs rounded font-semibold text-black border-gray-300"
+          className="h-7 text-xs rounded font-bold text-black border-gray-200 hover:bg-black hover:text-white transition-colors"
         >
           Ação
         </Button>
@@ -129,86 +131,86 @@ export default function Index() {
     </div>
   )
 
-  const renderOpp = (opp: any) => (
-    <div
-      key={opp.id}
-      className="p-3 hover:bg-gray-50 flex items-center justify-between transition-colors"
-    >
-      <div>
-        <div className="font-bold text-sm text-black">{opp.name}</div>
-        <div className="text-xs text-gray-500 mt-1 font-medium">
-          Fase: {opp.stage}
+  const renderOpp = (opp: any) => {
+    const acc = accounts.find((a) => a.id === opp.accountId)
+    return (
+      <div
+        key={opp.id}
+        className="p-3 hover:bg-gray-50 flex items-center justify-between transition-colors"
+      >
+        <div>
+          <div className="font-bold text-sm text-black">{opp.name}</div>
+          <div className="text-xs text-gray-500 mt-0.5 font-medium">
+            {acc?.name} • {opp.stage}
+          </div>
         </div>
+        <Link to="/pipeline">
+          <Button
+            size="sm"
+            variant="outline"
+            className="h-7 text-xs rounded font-bold text-black border-gray-200 hover:bg-black hover:text-white transition-colors"
+          >
+            Ação
+          </Button>
+        </Link>
       </div>
-      <Link to="/pipeline">
-        <Button
-          size="sm"
-          variant="outline"
-          className="h-7 text-xs rounded font-semibold text-black border-gray-300"
-        >
-          Ver
-        </Button>
-      </Link>
-    </div>
-  )
+    )
+  }
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto pb-10">
       <div>
-        <h1 className="text-3xl font-black text-black">Visão "Hoje"</h1>
+        <h1 className="text-3xl font-black text-black tracking-tight">
+          Atos3 CRM - Visão Hoje
+        </h1>
         <p className="text-gray-500 mt-1 font-medium">
-          Foco na execução. Prioridades e gargalos da operação.
+          Ferramenta de execução diária. Foco absoluto no follow-up e no próximo
+          passo.
         </p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         <MiniList
-          title="Atrasadas (Follow-ups vencidos)"
+          title="Pendências Prioritárias"
           icon={AlertCircle}
-          headerColor="bg-red-50 text-red-800"
           items={overdue}
-          emptyText="Zero atrasos!"
+          emptyText="Zero atrasos! Você está no controle."
           renderItem={renderAct}
         />
         <MiniList
-          title="Para Hoje"
+          title="Agenda do Dia"
           icon={Play}
-          headerColor="bg-yellow-50 text-yellow-800"
           items={todayActs}
-          emptyText="Livre por hoje."
+          emptyText="Nenhuma ação agendada para hoje."
           renderItem={renderAct}
         />
         <MiniList
-          title="Contas sem Próxima Ação"
+          title="Anti-Esquecimento (Sem Ação)"
           icon={AlertTriangle}
-          headerColor="bg-gray-100 text-gray-800"
           items={noActionAccs}
-          emptyText="Todas as contas têm dono."
+          emptyText="Todas as contas possuem próxima ação definida."
           renderItem={renderAcc}
         />
 
         <MiniList
           title="Prioridade A (S/ Atividade)"
           icon={AlertTriangle}
-          headerColor="bg-blue-50 text-blue-800"
           items={priorityA}
-          emptyText="Prioridades A em dia."
+          emptyText="Prioridades A estão engajadas."
           renderItem={renderAcc}
         />
         <MiniList
-          title="Leads Novos e Pesquisa"
+          title="Novos Leads (S/ Contato)"
           icon={Building2}
-          headerColor="bg-blue-50 text-blue-800"
           items={newLeads}
-          emptyText="Nenhum lead novo."
+          emptyText="Nenhum lead novo pendente."
           renderItem={renderAcc}
         />
         <MiniList
-          title="Oportunidades Estagnadas"
+          title="Oportunidades Paradas"
           icon={TrendingDown}
-          headerColor="bg-gray-100 text-gray-800"
           items={stalledOpps}
-          emptyText="Pipeline fluindo."
+          emptyText="Pipeline com follow-up em dia."
           renderItem={renderOpp}
         />
       </div>

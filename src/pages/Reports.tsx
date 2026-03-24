@@ -13,21 +13,24 @@ import {
   CartesianGrid,
   ResponsiveContainer,
 } from 'recharts'
-import { formatCurrency } from '@/lib/crm-utils'
+import { formatCurrency, isOverdue } from '@/lib/crm-utils'
 
 export default function Reports() {
   const { accounts, activities, opportunities } = useMainStore()
 
   const funnelData = [
-    { stage: 'Total Contas', count: accounts.length },
     {
-      stage: 'Contatados',
-      count:
-        activities.length > 0
-          ? accounts.length - (accounts.length > 1 ? 1 : 0)
-          : accounts.length,
+      stage: 'Prospecção',
+      count: opportunities.filter((o) => o.stage === 'Prospecção').length,
     },
-    { stage: 'Oportunidades', count: opportunities.length },
+    {
+      stage: 'Qualificação',
+      count: opportunities.filter((o) => o.stage === 'Qualificação').length,
+    },
+    {
+      stage: 'Proposta',
+      count: opportunities.filter((o) => o.stage === 'Proposta').length,
+    },
     {
       stage: 'Ganhos',
       count: opportunities.filter((o) => o.stage === 'Fechado ganho').length,
@@ -35,7 +38,7 @@ export default function Reports() {
   ]
 
   const chartConfig = {
-    count: { label: 'Volume', color: 'hsl(var(--primary))' },
+    count: { label: 'Oportunidades', color: 'hsl(var(--primary))' },
   }
 
   const wonValue = opportunities
@@ -45,14 +48,23 @@ export default function Reports() {
     .filter((o) => !o.stage.includes('Fechado'))
     .reduce((s, o) => s + o.total, 0)
 
-  const leadsThisMonth = accounts.length // mock assuming all are this month for prototype
+  const pendingFollowups = accounts.filter(
+    (a) => !a.nextActionDate || isOverdue(a.nextActionDate),
+  ).length
+  const totalAccounts = accounts.length
+  const followUpRate =
+    totalAccounts > 0
+      ? Math.round(((totalAccounts - pendingFollowups) / totalAccounts) * 100)
+      : 100
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto pb-10">
       <div className="mb-6">
-        <h1 className="text-3xl font-black text-black">Dashboard & KPIs</h1>
+        <h1 className="text-3xl font-black text-black tracking-tight">
+          Dashboard & Performance
+        </h1>
         <p className="text-gray-500 mt-1 font-medium">
-          Métricas e performance da operação comercial
+          Métricas focadas em execução e resultado
         </p>
       </div>
 
@@ -60,24 +72,36 @@ export default function Reports() {
         <Card className="shadow-sm border-gray-200 rounded-xl bg-white">
           <CardHeader className="pb-2">
             <CardTitle className="text-[10px] font-black uppercase tracking-widest text-gray-500">
-              Leads no Mês
+              Taxa de Follow-up (Em dia)
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-black text-black">
-              {leadsThisMonth}
+            <div
+              className={`text-3xl font-black ${followUpRate < 80 ? 'text-red-600' : 'text-black'}`}
+            >
+              {followUpRate}%
             </div>
           </CardContent>
         </Card>
         <Card className="shadow-sm border-gray-200 rounded-xl bg-white">
           <CardHeader className="pb-2">
             <CardTitle className="text-[10px] font-black uppercase tracking-widest text-gray-500">
-              Volume de Atividades
+              Leads Envelhecidos (&gt;15 dias)
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-3xl font-black text-black">
-              {activities.length}
+              {
+                accounts.filter((a) => {
+                  if (!a.lastTouchDate) return true
+                  const days = Math.floor(
+                    (new Date().getTime() -
+                      new Date(a.lastTouchDate).getTime()) /
+                      (1000 * 3600 * 24),
+                  )
+                  return days > 15
+                }).length
+              }
             </div>
           </CardContent>
         </Card>
@@ -96,7 +120,7 @@ export default function Reports() {
         <Card className="shadow-sm border-gray-200 rounded-xl bg-black text-white">
           <CardHeader className="pb-2">
             <CardTitle className="text-[10px] font-black uppercase tracking-widest text-gray-400">
-              Total Ganho
+              Total Fechado (Win)
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -110,7 +134,7 @@ export default function Reports() {
       <Card className="shadow-sm border-gray-200 overflow-hidden rounded-xl bg-white">
         <CardHeader className="bg-gray-50/50 border-b border-gray-100 pb-4">
           <CardTitle className="text-sm font-black text-black">
-            Funil de Conversão (Volume)
+            Conversão do Pipeline
           </CardTitle>
         </CardHeader>
         <CardContent className="pt-8 pb-4">
@@ -123,7 +147,7 @@ export default function Reports() {
                 <CartesianGrid
                   vertical={false}
                   strokeDasharray="3 3"
-                  className="stroke-gray-200"
+                  className="stroke-gray-100"
                 />
                 <XAxis
                   dataKey="stage"
@@ -138,9 +162,10 @@ export default function Reports() {
                   axisLine={false}
                   fontSize={12}
                   className="fill-gray-400 font-bold"
+                  allowDecimals={false}
                 />
                 <ChartTooltip
-                  cursor={{ fill: 'rgba(0,0,0,0.05)' }}
+                  cursor={{ fill: 'rgba(0,0,0,0.02)' }}
                   content={<ChartTooltipContent />}
                 />
                 <Bar

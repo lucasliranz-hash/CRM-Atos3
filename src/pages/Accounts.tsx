@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import useMainStore from '@/stores/main'
-import { getStatusColor, getActionColor } from '@/lib/crm-utils'
+import { getActionColor } from '@/lib/crm-utils'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import {
@@ -19,7 +19,14 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog'
-import { Download, FileText, Plus, Search, Upload } from 'lucide-react'
+import {
+  Download,
+  FileText,
+  Plus,
+  Search,
+  Upload,
+  AlertCircle,
+} from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
 import { ProposalGeneratorDialog } from '@/components/proposal/ProposalGeneratorDialog'
 
@@ -27,14 +34,28 @@ export default function Accounts() {
   const { accounts, contacts, addAccount } = useMainStore()
   const { toast } = useToast()
   const [search, setSearch] = useState('')
+  const [filterStatus, setFilterStatus] = useState('')
+  const [filterInterest, setFilterInterest] = useState('')
   const [isOpen, setIsOpen] = useState(false)
   const [proposalAccountId, setProposalAccountId] = useState<string | null>(
     null,
   )
 
-  const filtered = accounts.filter((a) =>
-    a.name.toLowerCase().includes(search.toLowerCase()),
-  )
+  const filtered = accounts.filter((a) => {
+    const matchSearch = a.name.toLowerCase().includes(search.toLowerCase())
+    const matchStatus = filterStatus ? a.status === filterStatus : true
+    const matchInterest = filterInterest
+      ? a.interestLevel === filterInterest
+      : true
+    return matchSearch && matchStatus && matchInterest
+  })
+
+  const getDaysWithoutContact = (date?: string) => {
+    if (!date) return 'Nunca'
+    const diff = new Date().getTime() - new Date(date).getTime()
+    const days = Math.floor(diff / (1000 * 3600 * 24))
+    return days <= 0 ? 'Hoje' : `${days} d`
+  }
 
   const handleCreate = (e: any) => {
     e.preventDefault()
@@ -53,6 +74,7 @@ export default function Accounts() {
       icpFit: fd.get('icpFit') as string,
       interestLevel: fd.get('interestLevel') as any,
       accountPotential: fd.get('accountPotential') as any,
+      cadenceStage: fd.get('cadenceStage') as string,
     })
     setIsOpen(false)
     toast({ title: 'Conta criada com sucesso!' })
@@ -68,23 +90,25 @@ export default function Accounts() {
     <div className="space-y-6 max-w-7xl mx-auto pb-10">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-3xl font-black text-black">Contas e Leads</h1>
+          <h1 className="text-3xl font-black text-black tracking-tight">
+            Contas e Leads
+          </h1>
           <p className="text-gray-500 mt-1 font-medium">
-            Gestão da base de prospectos
+            Gestão operacional da base de prospectos
           </p>
         </div>
         <div className="flex items-center gap-2">
           <Button
             variant="outline"
             onClick={() => mockAction('Importar CSV')}
-            className="rounded font-bold border-gray-300 text-black hidden sm:flex"
+            className="rounded font-bold border-gray-200 text-black hidden sm:flex hover:bg-gray-50"
           >
             <Upload className="w-4 h-4 mr-2" /> Importar
           </Button>
           <Button
             variant="outline"
             onClick={() => mockAction('Exportar')}
-            className="rounded font-bold border-gray-300 text-black hidden sm:flex"
+            className="rounded font-bold border-gray-200 text-black hidden sm:flex hover:bg-gray-50"
           >
             <Download className="w-4 h-4 mr-2" /> Exportar
           </Button>
@@ -159,21 +183,29 @@ export default function Accounts() {
                   </div>
                   <div className="space-y-1">
                     <label className="text-xs font-bold text-gray-700">
-                      Modelo Frota
-                    </label>
-                    <Input name="fleetModel" placeholder="Ex: Própria" />
-                  </div>
-                  <div className="space-y-1">
-                    <label className="text-xs font-bold text-gray-700">
                       Tam. Frota
                     </label>
                     <Input name="fleetEstimate" type="number" placeholder="0" />
                   </div>
                   <div className="space-y-1">
                     <label className="text-xs font-bold text-gray-700">
-                      Fonte do Lead
+                      Interesse
                     </label>
-                    <Input name="leadSource" placeholder="Ex: Inbound" />
+                    <select
+                      name="interestLevel"
+                      className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                    >
+                      <option value="">Desconhecido</option>
+                      <option value="Frio">Frio</option>
+                      <option value="Morno">Morno</option>
+                      <option value="Quente">Quente</option>
+                    </select>
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-xs font-bold text-gray-700">
+                      Origem Detalhada
+                    </label>
+                    <Input name="detailedSource" placeholder="Ex: Google Ads" />
                   </div>
                   <div className="space-y-1">
                     <label className="text-xs font-bold text-gray-700">
@@ -190,16 +222,9 @@ export default function Accounts() {
                   </div>
                   <div className="space-y-1">
                     <label className="text-xs font-bold text-gray-700">
-                      Potencial
+                      Cadência Atual
                     </label>
-                    <select
-                      name="accountPotential"
-                      className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                    >
-                      <option value="Médio">Médio</option>
-                      <option value="Alto">Alto</option>
-                      <option value="Baixo">Baixo</option>
-                    </select>
+                    <Input name="cadenceStage" placeholder="Ex: Toque 1" />
                   </div>
                 </div>
                 <Button
@@ -215,23 +240,49 @@ export default function Accounts() {
       </div>
 
       <div className="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm">
-        <div className="p-4 border-b border-gray-100 flex items-center bg-gray-50/50">
-          <Search className="w-4 h-4 text-gray-400 mr-2" />
-          <input
-            className="bg-transparent font-medium border-none outline-none text-sm w-full placeholder:text-gray-400"
-            placeholder="Buscar contas..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          />
+        <div className="p-4 border-b border-gray-100 flex flex-col sm:flex-row items-center gap-4 bg-gray-50/30">
+          <div className="flex items-center flex-1 bg-white border border-gray-200 rounded-lg px-3 py-1.5 focus-within:ring-2 focus-within:ring-black">
+            <Search className="w-4 h-4 text-gray-400 mr-2 shrink-0" />
+            <input
+              className="bg-transparent font-medium border-none outline-none text-sm w-full placeholder:text-gray-400"
+              placeholder="Buscar contas..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
+          </div>
+          <div className="flex gap-2 w-full sm:w-auto">
+            <select
+              className="h-9 rounded-lg border border-gray-200 bg-white px-3 py-1 text-sm font-medium text-gray-700 outline-none w-full sm:w-auto"
+              value={filterStatus}
+              onChange={(e) => setFilterStatus(e.target.value)}
+            >
+              <option value="">Status: Todos</option>
+              <option value="Novo">Novo</option>
+              <option value="Em prospecção">Em prospecção</option>
+              <option value="Qualificado">Qualificado</option>
+              <option value="Aguardando retorno">Aguardando retorno</option>
+            </select>
+            <select
+              className="h-9 rounded-lg border border-gray-200 bg-white px-3 py-1 text-sm font-medium text-gray-700 outline-none w-full sm:w-auto"
+              value={filterInterest}
+              onChange={(e) => setFilterInterest(e.target.value)}
+            >
+              <option value="">Interesse: Todos</option>
+              <option value="Quente">Quente</option>
+              <option value="Morno">Morno</option>
+              <option value="Frio">Frio</option>
+            </select>
+          </div>
         </div>
+
         <Table>
           <TableHeader>
             <TableRow className="bg-gray-50">
               <TableHead className="font-bold text-black">Empresa</TableHead>
+              <TableHead className="font-bold text-black">Status</TableHead>
               <TableHead className="font-bold text-black">
-                Status / Prioridade
+                Último Toque
               </TableHead>
-              <TableHead className="font-bold text-black">Contatos</TableHead>
               <TableHead className="font-bold text-black">
                 Próxima Ação
               </TableHead>
@@ -242,59 +293,56 @@ export default function Accounts() {
           </TableHeader>
           <TableBody>
             {filtered.map((acc) => {
-              const accContacts = contacts.filter((c) => c.accountId === acc.id)
-              const alertNoContact = accContacts.length === 0
               const alertNoAction = !acc.nextActionDate
 
               return (
                 <TableRow key={acc.id} className="hover:bg-gray-50/50">
                   <TableCell>
-                    <div className="font-bold text-black">{acc.name}</div>
-                    <div className="text-xs text-gray-500 mt-1 font-medium">
-                      {acc.website || acc.segment || '-'}
+                    <div className="font-bold text-black text-sm">
+                      {acc.name}
+                    </div>
+                    <div className="text-xs text-gray-500 mt-0.5 font-medium flex items-center gap-2">
+                      <span>{acc.segment || '-'}</span>
+                      {acc.interestLevel && (
+                        <span className="bg-gray-100 border border-gray-200 px-1.5 rounded text-gray-600">
+                          {acc.interestLevel}
+                        </span>
+                      )}
                     </div>
                   </TableCell>
                   <TableCell>
                     <div className="flex items-center gap-2">
                       <Badge
-                        className={`${getStatusColor(acc.status)} border-0 shadow-none font-bold rounded`}
+                        variant="outline"
+                        className="border-gray-200 text-gray-700 font-bold rounded bg-white shadow-sm"
                       >
                         {acc.status}
                       </Badge>
-                      <Badge
-                        variant="outline"
-                        className="border-gray-200 text-gray-600 font-bold rounded"
-                      >
+                      <span className="text-xs font-bold text-gray-500">
                         Prio {acc.priority}
-                      </Badge>
+                      </span>
                     </div>
                   </TableCell>
                   <TableCell>
-                    {alertNoContact ? (
-                      <span className="text-red-600 text-xs font-bold border border-red-200 bg-red-50 px-2 py-1 rounded">
-                        Sem contatos
-                      </span>
-                    ) : (
-                      <span className="text-sm font-semibold text-gray-700">
-                        {accContacts.length} pessoa(s)
-                      </span>
-                    )}
+                    <span className="text-sm font-semibold text-gray-700">
+                      {getDaysWithoutContact(acc.lastTouchDate)}
+                    </span>
                   </TableCell>
                   <TableCell>
                     {alertNoAction ? (
-                      <span className="text-gray-500 text-xs font-bold italic">
-                        Ação Pendente
+                      <span className="text-red-600 text-xs font-bold flex items-center bg-red-50 border border-red-100 px-2 py-1 rounded w-fit">
+                        <AlertCircle className="w-3 h-3 mr-1" /> Sem Ação
                       </span>
                     ) : (
                       <div className="flex flex-col items-start gap-1">
                         <span className="text-xs font-bold text-black">
                           {acc.nextAction}
                         </span>
-                        <Badge
-                          className={`${getActionColor(acc.nextActionDate)} border-0 shadow-none rounded font-bold text-[10px] px-1.5 py-0`}
+                        <span
+                          className={`text-[10px] font-bold px-1.5 py-0.5 rounded border ${getActionColor(acc.nextActionDate)}`}
                         >
                           {new Date(acc.nextActionDate!).toLocaleDateString()}
-                        </Badge>
+                        </span>
                       </div>
                     )}
                   </TableCell>
@@ -305,13 +353,23 @@ export default function Accounts() {
                       onClick={() => setProposalAccountId(acc.id)}
                       className="h-8 text-xs font-bold rounded hover:bg-gray-100"
                     >
-                      <FileText className="w-4 h-4 mr-2" />
+                      <FileText className="w-4 h-4 mr-2 text-gray-500" />
                       Proposta
                     </Button>
                   </TableCell>
                 </TableRow>
               )
             })}
+            {filtered.length === 0 && (
+              <TableRow>
+                <TableCell
+                  colSpan={5}
+                  className="text-center py-10 text-gray-500 font-medium"
+                >
+                  Nenhuma conta encontrada com estes filtros.
+                </TableCell>
+              </TableRow>
+            )}
           </TableBody>
         </Table>
       </div>

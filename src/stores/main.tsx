@@ -18,11 +18,7 @@ interface MainStore {
   completeActivity: (id: string) => void
   addContact: (contact: Omit<Contact, 'id' | 'createdAt' | 'updatedAt'>) => void
   addOpportunity: (opp: Omit<Opportunity, 'id' | 'createdAt'>) => void
-  updateOpportunityStage: (
-    id: string,
-    stage: Opportunity['stage'],
-    lossReason?: string,
-  ) => void
+  updateOpportunity: (id: string, opp: Partial<Opportunity>) => void
 }
 
 const MainContext = createContext<MainStore | undefined>(undefined)
@@ -102,13 +98,9 @@ export function MainProvider({ children }: { children: ReactNode }) {
     ])
   }
 
-  const updateOpportunityStage = (
-    id: string,
-    stage: Opportunity['stage'],
-    lossReason?: string,
-  ) => {
+  const updateOpportunity = (id: string, opp: Partial<Opportunity>) => {
     setOpportunities((prev) =>
-      prev.map((o) => (o.id === id ? { ...o, stage, lossReason } : o)),
+      prev.map((o) => (o.id === id ? { ...o, ...opp } : o)),
     )
   }
 
@@ -125,7 +117,7 @@ export function MainProvider({ children }: { children: ReactNode }) {
         completeActivity,
         addContact,
         addOpportunity,
-        updateOpportunityStage,
+        updateOpportunity,
       }}
     >
       {children}

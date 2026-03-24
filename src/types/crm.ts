@@ -32,6 +32,7 @@ export interface Account {
   nextActionDate?: string
   lastTouchDate?: string
   cadenceStage?: string
+  lossReason?: string
   createdAt: string
   updatedAt: string
 }
@@ -109,10 +110,8 @@ export interface Activity {
 }
 
 export type OpportunityStage =
-  | 'Diagnóstico'
-  | 'Reunião agendada'
-  | 'Reunião realizada'
-  | 'Piloto'
+  | 'Prospecção'
+  | 'Qualificação'
   | 'Proposta'
   | 'Negociação'
   | 'Fechado ganho'
@@ -129,5 +128,7 @@ export interface Opportunity {
   probability: number
   lossReason?: string
   closeDate?: string
+  nextAction?: string
+  nextActionDate?: string
   createdAt: string
 }
