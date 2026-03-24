@@ -11,29 +11,32 @@ import Reports from './pages/Reports'
 import Proposal from './pages/Proposal'
 import NotFound from './pages/NotFound'
 import Layout from './components/Layout'
+import { MainProvider } from '@/stores/main'
 
 const App = () => (
-  <BrowserRouter
-    future={{ v7_startTransition: false, v7_relativeSplatPath: false }}
-  >
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <Routes>
-        <Route element={<Layout />}>
-          <Route path="/" element={<Index />} />
-          <Route path="/accounts" element={<Accounts />} />
-          <Route path="/contacts" element={<Contacts />} />
-          <Route path="/activities" element={<Activities />} />
-          <Route path="/pipeline" element={<Pipeline />} />
-          <Route path="/reports" element={<Reports />} />
-        </Route>
-        {/* Proposal route outside Layout for full screen and clean printing */}
-        <Route path="/proposal" element={<Proposal />} />
-        <Route path="*" element={<NotFound />} />
-      </Routes>
-    </TooltipProvider>
-  </BrowserRouter>
+  <MainProvider>
+    <BrowserRouter
+      future={{ v7_startTransition: false, v7_relativeSplatPath: false }}
+    >
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <Routes>
+          <Route element={<Layout />}>
+            <Route path="/" element={<Index />} />
+            <Route path="/accounts" element={<Accounts />} />
+            <Route path="/contacts" element={<Contacts />} />
+            <Route path="/activities" element={<Activities />} />
+            <Route path="/pipeline" element={<Pipeline />} />
+            <Route path="/reports" element={<Reports />} />
+          </Route>
+          {/* Proposal route outside Layout for full screen and clean printing */}
+          <Route path="/proposal" element={<Proposal />} />
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+      </TooltipProvider>
+    </BrowserRouter>
+  </MainProvider>
 )
 
 export default App
