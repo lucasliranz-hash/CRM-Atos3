@@ -27,8 +27,9 @@ const App = () => (
           <Route path="/activities" element={<Activities />} />
           <Route path="/pipeline" element={<Pipeline />} />
           <Route path="/reports" element={<Reports />} />
-          <Route path="/proposal" element={<Proposal />} />
         </Route>
+        {/* Proposal route outside Layout for full screen and clean printing */}
+        <Route path="/proposal" element={<Proposal />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
     </TooltipProvider>

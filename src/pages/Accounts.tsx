@@ -19,14 +19,18 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog'
-import { Download, Plus, Search, Upload } from 'lucide-react'
+import { Download, FileText, Plus, Search, Upload } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
+import { ProposalGeneratorDialog } from '@/components/proposal/ProposalGeneratorDialog'
 
 export default function Accounts() {
   const { accounts, contacts, addAccount } = useMainStore()
   const { toast } = useToast()
   const [search, setSearch] = useState('')
   const [isOpen, setIsOpen] = useState(false)
+  const [proposalAccountId, setProposalAccountId] = useState<string | null>(
+    null,
+  )
 
   const filtered = accounts.filter((a) =>
     a.name.toLowerCase().includes(search.toLowerCase()),
@@ -231,6 +235,9 @@ export default function Accounts() {
               <TableHead className="font-bold text-black">
                 Próxima Ação
               </TableHead>
+              <TableHead className="font-bold text-black text-right">
+                Ações
+              </TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -291,12 +298,29 @@ export default function Accounts() {
                       </div>
                     )}
                   </TableCell>
+                  <TableCell className="text-right">
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => setProposalAccountId(acc.id)}
+                      className="h-8 text-xs font-bold rounded hover:bg-gray-100"
+                    >
+                      <FileText className="w-4 h-4 mr-2" />
+                      Proposta
+                    </Button>
+                  </TableCell>
                 </TableRow>
               )
             })}
           </TableBody>
         </Table>
       </div>
+
+      <ProposalGeneratorDialog
+        accountId={proposalAccountId}
+        open={!!proposalAccountId}
+        onOpenChange={(open) => !open && setProposalAccountId(null)}
+      />
     </div>
   )
 }

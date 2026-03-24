@@ -20,6 +20,7 @@ import {
 } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { useToast } from '@/hooks/use-toast'
+import { ProposalGeneratorDialog } from '@/components/proposal/ProposalGeneratorDialog'
 
 const STAGES = [
   'Diagnóstico',
@@ -37,6 +38,9 @@ export default function Pipeline() {
   const { toast } = useToast()
   const [view, setView] = useState<'kanban' | 'table'>('kanban')
   const [selectedOpp, setSelectedOpp] = useState<any>(null)
+  const [proposalAccountId, setProposalAccountId] = useState<string | null>(
+    null,
+  )
 
   const handleUpdateStage = (e: any) => {
     e.preventDefault()
@@ -246,10 +250,27 @@ export default function Pipeline() {
               >
                 Salvar Alteração
               </Button>
+              <Button
+                type="button"
+                variant="outline"
+                className="w-full mt-2 font-bold border-gray-300 text-black hover:bg-gray-100"
+                onClick={() => {
+                  setProposalAccountId(selectedOpp.accountId)
+                  setSelectedOpp(null)
+                }}
+              >
+                Gerar Proposta Comercial
+              </Button>
             </form>
           </DialogContent>
         </Dialog>
       )}
+
+      <ProposalGeneratorDialog
+        accountId={proposalAccountId}
+        open={!!proposalAccountId}
+        onOpenChange={(open) => !open && setProposalAccountId(null)}
+      />
     </div>
   )
 }
