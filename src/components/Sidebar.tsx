@@ -6,6 +6,7 @@ import {
   Activity,
   Kanban,
   BarChart,
+  Settings as SettingsIcon,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import {
@@ -21,6 +22,7 @@ const navItems = [
   { icon: Activity, label: 'Atividades', path: '/activities' },
   { icon: Kanban, label: 'Pipeline', path: '/pipeline' },
   { icon: BarChart, label: 'Dashboard', path: '/reports' },
+  { icon: SettingsIcon, label: 'Configurações', path: '/settings' },
 ]
 
 export function Sidebar() {
@@ -46,7 +48,7 @@ export function Sidebar() {
             </TooltipTrigger>
             <TooltipContent
               side="right"
-              className="bg-black text-white border-0 ml-2 shadow-lg"
+              className="bg-black text-white border-0 ml-2 shadow-lg font-medium"
             >
               {item.label}
             </TooltipContent>

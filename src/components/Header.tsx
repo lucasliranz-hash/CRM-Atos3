@@ -8,10 +8,12 @@ import {
 import { Link, useNavigate } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import { useAuth } from '@/hooks/use-auth'
+import useMainStore from '@/stores/main'
 
 export function Header() {
   const navigate = useNavigate()
   const { profile, signOut } = useAuth()
+  const { logoUrl } = useMainStore()
 
   const handleLogout = async () => {
     await signOut()
@@ -22,12 +24,22 @@ export function Header() {
     <header className="flex items-center justify-between px-6 py-4 bg-white mx-4 mt-4 rounded-xl border border-gray-200 shadow-sm sticky top-4 z-40">
       <div className="flex items-center gap-6">
         <Link to="/" className="flex items-center gap-3 group">
-          <div className="h-8 w-8 bg-black rounded flex items-center justify-center text-white shadow-sm group-hover:bg-gray-800 transition-colors">
-            <Crosshair className="w-4 h-4" />
-          </div>
-          <span className="font-black text-xl tracking-tight text-black">
-            Atos3 CRM
-          </span>
+          {logoUrl ? (
+            <img
+              src={logoUrl}
+              alt="Logo"
+              className="h-8 w-auto max-w-[160px] object-contain"
+            />
+          ) : (
+            <>
+              <div className="h-8 w-8 bg-black rounded flex items-center justify-center text-white shadow-sm group-hover:bg-gray-800 transition-colors">
+                <Crosshair className="w-4 h-4" />
+              </div>
+              <span className="font-black text-xl tracking-tight text-black hidden sm:block">
+                Atos3 CRM
+              </span>
+            </>
+          )}
         </Link>
       </div>
 

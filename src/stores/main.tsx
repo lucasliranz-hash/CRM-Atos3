@@ -14,6 +14,8 @@ interface MainStore {
   contacts: Contact[]
   activities: Activity[]
   opportunities: Opportunity[]
+  logoUrl: string | null
+  setLogoUrl: (url: string | null) => void
   addAccount: (
     acc: Omit<Account, 'id' | 'createdAt' | 'updatedAt'>,
   ) => Promise<void>
@@ -35,6 +37,7 @@ export function MainProvider({ children }: { children: ReactNode }) {
   const [contacts, setContacts] = useState<Contact[]>([])
   const [activities, setActivities] = useState<Activity[]>([])
   const [opportunities, setOpportunities] = useState<Opportunity[]>([])
+  const [logoUrl, setLogoUrl] = useState<string | null>(null)
 
   useEffect(() => {
     if (user && profile) {
@@ -61,11 +64,23 @@ export function MainProvider({ children }: { children: ReactNode }) {
         if (acts.data) setActivities(acts.data as Activity[])
         if (opps.data) setOpportunities(opps.data as Opportunity[])
       })
+
+      if (profile.loja_id) {
+        supabase
+          .from('company_settings' as any)
+          .select('logo_url')
+          .eq('loja_id', profile.loja_id)
+          .maybeSingle()
+          .then(({ data }) => {
+            if (data?.logo_url) setLogoUrl(data.logo_url)
+          })
+      }
     } else {
       setAccounts([])
       setContacts([])
       setActivities([])
       setOpportunities([])
+      setLogoUrl(null)
     }
   }, [user, profile])
 
@@ -173,6 +188,8 @@ export function MainProvider({ children }: { children: ReactNode }) {
         contacts,
         activities,
         opportunities,
+        logoUrl,
+        setLogoUrl,
         addAccount,
         updateAccount,
         addActivity,
