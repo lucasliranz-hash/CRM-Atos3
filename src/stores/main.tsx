@@ -1,107 +1,169 @@
-import React, { createContext, useContext, useState, ReactNode } from 'react'
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  ReactNode,
+} from 'react'
 import { Account, Contact, Activity, Opportunity } from '@/types/crm'
-import {
-  mockAccounts,
-  mockContacts,
-  mockActivities,
-  mockOpportunities,
-} from '@/data/mock'
+import { supabase } from '@/lib/supabase/client'
+import { useAuth } from '@/hooks/use-auth'
 
 interface MainStore {
   accounts: Account[]
   contacts: Contact[]
   activities: Activity[]
   opportunities: Opportunity[]
-  addAccount: (acc: Omit<Account, 'id' | 'createdAt' | 'updatedAt'>) => void
-  updateAccount: (id: string, acc: Partial<Account>) => void
-  addActivity: (act: Omit<Activity, 'id' | 'createdAt'>) => void
-  completeActivity: (id: string) => void
-  addContact: (contact: Omit<Contact, 'id' | 'createdAt' | 'updatedAt'>) => void
-  addOpportunity: (opp: Omit<Opportunity, 'id' | 'createdAt'>) => void
-  updateOpportunity: (id: string, opp: Partial<Opportunity>) => void
+  addAccount: (
+    acc: Omit<Account, 'id' | 'createdAt' | 'updatedAt'>,
+  ) => Promise<void>
+  updateAccount: (id: string, acc: Partial<Account>) => Promise<void>
+  addActivity: (act: Omit<Activity, 'id' | 'createdAt'>) => Promise<void>
+  completeActivity: (id: string) => Promise<void>
+  addContact: (
+    contact: Omit<Contact, 'id' | 'createdAt' | 'updatedAt'>,
+  ) => Promise<void>
+  addOpportunity: (opp: Omit<Opportunity, 'id' | 'createdAt'>) => Promise<void>
+  updateOpportunity: (id: string, opp: Partial<Opportunity>) => Promise<void>
 }
 
 const MainContext = createContext<MainStore | undefined>(undefined)
 
 export function MainProvider({ children }: { children: ReactNode }) {
-  const [accounts, setAccounts] = useState<Account[]>(mockAccounts)
-  const [contacts, setContacts] = useState<Contact[]>(mockContacts)
-  const [activities, setActivities] = useState<Activity[]>(mockActivities)
-  const [opportunities, setOpportunities] =
-    useState<Opportunity[]>(mockOpportunities)
+  const { user, profile } = useAuth()
+  const [accounts, setAccounts] = useState<Account[]>([])
+  const [contacts, setContacts] = useState<Contact[]>([])
+  const [activities, setActivities] = useState<Activity[]>([])
+  const [opportunities, setOpportunities] = useState<Opportunity[]>([])
 
-  const updateAccount = (id: string, acc: Partial<Account>) => {
-    setAccounts((prev) =>
-      prev.map((a) =>
-        a.id === id ? { ...a, ...acc, updatedAt: new Date().toISOString() } : a,
-      ),
-    )
-  }
-
-  const addAccount = (acc: Omit<Account, 'id' | 'createdAt' | 'updatedAt'>) => {
-    const newAcc: Account = {
-      ...acc,
-      id: Math.random().toString(36).substring(7),
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
+  useEffect(() => {
+    if (user && profile) {
+      Promise.all([
+        supabase
+          .from('accounts')
+          .select('*')
+          .order('createdAt', { ascending: false }),
+        supabase
+          .from('contacts')
+          .select('*')
+          .order('createdAt', { ascending: false }),
+        supabase
+          .from('activities')
+          .select('*')
+          .order('date', { ascending: false }),
+        supabase
+          .from('opportunities')
+          .select('*')
+          .order('createdAt', { ascending: false }),
+      ]).then(([accs, conts, acts, opps]) => {
+        if (accs.data) setAccounts(accs.data as Account[])
+        if (conts.data) setContacts(conts.data as Contact[])
+        if (acts.data) setActivities(acts.data as Activity[])
+        if (opps.data) setOpportunities(opps.data as Opportunity[])
+      })
+    } else {
+      setAccounts([])
+      setContacts([])
+      setActivities([])
+      setOpportunities([])
     }
-    setAccounts((prev) => [newAcc, ...prev])
+  }, [user, profile])
+
+  const updateAccount = async (id: string, acc: Partial<Account>) => {
+    const { error } = await supabase.from('accounts').update(acc).eq('id', id)
+    if (!error) {
+      setAccounts((prev) =>
+        prev.map((a) =>
+          a.id === id
+            ? { ...a, ...acc, updatedAt: new Date().toISOString() }
+            : a,
+        ),
+      )
+    }
   }
 
-  const addActivity = (act: Omit<Activity, 'id' | 'createdAt'>) => {
-    setActivities((prev) => [
-      {
-        ...act,
-        id: Math.random().toString(36).substring(7),
-        createdAt: new Date().toISOString(),
-      },
-      ...prev,
-    ])
-
-    updateAccount(act.accountId, {
-      lastTouchDate: new Date().toISOString(),
-      ...(act.nextAction && {
-        nextAction: act.nextAction,
-        nextActionDate: act.nextActionDate,
-      }),
-    })
+  const addAccount = async (
+    acc: Omit<Account, 'id' | 'createdAt' | 'updatedAt'>,
+  ) => {
+    const toInsert = { ...acc, loja_id: profile?.loja_id }
+    const { data, error } = await supabase
+      .from('accounts')
+      .insert(toInsert)
+      .select()
+      .single()
+    if (data && !error) {
+      setAccounts((prev) => [data as Account, ...prev])
+    }
   }
 
-  const completeActivity = (id: string) => {
-    setActivities((prev) =>
-      prev.map((a) => (a.id === id ? { ...a, completed: true } : a)),
-    )
+  const addActivity = async (act: Omit<Activity, 'id' | 'createdAt'>) => {
+    const toInsert = { ...act, loja_id: profile?.loja_id }
+    const { data, error } = await supabase
+      .from('activities')
+      .insert(toInsert)
+      .select()
+      .single()
+
+    if (data && !error) {
+      setActivities((prev) => [data as Activity, ...prev])
+      await updateAccount(act.accountId, {
+        lastTouchDate: new Date().toISOString(),
+        ...(act.nextAction && {
+          nextAction: act.nextAction,
+          nextActionDate: act.nextActionDate,
+        }),
+      })
+    }
   }
 
-  const addContact = (
+  const completeActivity = async (id: string) => {
+    const { error } = await supabase
+      .from('activities')
+      .update({ completed: true })
+      .eq('id', id)
+    if (!error) {
+      setActivities((prev) =>
+        prev.map((a) => (a.id === id ? { ...a, completed: true } : a)),
+      )
+    }
+  }
+
+  const addContact = async (
     contact: Omit<Contact, 'id' | 'createdAt' | 'updatedAt'>,
   ) => {
-    setContacts((prev) => [
-      {
-        ...contact,
-        id: Math.random().toString(36).substring(7),
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      },
-      ...prev,
-    ])
+    const toInsert = { ...contact, loja_id: profile?.loja_id }
+    const { data, error } = await supabase
+      .from('contacts')
+      .insert(toInsert)
+      .select()
+      .single()
+    if (data && !error) {
+      setContacts((prev) => [data as Contact, ...prev])
+    }
   }
 
-  const addOpportunity = (opp: Omit<Opportunity, 'id' | 'createdAt'>) => {
-    setOpportunities((prev) => [
-      {
-        ...opp,
-        id: Math.random().toString(36).substring(7),
-        createdAt: new Date().toISOString(),
-      },
-      ...prev,
-    ])
+  const addOpportunity = async (opp: Omit<Opportunity, 'id' | 'createdAt'>) => {
+    const toInsert = { ...opp, loja_id: profile?.loja_id }
+    const { data, error } = await supabase
+      .from('opportunities')
+      .insert(toInsert)
+      .select()
+      .single()
+    if (data && !error) {
+      setOpportunities((prev) => [data as Opportunity, ...prev])
+    }
   }
 
-  const updateOpportunity = (id: string, opp: Partial<Opportunity>) => {
-    setOpportunities((prev) =>
-      prev.map((o) => (o.id === id ? { ...o, ...opp } : o)),
-    )
+  const updateOpportunity = async (id: string, opp: Partial<Opportunity>) => {
+    const { error } = await supabase
+      .from('opportunities')
+      .update(opp)
+      .eq('id', id)
+    if (!error) {
+      setOpportunities((prev) =>
+        prev.map((o) => (o.id === id ? { ...o, ...opp } : o)),
+      )
+    }
   }
 
   return (

@@ -9,31 +9,36 @@ import Activities from './pages/Activities'
 import Pipeline from './pages/Pipeline'
 import Reports from './pages/Reports'
 import NotFound from './pages/NotFound'
+import Login from './pages/Login'
 import Layout from './components/Layout'
 import { MainProvider } from '@/stores/main'
+import { AuthProvider } from '@/hooks/use-auth'
 
 const App = () => (
-  <MainProvider>
-    <BrowserRouter
-      future={{ v7_startTransition: false, v7_relativeSplatPath: false }}
-    >
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <Routes>
-          <Route element={<Layout />}>
-            <Route path="/" element={<Index />} />
-            <Route path="/accounts" element={<Accounts />} />
-            <Route path="/contacts" element={<Contacts />} />
-            <Route path="/activities" element={<Activities />} />
-            <Route path="/pipeline" element={<Pipeline />} />
-            <Route path="/reports" element={<Reports />} />
-          </Route>
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </TooltipProvider>
-    </BrowserRouter>
-  </MainProvider>
+  <AuthProvider>
+    <MainProvider>
+      <BrowserRouter
+        future={{ v7_startTransition: false, v7_relativeSplatPath: false }}
+      >
+        <TooltipProvider>
+          <Toaster />
+          <Sonner />
+          <Routes>
+            <Route path="/login" element={<Login />} />
+            <Route element={<Layout />}>
+              <Route path="/" element={<Index />} />
+              <Route path="/accounts" element={<Accounts />} />
+              <Route path="/contacts" element={<Contacts />} />
+              <Route path="/activities" element={<Activities />} />
+              <Route path="/pipeline" element={<Pipeline />} />
+              <Route path="/reports" element={<Reports />} />
+            </Route>
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </TooltipProvider>
+      </BrowserRouter>
+    </MainProvider>
+  </AuthProvider>
 )
 
 export default App

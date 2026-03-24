@@ -33,6 +33,7 @@ export interface Account {
   lastTouchDate?: string
   cadenceStage?: string
   lossReason?: string
+  loja_id?: string
   createdAt: string
   updatedAt: string
 }
@@ -58,6 +59,7 @@ export interface Contact {
   isDecisionMaker: boolean
   isInfluencer: boolean
   isChampion: boolean
+  loja_id?: string
   createdAt: string
   updatedAt: string
 }
@@ -106,6 +108,7 @@ export interface Activity {
   nextAction?: string
   nextActionDate?: string
   completed: boolean
+  loja_id?: string
   createdAt: string
 }
 
@@ -130,5 +133,6 @@ export interface Opportunity {
   closeDate?: string
   nextAction?: string
   nextActionDate?: string
+  loja_id?: string
   createdAt: string
 }

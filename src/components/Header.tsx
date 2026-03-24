@@ -1,5 +1,5 @@
-import { Crosshair, Plus } from 'lucide-react'
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import { Crosshair, Plus, LogOut } from 'lucide-react'
+import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import {
   Popover,
   PopoverContent,
@@ -7,9 +7,16 @@ import {
 } from '@/components/ui/popover'
 import { Link, useNavigate } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
+import { useAuth } from '@/hooks/use-auth'
 
 export function Header() {
   const navigate = useNavigate()
+  const { profile, signOut } = useAuth()
+
+  const handleLogout = async () => {
+    await signOut()
+    navigate('/login')
+  }
 
   return (
     <header className="flex items-center justify-between px-6 py-4 bg-white mx-4 mt-4 rounded-xl border border-gray-200 shadow-sm sticky top-4 z-40">
@@ -64,16 +71,31 @@ export function Header() {
         <div className="flex items-center gap-3">
           <div className="text-right hidden sm:block">
             <p className="text-sm font-bold text-black leading-none">
-              Sales Solo
+              {profile?.nome || 'Usuário'}
             </p>
-            <p className="text-xs text-gray-500 mt-1 font-medium">B2B Exec</p>
+            <p className="text-xs text-gray-500 mt-1 font-medium capitalize">
+              {profile?.role || 'B2B Exec'}
+            </p>
           </div>
-          <Avatar className="h-9 w-9 border border-gray-200 shadow-sm">
-            <AvatarImage src="https://img.usecurling.com/ppl/thumbnail?gender=male&seed=1" />
-            <AvatarFallback className="bg-gray-100 text-black font-bold">
-              S
-            </AvatarFallback>
-          </Avatar>
+
+          <Popover>
+            <PopoverTrigger asChild>
+              <Avatar className="h-9 w-9 border border-gray-200 shadow-sm cursor-pointer hover:border-black transition-colors">
+                <AvatarFallback className="bg-gray-100 text-black font-bold">
+                  {profile?.nome?.charAt(0).toUpperCase() || 'U'}
+                </AvatarFallback>
+              </Avatar>
+            </PopoverTrigger>
+            <PopoverContent className="w-40 p-1" align="end">
+              <Button
+                variant="ghost"
+                onClick={handleLogout}
+                className="w-full justify-start text-red-600 hover:text-red-700 hover:bg-red-50 font-bold"
+              >
+                <LogOut className="w-4 h-4 mr-2" /> Sair
+              </Button>
+            </PopoverContent>
+          </Popover>
         </div>
       </div>
     </header>
