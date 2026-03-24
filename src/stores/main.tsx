@@ -4,6 +4,7 @@ import React, {
   useState,
   useEffect,
   ReactNode,
+  useRef,
 } from 'react'
 import { Account, Contact, Activity, Opportunity } from '@/types/crm'
 import { supabase } from '@/lib/supabase/client'
@@ -39,7 +40,15 @@ export function MainProvider({ children }: { children: ReactNode }) {
   const [opportunities, setOpportunities] = useState<Opportunity[]>([])
   const [logoUrl, setLogoUrl] = useState<string | null>(null)
 
+  const oppsRef = useRef(opportunities)
   useEffect(() => {
+    oppsRef.current = opportunities
+  }, [opportunities])
+
+  useEffect(() => {
+    let mounted = true
+    let channel: any
+
     if (user && profile) {
       Promise.all([
         supabase
@@ -59,6 +68,7 @@ export function MainProvider({ children }: { children: ReactNode }) {
           .select('*')
           .order('createdAt', { ascending: false }),
       ]).then(([accs, conts, acts, opps]) => {
+        if (!mounted) return
         if (accs.data) setAccounts(accs.data as Account[])
         if (conts.data) setContacts(conts.data as Contact[])
         if (acts.data) setActivities(acts.data as Activity[])
@@ -72,15 +82,120 @@ export function MainProvider({ children }: { children: ReactNode }) {
           .eq('loja_id', profile.loja_id)
           .maybeSingle()
           .then(({ data }) => {
-            if (data?.logo_url) setLogoUrl(data.logo_url)
+            if (mounted && data?.logo_url) setLogoUrl(data.logo_url)
           })
       }
+
+      channel = supabase
+        .channel('public-db-changes')
+        .on(
+          'postgres_changes',
+          { event: '*', schema: 'public', table: 'accounts' },
+          (payload) => {
+            if (payload.eventType === 'INSERT') {
+              setAccounts((prev) =>
+                prev.some((a) => a.id === payload.new.id)
+                  ? prev
+                  : [payload.new as Account, ...prev],
+              )
+            } else if (payload.eventType === 'UPDATE') {
+              setAccounts((prev) =>
+                prev.map((a) =>
+                  a.id === payload.new.id ? { ...a, ...payload.new } : a,
+                ),
+              )
+            } else if (payload.eventType === 'DELETE') {
+              setAccounts((prev) => prev.filter((a) => a.id !== payload.old.id))
+            }
+          },
+        )
+        .on(
+          'postgres_changes',
+          { event: '*', schema: 'public', table: 'contacts' },
+          (payload) => {
+            if (payload.eventType === 'INSERT') {
+              setContacts((prev) =>
+                prev.some((c) => c.id === payload.new.id)
+                  ? prev
+                  : [payload.new as Contact, ...prev],
+              )
+            } else if (payload.eventType === 'UPDATE') {
+              setContacts((prev) =>
+                prev.map((c) =>
+                  c.id === payload.new.id ? { ...c, ...payload.new } : c,
+                ),
+              )
+            } else if (payload.eventType === 'DELETE') {
+              setContacts((prev) => prev.filter((c) => c.id !== payload.old.id))
+            }
+          },
+        )
+        .on(
+          'postgres_changes',
+          { event: '*', schema: 'public', table: 'activities' },
+          (payload) => {
+            if (payload.eventType === 'INSERT') {
+              setActivities((prev) =>
+                prev.some((a) => a.id === payload.new.id)
+                  ? prev
+                  : [payload.new as Activity, ...prev].sort(
+                      (a, b) =>
+                        new Date(b.date).getTime() - new Date(a.date).getTime(),
+                    ),
+              )
+            } else if (payload.eventType === 'UPDATE') {
+              setActivities((prev) =>
+                prev
+                  .map((a) =>
+                    a.id === payload.new.id ? { ...a, ...payload.new } : a,
+                  )
+                  .sort(
+                    (a, b) =>
+                      new Date(b.date).getTime() - new Date(a.date).getTime(),
+                  ),
+              )
+            } else if (payload.eventType === 'DELETE') {
+              setActivities((prev) =>
+                prev.filter((a) => a.id !== payload.old.id),
+              )
+            }
+          },
+        )
+        .on(
+          'postgres_changes',
+          { event: '*', schema: 'public', table: 'opportunities' },
+          (payload) => {
+            if (payload.eventType === 'INSERT') {
+              setOpportunities((prev) =>
+                prev.some((o) => o.id === payload.new.id)
+                  ? prev
+                  : [payload.new as Opportunity, ...prev],
+              )
+            } else if (payload.eventType === 'UPDATE') {
+              setOpportunities((prev) =>
+                prev.map((o) =>
+                  o.id === payload.new.id ? { ...o, ...payload.new } : o,
+                ),
+              )
+            } else if (payload.eventType === 'DELETE') {
+              setOpportunities((prev) =>
+                prev.filter((o) => o.id !== payload.old.id),
+              )
+            }
+          },
+        )
+        .subscribe()
     } else {
       setAccounts([])
       setContacts([])
       setActivities([])
       setOpportunities([])
       setLogoUrl(null)
+    }
+
+    return () => {
+      mounted = false
+      if (channel) supabase.removeChannel(channel)
     }
   }, [user, profile])
 
@@ -107,7 +222,9 @@ export function MainProvider({ children }: { children: ReactNode }) {
       .select()
       .single()
     if (data && !error) {
-      setAccounts((prev) => [data as Account, ...prev])
+      setAccounts((prev) =>
+        prev.some((a) => a.id === data.id) ? prev : [data as Account, ...prev],
+      )
     }
   }
 
@@ -120,7 +237,10 @@ export function MainProvider({ children }: { children: ReactNode }) {
       .single()
 
     if (data && !error) {
-      setActivities((prev) => [data as Activity, ...prev])
+      setActivities((prev) =>
+        prev.some((a) => a.id === data.id) ? prev : [data as Activity, ...prev],
+      )
+
       await updateAccount(act.accountId, {
         lastTouchDate: new Date().toISOString(),
         ...(act.nextAction && {
@@ -128,6 +248,21 @@ export function MainProvider({ children }: { children: ReactNode }) {
           nextActionDate: act.nextActionDate,
         }),
       })
+
+      if (act.nextAction) {
+        const linkedOpps = oppsRef.current.filter(
+          (o) =>
+            o.accountId === act.accountId &&
+            o.stage !== 'Fechado ganho' &&
+            o.stage !== 'Fechado perdido',
+        )
+        for (const opp of linkedOpps) {
+          await updateOpportunity(opp.id, {
+            nextAction: act.nextAction,
+            nextActionDate: act.nextActionDate,
+          })
+        }
+      }
     }
   }
 
@@ -153,7 +288,9 @@ export function MainProvider({ children }: { children: ReactNode }) {
       .select()
       .single()
     if (data && !error) {
-      setContacts((prev) => [data as Contact, ...prev])
+      setContacts((prev) =>
+        prev.some((c) => c.id === data.id) ? prev : [data as Contact, ...prev],
+      )
     }
   }
 
@@ -165,7 +302,18 @@ export function MainProvider({ children }: { children: ReactNode }) {
       .select()
       .single()
     if (data && !error) {
-      setOpportunities((prev) => [data as Opportunity, ...prev])
+      setOpportunities((prev) =>
+        prev.some((o) => o.id === data.id)
+          ? prev
+          : [data as Opportunity, ...prev],
+      )
+
+      if (opp.nextAction && opp.accountId) {
+        await updateAccount(opp.accountId, {
+          nextAction: opp.nextAction,
+          nextActionDate: opp.nextActionDate,
+        })
+      }
     }
   }
 
@@ -178,6 +326,26 @@ export function MainProvider({ children }: { children: ReactNode }) {
       setOpportunities((prev) =>
         prev.map((o) => (o.id === id ? { ...o, ...opp } : o)),
       )
+
+      const existingOpp = oppsRef.current.find((o) => o.id === id)
+      if (existingOpp?.accountId) {
+        let accountUpdates: Partial<Account> = {}
+
+        if (opp.nextAction !== undefined) {
+          accountUpdates.nextAction = opp.nextAction
+          accountUpdates.nextActionDate = opp.nextActionDate
+        }
+
+        if (opp.stage === 'Fechado ganho') {
+          accountUpdates.status = 'Qualificado'
+        } else if (opp.stage === 'Fechado perdido') {
+          accountUpdates.status = 'Perdido'
+        }
+
+        if (Object.keys(accountUpdates).length > 0) {
+          await updateAccount(existingOpp.accountId, accountUpdates)
+        }
+      }
     }
   }
 
