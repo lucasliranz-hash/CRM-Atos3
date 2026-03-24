@@ -165,6 +165,38 @@ export type Database = {
           },
         ]
       }
+      company_settings: {
+        Row: {
+          created_at: string | null
+          id: string
+          logo_url: string | null
+          loja_id: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          logo_url?: string | null
+          loja_id?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          logo_url?: string | null
+          loja_id?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'company_settings_loja_id_fkey'
+            columns: ['loja_id']
+            isOneToOne: true
+            referencedRelation: 'lojas'
+            referencedColumns: ['id']
+          },
+        ]
+      }
       contacts: {
         Row: {
           accountId: string | null
@@ -539,6 +571,12 @@ export const Constants = {
 //   completed: boolean (nullable, default: false)
 //   loja_id: uuid (nullable)
 //   createdAt: timestamp with time zone (nullable, default: now())
+// Table: company_settings
+//   id: uuid (not null, default: gen_random_uuid())
+//   loja_id: uuid (nullable)
+//   logo_url: text (nullable)
+//   created_at: timestamp with time zone (nullable, default: now())
+//   updated_at: timestamp with time zone (nullable, default: now())
 // Table: contacts
 //   id: uuid (not null, default: gen_random_uuid())
 //   accountId: uuid (nullable)
@@ -591,6 +629,10 @@ export const Constants = {
 //   FOREIGN KEY activities_contactId_fkey: FOREIGN KEY ("contactId") REFERENCES contacts(id) ON DELETE SET NULL
 //   FOREIGN KEY activities_loja_id_fkey: FOREIGN KEY (loja_id) REFERENCES lojas(id)
 //   PRIMARY KEY activities_pkey: PRIMARY KEY (id)
+// Table: company_settings
+//   FOREIGN KEY company_settings_loja_id_fkey: FOREIGN KEY (loja_id) REFERENCES lojas(id) ON DELETE CASCADE
+//   UNIQUE company_settings_loja_id_key: UNIQUE (loja_id)
+//   PRIMARY KEY company_settings_pkey: PRIMARY KEY (id)
 // Table: contacts
 //   FOREIGN KEY contacts_accountId_fkey: FOREIGN KEY ("accountId") REFERENCES accounts(id) ON DELETE CASCADE
 //   FOREIGN KEY contacts_loja_id_fkey: FOREIGN KEY (loja_id) REFERENCES lojas(id)
@@ -614,6 +656,9 @@ export const Constants = {
 // Table: activities
 //   Policy "activities_all" (ALL, PERMISSIVE) roles={public}
 //     USING: ((get_user_role() = 'admin'::text) OR (loja_id = get_user_loja()))
+// Table: company_settings
+//   Policy "company_settings_all" (ALL, PERMISSIVE) roles={public}
+//     USING: ((loja_id = get_user_loja()) OR (get_user_role() = 'admin'::text))
 // Table: contacts
 //   Policy "contacts_all" (ALL, PERMISSIVE) roles={public}
 //     USING: ((get_user_role() = 'admin'::text) OR (loja_id = get_user_loja()))
@@ -666,3 +711,7 @@ export const Constants = {
 //   END;
 //   $function$
 //
+
+// --- INDEXES ---
+// Table: company_settings
+//   CREATE UNIQUE INDEX company_settings_loja_id_key ON public.company_settings USING btree (loja_id)
