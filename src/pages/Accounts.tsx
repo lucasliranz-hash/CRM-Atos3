@@ -31,7 +31,7 @@ import { useToast } from '@/hooks/use-toast'
 import { ProposalGeneratorDialog } from '@/components/proposal/ProposalGeneratorDialog'
 
 export default function Accounts() {
-  const { accounts, contacts, addAccount } = useMainStore()
+  const { accounts, addAccount } = useMainStore()
   const { toast } = useToast()
   const [search, setSearch] = useState('')
   const [filterStatus, setFilterStatus] = useState('')
@@ -170,6 +170,9 @@ export default function Accounts() {
                         Pronto para contato
                       </option>
                       <option value="Em prospecção">Em prospecção</option>
+                      <option value="Aguardando retorno">
+                        Aguardando retorno
+                      </option>
                     </select>
                   </div>
                 </div>
@@ -218,6 +221,20 @@ export default function Accounts() {
                       <option value="B">B - Média</option>
                       <option value="A">A - Alta</option>
                       <option value="C">C - Baixa</option>
+                    </select>
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-xs font-bold text-gray-700">
+                      Potencial
+                    </label>
+                    <select
+                      name="accountPotential"
+                      className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                    >
+                      <option value="">Desconhecido</option>
+                      <option value="Baixo">Baixo</option>
+                      <option value="Médio">Médio</option>
+                      <option value="Alto">Alto</option>
                     </select>
                   </div>
                   <div className="space-y-1">
@@ -311,16 +328,23 @@ export default function Accounts() {
                     </div>
                   </TableCell>
                   <TableCell>
-                    <div className="flex items-center gap-2">
+                    <div className="flex flex-col items-start gap-1.5">
                       <Badge
                         variant="outline"
                         className="border-gray-200 text-gray-700 font-bold rounded bg-white shadow-sm"
                       >
                         {acc.status}
                       </Badge>
-                      <span className="text-xs font-bold text-gray-500">
-                        Prio {acc.priority}
-                      </span>
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-gray-100 text-gray-600 border border-gray-200">
+                          Prio {acc.priority}
+                        </span>
+                        {acc.accountPotential && (
+                          <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-gray-100 text-gray-600 border border-gray-200">
+                            Pot. {acc.accountPotential}
+                          </span>
+                        )}
+                      </div>
                     </div>
                   </TableCell>
                   <TableCell>

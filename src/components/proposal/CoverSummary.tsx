@@ -23,7 +23,7 @@ export function CoverSummary({ account }: any) {
             Atos3 Tecnologia
           </div>
           <div className="text-sm font-bold text-gray-500 uppercase tracking-widest hidden sm:block">
-            Proposta de Solução Tecnológica
+            PROPOSTA COMERCIAL - ATOS3 CRM
           </div>
         </div>
 

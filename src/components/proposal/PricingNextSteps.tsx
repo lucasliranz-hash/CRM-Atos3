@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { CheckCircle2, Zap, Settings, Shield, TrendingDown } from 'lucide-react'
 import {
   Table,
@@ -10,8 +11,11 @@ import {
 import { formatCurrency } from '@/lib/crm-utils'
 
 export function PricingNextSteps({ account, config }: any) {
-  const fleet = account?.fleetEstimate || 1
-  const totalMonthly = fleet * config.unit
+  const [fleet, setFleet] = useState(account?.fleetEstimate || 1)
+  const [unit, setUnit] = useState(config.unit || 150)
+  const [setup, setSetup] = useState(config.setup || 1000)
+
+  const totalMonthly = fleet * unit
 
   return (
     <>
@@ -67,14 +71,18 @@ export function PricingNextSteps({ account, config }: any) {
       </section>
 
       <section className="space-y-8 break-inside-avoid pt-12">
-        <div className="space-y-4">
-          <h2 className="text-3xl font-black tracking-tight border-b-4 border-black inline-block pb-2">
-            06. Investimento
-          </h2>
-          <p className="text-xl leading-relaxed text-gray-700 max-w-3xl font-medium">
-            Dimensionamento financeiro para a frota estimada de{' '}
-            <span className="font-black text-black">{fleet} veículos</span>.
-          </p>
+        <div className="space-y-4 flex flex-col md:flex-row md:items-end justify-between">
+          <div>
+            <h2 className="text-3xl font-black tracking-tight border-b-4 border-black inline-block pb-2">
+              06. Investimento
+            </h2>
+            <p className="text-xl leading-relaxed text-gray-700 max-w-3xl font-medium mt-4">
+              Dimensionamento financeiro configurável para a sua operação.
+            </p>
+          </div>
+          <div className="text-xs font-bold text-gray-400 bg-gray-50 px-3 py-1.5 rounded border border-gray-200 print:hidden">
+            Tabela Editável
+          </div>
         </div>
 
         <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-sm">
@@ -94,13 +102,30 @@ export function PricingNextSteps({ account, config }: any) {
                 <TableCell className="py-6 font-bold text-base text-gray-800">
                   Mensalidade por Veículo (Unitário)
                 </TableCell>
-                <TableCell className="py-6 text-right font-black text-xl text-black">
-                  {formatCurrency(config.unit)}
+                <TableCell className="py-6 text-right">
+                  <div className="flex justify-end items-center gap-1 font-black text-xl text-black">
+                    R$
+                    <input
+                      type="number"
+                      value={unit}
+                      onChange={(e) => setUnit(Number(e.target.value) || 0)}
+                      className="w-24 text-right bg-transparent outline-none border-b border-dashed border-gray-300 focus:border-black focus:bg-gray-50 rounded-none print:appearance-none print:border-none print:bg-transparent"
+                    />
+                  </div>
                 </TableCell>
               </TableRow>
-              <TableRow className="bg-black hover:bg-black text-white">
+              <TableRow className="bg-black hover:bg-black text-white print:bg-black print:text-white">
                 <TableCell className="py-6 font-bold text-base text-white">
-                  Mensalidade Total da Frota ({fleet} un.)
+                  <div className="flex items-center gap-2">
+                    Mensalidade Total da Frota (
+                    <input
+                      type="number"
+                      value={fleet}
+                      onChange={(e) => setFleet(Number(e.target.value) || 0)}
+                      className="w-16 text-center bg-transparent border-b border-dashed border-gray-500 focus:border-white focus:bg-gray-800 outline-none print:appearance-none print:border-none"
+                    />
+                    un.)
+                  </div>
                 </TableCell>
                 <TableCell className="py-6 text-right font-black text-2xl text-white">
                   {formatCurrency(totalMonthly)}
@@ -113,8 +138,16 @@ export function PricingNextSteps({ account, config }: any) {
                 <TableCell className="py-6 font-bold text-base text-gray-800">
                   Taxa de Implantação e Setup
                 </TableCell>
-                <TableCell className="py-6 text-right font-black text-xl text-black">
-                  {formatCurrency(config.setup)}
+                <TableCell className="py-6 text-right">
+                  <div className="flex justify-end items-center gap-1 font-black text-xl text-black">
+                    R$
+                    <input
+                      type="number"
+                      value={setup}
+                      onChange={(e) => setSetup(Number(e.target.value) || 0)}
+                      className="w-24 text-right bg-transparent outline-none border-b border-dashed border-gray-300 focus:border-black focus:bg-gray-50 rounded-none print:appearance-none print:border-none print:bg-transparent"
+                    />
+                  </div>
                   <span className="text-sm font-medium text-gray-500 block mt-1">
                     pagamento único
                   </span>

@@ -11,6 +11,7 @@ import {
   AlertTriangle,
   Building2,
   TrendingDown,
+  Timer,
 } from 'lucide-react'
 import { Link } from 'react-router-dom'
 
@@ -74,6 +75,10 @@ export default function Index() {
           (!o.nextActionDate || isOverdue(o.nextActionDate)),
       ),
     [opportunities],
+  )
+  const waitingReturn = useMemo(
+    () => accounts.filter((a) => a.status === 'Aguardando retorno'),
+    [accounts],
   )
 
   const renderAct = (act: any) => {
@@ -212,6 +217,13 @@ export default function Index() {
           items={stalledOpps}
           emptyText="Pipeline com follow-up em dia."
           renderItem={renderOpp}
+        />
+        <MiniList
+          title="Aguardando Retorno"
+          icon={Timer}
+          items={waitingReturn}
+          emptyText="Nenhum lead nesta etapa."
+          renderItem={renderAcc}
         />
       </div>
     </div>
