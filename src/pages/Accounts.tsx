@@ -19,16 +19,8 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog'
-import {
-  Download,
-  FileText,
-  Plus,
-  Search,
-  Upload,
-  AlertCircle,
-} from 'lucide-react'
+import { Download, Plus, Search, Upload, AlertCircle } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
-import { ProposalGeneratorDialog } from '@/components/proposal/ProposalGeneratorDialog'
 
 export default function Accounts() {
   const { accounts, addAccount } = useMainStore()
@@ -37,9 +29,6 @@ export default function Accounts() {
   const [filterStatus, setFilterStatus] = useState('')
   const [filterInterest, setFilterInterest] = useState('')
   const [isOpen, setIsOpen] = useState(false)
-  const [proposalAccountId, setProposalAccountId] = useState<string | null>(
-    null,
-  )
 
   const filtered = accounts.filter((a) => {
     const matchSearch = a.name.toLowerCase().includes(search.toLowerCase())
@@ -303,9 +292,6 @@ export default function Accounts() {
               <TableHead className="font-bold text-black">
                 Próxima Ação
               </TableHead>
-              <TableHead className="font-bold text-black text-right">
-                Ações
-              </TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -370,24 +356,13 @@ export default function Accounts() {
                       </div>
                     )}
                   </TableCell>
-                  <TableCell className="text-right">
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      onClick={() => setProposalAccountId(acc.id)}
-                      className="h-8 text-xs font-bold rounded hover:bg-gray-100"
-                    >
-                      <FileText className="w-4 h-4 mr-2 text-gray-500" />
-                      Proposta
-                    </Button>
-                  </TableCell>
                 </TableRow>
               )
             })}
             {filtered.length === 0 && (
               <TableRow>
                 <TableCell
-                  colSpan={5}
+                  colSpan={4}
                   className="text-center py-10 text-gray-500 font-medium"
                 >
                   Nenhuma conta encontrada com estes filtros.
@@ -397,12 +372,6 @@ export default function Accounts() {
           </TableBody>
         </Table>
       </div>
-
-      <ProposalGeneratorDialog
-        accountId={proposalAccountId}
-        open={!!proposalAccountId}
-        onOpenChange={(open) => !open && setProposalAccountId(null)}
-      />
     </div>
   )
 }

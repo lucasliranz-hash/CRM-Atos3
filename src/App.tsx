@@ -8,7 +8,6 @@ import Contacts from './pages/Contacts'
 import Activities from './pages/Activities'
 import Pipeline from './pages/Pipeline'
 import Reports from './pages/Reports'
-import Proposal from './pages/Proposal'
 import NotFound from './pages/NotFound'
 import Layout from './components/Layout'
 import { MainProvider } from '@/stores/main'
@@ -30,8 +29,6 @@ const App = () => (
             <Route path="/pipeline" element={<Pipeline />} />
             <Route path="/reports" element={<Reports />} />
           </Route>
-          {/* Proposal route outside Layout for full screen and clean printing */}
-          <Route path="/proposal" element={<Proposal />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </TooltipProvider>
