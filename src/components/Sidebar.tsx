@@ -6,6 +6,7 @@ import {
   Activity,
   Kanban,
   BarChart,
+  FileText,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import {
@@ -21,6 +22,7 @@ const navItems = [
   { icon: Activity, label: 'Atividades', path: '/activities' },
   { icon: Kanban, label: 'Pipeline', path: '/pipeline' },
   { icon: BarChart, label: 'Dashboard', path: '/reports' },
+  { icon: FileText, label: 'Proposta', path: '/proposal' },
 ]
 
 export function Sidebar() {

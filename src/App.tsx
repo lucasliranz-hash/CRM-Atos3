@@ -8,6 +8,7 @@ import Contacts from './pages/Contacts'
 import Activities from './pages/Activities'
 import Pipeline from './pages/Pipeline'
 import Reports from './pages/Reports'
+import Proposal from './pages/Proposal'
 import NotFound from './pages/NotFound'
 import Layout from './components/Layout'
 
@@ -26,6 +27,7 @@ const App = () => (
           <Route path="/activities" element={<Activities />} />
           <Route path="/pipeline" element={<Pipeline />} />
           <Route path="/reports" element={<Reports />} />
+          <Route path="/proposal" element={<Proposal />} />
         </Route>
         <Route path="*" element={<NotFound />} />
       </Routes>
