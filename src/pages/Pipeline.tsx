@@ -171,25 +171,37 @@ export default function Pipeline() {
                     const overdue = opp.nextActionDate
                       ? isOverdue(opp.nextActionDate)
                       : true
+
+                    const isNewLead =
+                      opp.stage === 'Prospecção' &&
+                      opp.nextAction?.includes('Contato inicial')
+
                     return (
                       <div
                         key={opp.id}
                         draggable
                         onDragStart={(e) => onDragStart(e, opp.id)}
                         onClick={() => setSelectedOpp(opp)}
-                        className={`bg-white p-4 rounded-xl shadow-sm border cursor-grab active:cursor-grabbing hover:border-black transition-colors group ${overdue ? 'border-red-200' : 'border-gray-200'}`}
+                        className={`bg-white p-4 rounded-xl shadow-sm border cursor-grab active:cursor-grabbing hover:border-black transition-colors group ${overdue && !isNewLead ? 'border-red-200' : isNewLead ? 'border-blue-200' : 'border-gray-200'}`}
                       >
                         <div className="text-xs font-bold text-gray-500 mb-2 flex items-center justify-between group-hover:text-black transition-colors">
                           <span className="flex items-center gap-1">
                             <Building2 className="w-3 h-3" />
                             {acc?.name}
                           </span>
-                          {overdue && (
-                            <AlertCircle
-                              className="w-3 h-3 text-red-500"
-                              title="Ação atrasada ou pendente"
-                            />
-                          )}
+                          <div className="flex items-center gap-1">
+                            {isNewLead && (
+                              <span className="bg-blue-100 text-blue-800 text-[9px] px-1.5 py-0.5 rounded font-black uppercase tracking-wider">
+                                Novo Lead
+                              </span>
+                            )}
+                            {overdue && !isNewLead && (
+                              <AlertCircle
+                                className="w-3 h-3 text-red-500"
+                                title="Ação atrasada ou pendente"
+                              />
+                            )}
+                          </div>
                         </div>
                         <h4 className="font-black text-sm text-black mb-3 leading-tight">
                           {opp.name}
@@ -203,7 +215,7 @@ export default function Pipeline() {
                           </span>
                         </div>
                         <div
-                          className={`text-[10px] font-semibold px-2 py-1.5 rounded bg-gray-50 border ${overdue ? 'border-red-100 text-red-700' : 'border-gray-100 text-gray-600'}`}
+                          className={`text-[10px] font-semibold px-2 py-1.5 rounded bg-gray-50 border ${overdue && !isNewLead ? 'border-red-100 text-red-700' : isNewLead ? 'border-blue-100 text-blue-800 bg-blue-50/50' : 'border-gray-100 text-gray-600'}`}
                         >
                           Ação: {opp.nextAction || 'Não definida'}
                         </div>
@@ -247,10 +259,22 @@ export default function Pipeline() {
                 const overdue = opp.nextActionDate
                   ? isOverdue(opp.nextActionDate)
                   : true
+
+                const isNewLead =
+                  opp.stage === 'Prospecção' &&
+                  opp.nextAction?.includes('Contato inicial')
+
                 return (
                   <TableRow key={opp.id} className="hover:bg-gray-50/50">
                     <TableCell className="font-bold text-sm text-black">
-                      {opp.name}
+                      <div className="flex items-center gap-2">
+                        {opp.name}
+                        {isNewLead && (
+                          <span className="bg-blue-100 text-blue-800 text-[9px] px-1.5 py-0.5 rounded font-black uppercase tracking-wider">
+                            Novo
+                          </span>
+                        )}
+                      </div>
                     </TableCell>
                     <TableCell className="text-sm font-semibold text-gray-700">
                       {acc?.name}
@@ -265,7 +289,7 @@ export default function Pipeline() {
                     </TableCell>
                     <TableCell>
                       <div
-                        className={`text-xs font-semibold ${overdue ? 'text-red-600' : 'text-gray-600'}`}
+                        className={`text-xs font-semibold ${overdue && !isNewLead ? 'text-red-600' : isNewLead ? 'text-blue-600' : 'text-gray-600'}`}
                       >
                         {opp.nextAction || 'Pendente'}
                       </div>
