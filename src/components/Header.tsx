@@ -1,4 +1,4 @@
-import { Crosshair, Plus, LogOut } from 'lucide-react'
+import { Search, Plus, LogOut, Bell, Target } from 'lucide-react'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import {
   Popover,
@@ -21,56 +21,73 @@ export function Header() {
   }
 
   return (
-    <header className="flex items-center justify-between px-6 py-4 bg-white mx-4 mt-4 rounded-xl border border-gray-200 shadow-sm sticky top-4 z-40">
-      <div className="flex items-center gap-6">
-        <Link to="/" className="flex items-center gap-3 group">
+    <header className="flex items-center justify-between px-4 md:px-8 py-4 bg-white/60 sticky top-0 z-40 backdrop-blur-xl border-b border-gray-200/50">
+      <div className="flex items-center gap-6 flex-1">
+        {/* Mobile Logo */}
+        <div className="md:hidden flex items-center gap-3">
           {logoUrl ? (
             <img
               src={logoUrl}
               alt="Logo"
-              className="h-8 w-auto max-w-[160px] object-contain"
+              className="h-8 w-auto max-w-[120px] object-contain drop-shadow-sm"
             />
           ) : (
-            <>
-              <div className="h-8 w-8 bg-black rounded flex items-center justify-center text-white shadow-sm group-hover:bg-gray-800 transition-colors">
-                <Crosshair className="w-4 h-4" />
-              </div>
-              <span className="font-black text-xl tracking-tight text-black hidden sm:block">
-                Atos3 CRM
-              </span>
-            </>
+            <div className="w-8 h-8 bg-black rounded-lg flex items-center justify-center text-white shadow-sm">
+              <span className="font-black text-sm tracking-tighter">A3</span>
+            </div>
           )}
-        </Link>
+        </div>
+
+        {/* Global Search Mock */}
+        <div className="hidden md:flex items-center flex-1 max-w-md bg-white border border-gray-200 rounded-full px-4 py-2 shadow-[0_2px_8px_rgba(0,0,0,0.02)] focus-within:shadow-[0_4px_16px_rgba(0,0,0,0.06)] focus-within:border-gray-300 transition-all duration-300 group">
+          <Search className="w-4 h-4 text-gray-400 mr-3 group-focus-within:text-black transition-colors" />
+          <input
+            type="text"
+            placeholder="Buscar contas, contatos ou oportunidades..."
+            className="bg-transparent border-none outline-none text-sm w-full font-medium placeholder:text-gray-400 text-gray-900"
+          />
+          <div className="flex items-center gap-1 text-[10px] text-gray-400 font-bold ml-2">
+            <span className="px-1.5 py-0.5 rounded-md bg-gray-50 border border-gray-100">
+              ⌘
+            </span>
+            <span className="px-1.5 py-0.5 rounded-md bg-gray-50 border border-gray-100">
+              K
+            </span>
+          </div>
+        </div>
       </div>
 
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-2 md:gap-4">
         <Popover>
           <PopoverTrigger asChild>
-            <Button
-              size="sm"
-              className="bg-black text-white hover:bg-gray-800 rounded font-semibold hidden sm:flex"
-            >
-              <Plus className="w-4 h-4 mr-1" /> Ação Rápida
+            <Button className="bg-black text-white rounded-full px-5 shadow-lg shadow-black/10 hover:bg-gray-800 transition-all duration-300 font-bold hidden sm:flex h-10">
+              <Plus className="w-4 h-4 mr-1.5" strokeWidth={3} /> Nova Ação
             </Button>
           </PopoverTrigger>
-          <PopoverContent className="w-48 p-2 flex flex-col gap-1" align="end">
+          <PopoverContent
+            className="w-56 p-2 flex flex-col gap-1 rounded-2xl shadow-xl border-gray-100"
+            align="end"
+          >
+            <div className="px-3 py-1.5 text-[10px] font-black text-gray-400 uppercase tracking-widest">
+              Criar Rapidamente
+            </div>
             <Button
               variant="ghost"
-              className="justify-start w-full text-sm h-8 font-medium"
+              className="justify-start w-full text-sm h-9 font-bold rounded-xl hover:bg-gray-50 text-gray-700"
               onClick={() => navigate('/accounts')}
             >
-              Nova Conta
+              Conta ou Lead
             </Button>
             <Button
               variant="ghost"
-              className="justify-start w-full text-sm h-8 font-medium"
+              className="justify-start w-full text-sm h-9 font-bold rounded-xl hover:bg-gray-50 text-gray-700"
               onClick={() => navigate('/pipeline')}
             >
-              Nova Oportunidade
+              Oportunidade
             </Button>
             <Button
               variant="ghost"
-              className="justify-start w-full text-sm h-8 font-medium"
+              className="justify-start w-full text-sm h-9 font-bold rounded-xl hover:bg-gray-50 text-gray-700"
               onClick={() => navigate('/activities')}
             >
               Registrar Atividade
@@ -78,37 +95,63 @@ export function Header() {
           </PopoverContent>
         </Popover>
 
+        <Button
+          variant="ghost"
+          size="icon"
+          className="rounded-full text-gray-400 hover:text-black hover:bg-gray-100 relative w-10 h-10 transition-colors"
+        >
+          <Bell className="w-5 h-5" />
+          <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border-2 border-white" />
+        </Button>
+
         <div className="w-px h-6 bg-gray-200 mx-1 hidden sm:block" />
 
-        <div className="flex items-center gap-3">
-          <div className="text-right hidden sm:block">
-            <p className="text-sm font-bold text-black leading-none">
-              {profile?.nome || 'Usuário'}
-            </p>
-            <p className="text-xs text-gray-500 mt-1 font-medium capitalize">
-              {profile?.role || 'B2B Exec'}
-            </p>
-          </div>
-
-          <Popover>
-            <PopoverTrigger asChild>
-              <Avatar className="h-9 w-9 border border-gray-200 shadow-sm cursor-pointer hover:border-black transition-colors">
-                <AvatarFallback className="bg-gray-100 text-black font-bold">
+        <Popover>
+          <PopoverTrigger asChild>
+            <div className="flex items-center gap-3 cursor-pointer group p-1 pr-2 rounded-full hover:bg-white transition-colors border border-transparent hover:border-gray-100 hover:shadow-sm">
+              <div className="text-right hidden sm:block group-hover:opacity-80 transition-opacity">
+                <p className="text-sm font-bold text-gray-900 leading-none">
+                  {profile?.nome || 'Usuário'}
+                </p>
+                <p className="text-xs text-gray-500 mt-1 font-semibold capitalize">
+                  {profile?.role || 'B2B Exec'}
+                </p>
+              </div>
+              <Avatar className="h-9 w-9 border-2 border-white shadow-sm ring-1 ring-gray-100 group-hover:ring-gray-200 transition-all">
+                <AvatarFallback className="bg-gradient-to-br from-gray-800 to-black text-white font-bold text-sm">
                   {profile?.nome?.charAt(0).toUpperCase() || 'U'}
                 </AvatarFallback>
               </Avatar>
-            </PopoverTrigger>
-            <PopoverContent className="w-40 p-1" align="end">
-              <Button
-                variant="ghost"
-                onClick={handleLogout}
-                className="w-full justify-start text-red-600 hover:text-red-700 hover:bg-red-50 font-bold"
-              >
-                <LogOut className="w-4 h-4 mr-2" /> Sair
-              </Button>
-            </PopoverContent>
-          </Popover>
-        </div>
+            </div>
+          </PopoverTrigger>
+          <PopoverContent
+            className="w-52 p-2 rounded-2xl shadow-xl border-gray-100"
+            align="end"
+          >
+            <div className="px-3 py-3 border-b border-gray-50 mb-1 bg-gray-50/50 rounded-xl">
+              <p className="text-sm font-black text-gray-900">
+                {profile?.nome || 'Usuário'}
+              </p>
+              <p className="text-xs font-semibold text-gray-500 mt-0.5">
+                {profile?.role || 'B2B Exec'}
+              </p>
+            </div>
+            <Button
+              variant="ghost"
+              onClick={() => navigate('/settings')}
+              className="w-full justify-start text-sm font-bold rounded-xl hover:bg-gray-50 text-gray-700 mt-1"
+            >
+              Configurações
+            </Button>
+            <Button
+              variant="ghost"
+              onClick={handleLogout}
+              className="w-full justify-start text-red-600 hover:text-red-700 hover:bg-red-50 font-bold rounded-xl mt-1"
+            >
+              <LogOut className="w-4 h-4 mr-2" /> Sair
+            </Button>
+          </PopoverContent>
+        </Popover>
       </div>
     </header>
   )

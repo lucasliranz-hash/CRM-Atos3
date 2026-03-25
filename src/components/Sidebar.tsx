@@ -14,47 +14,105 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from '@/components/ui/tooltip'
+import useMainStore from '@/stores/main'
 
 const navItems = [
-  { icon: LayoutDashboard, label: 'Hoje', path: '/' },
-  { icon: Building2, label: 'Contas', path: '/accounts' },
+  { icon: LayoutDashboard, label: 'Dashboard', path: '/' },
+  { icon: Building2, label: 'Contas & Leads', path: '/accounts' },
   { icon: Users, label: 'Contatos', path: '/contacts' },
   { icon: Activity, label: 'Atividades', path: '/activities' },
   { icon: Kanban, label: 'Pipeline', path: '/pipeline' },
-  { icon: BarChart, label: 'Dashboard', path: '/reports' },
-  { icon: SettingsIcon, label: 'Configurações', path: '/settings' },
+  { icon: BarChart, label: 'Relatórios', path: '/reports' },
 ]
 
 export function Sidebar() {
   const location = useLocation()
+  const { logoUrl } = useMainStore()
+
   return (
-    <aside className="fixed left-4 top-1/2 -translate-y-1/2 z-50 hidden md:flex flex-col gap-2 bg-black text-white py-6 px-3 rounded-2xl shadow-xl border border-gray-800">
-      {navItems.map((item) => {
-        const isActive = location.pathname === item.path
-        return (
-          <Tooltip key={item.path}>
-            <TooltipTrigger asChild>
-              <Link
-                to={item.path}
-                className={cn(
-                  'p-3 rounded-xl transition-all',
-                  isActive
-                    ? 'bg-white text-black'
-                    : 'text-gray-400 hover:text-white hover:bg-white/10',
-                )}
+    <aside className="fixed left-0 top-0 h-screen w-20 z-50 hidden md:flex flex-col items-center py-6 bg-white border-r border-gray-200/60 shadow-[4px_0_24px_rgba(0,0,0,0.02)]">
+      <div className="mb-8 px-2">
+        {logoUrl ? (
+          <img
+            src={logoUrl}
+            alt="Logo"
+            className="w-10 h-10 object-contain drop-shadow-sm"
+          />
+        ) : (
+          <div className="w-10 h-10 bg-black rounded-2xl flex items-center justify-center text-white shadow-md">
+            <span className="font-black text-lg tracking-tighter">A3</span>
+          </div>
+        )}
+      </div>
+
+      <div className="flex flex-col gap-2.5 flex-1 w-full px-3">
+        {navItems.map((item) => {
+          const isActive =
+            location.pathname === item.path ||
+            (item.path !== '/' && location.pathname.startsWith(item.path))
+          return (
+            <Tooltip key={item.path}>
+              <TooltipTrigger asChild>
+                <Link
+                  to={item.path}
+                  className={cn(
+                    'p-3.5 rounded-xl transition-all duration-300 flex items-center justify-center relative group w-full',
+                    isActive
+                      ? 'bg-black text-white shadow-md shadow-black/10'
+                      : 'text-gray-400 hover:text-black hover:bg-gray-100/80',
+                  )}
+                >
+                  <item.icon
+                    size={22}
+                    strokeWidth={isActive ? 2.5 : 2}
+                    className={cn(
+                      'transition-transform duration-300 group-hover:scale-110',
+                      isActive && 'scale-110',
+                    )}
+                  />
+                  {isActive && (
+                    <div className="absolute -left-3 top-1/2 -translate-y-1/2 w-1.5 h-8 bg-black rounded-r-full" />
+                  )}
+                </Link>
+              </TooltipTrigger>
+              <TooltipContent
+                side="right"
+                className="bg-gray-900 text-white border-0 ml-4 shadow-xl font-bold px-3 py-1.5 text-xs rounded-lg"
               >
-                <item.icon size={20} strokeWidth={isActive ? 2.5 : 2} />
-              </Link>
-            </TooltipTrigger>
-            <TooltipContent
-              side="right"
-              className="bg-black text-white border-0 ml-2 shadow-lg font-medium"
+                {item.label}
+              </TooltipContent>
+            </Tooltip>
+          )
+        })}
+      </div>
+
+      <div className="mt-auto px-3 w-full pb-2">
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Link
+              to="/settings"
+              className={cn(
+                'p-3.5 rounded-xl transition-all duration-300 flex items-center justify-center relative group w-full',
+                location.pathname === '/settings'
+                  ? 'bg-black text-white shadow-md shadow-black/10'
+                  : 'text-gray-400 hover:text-black hover:bg-gray-100/80',
+              )}
             >
-              {item.label}
-            </TooltipContent>
-          </Tooltip>
-        )
-      })}
+              <SettingsIcon
+                size={22}
+                strokeWidth={location.pathname === '/settings' ? 2.5 : 2}
+                className="transition-transform duration-500 group-hover:rotate-45"
+              />
+            </Link>
+          </TooltipTrigger>
+          <TooltipContent
+            side="right"
+            className="bg-gray-900 text-white border-0 ml-4 shadow-xl font-bold px-3 py-1.5 text-xs rounded-lg"
+          >
+            Configurações
+          </TooltipContent>
+        </Tooltip>
+      </div>
     </aside>
   )
 }
