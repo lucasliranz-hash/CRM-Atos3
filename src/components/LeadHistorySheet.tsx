@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react'
+import React, { useMemo, useState, useEffect } from 'react'
 import {
   Sheet,
   SheetContent,
@@ -22,6 +22,8 @@ import {
 } from 'lucide-react'
 import { Account } from '@/types/crm'
 import { Badge } from '@/components/ui/badge'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import LeadInteractionForm from './LeadInteractionForm'
 
 interface Props {
   account: Account | null
@@ -35,6 +37,11 @@ export default function LeadHistorySheet({
   onOpenChange,
 }: Props) {
   const { activities, opportunities, contacts } = useMainStore()
+  const [activeTab, setActiveTab] = useState('history')
+
+  useEffect(() => {
+    if (open) setActiveTab('history')
+  }, [open, account])
 
   const timeline = useMemo(() => {
     if (!account) return []
@@ -109,8 +116,8 @@ export default function LeadHistorySheet({
         type: 'activity',
         title: act.type,
         description: act.result
-          ? `Resultado: ${act.result}`
-          : 'Atividade registrada',
+          ? act.result
+          : 'Atividade registrada no sistema.',
         date: new Date(act.date),
         icon,
         color,
@@ -125,60 +132,97 @@ export default function LeadHistorySheet({
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent className="sm:max-w-[450px] overflow-y-auto bg-gray-50/50 p-6">
-        <SheetHeader className="mb-6">
-          <div className="flex items-center justify-between">
-            <SheetTitle className="text-xl font-black text-gray-900">
-              {account.name}
-            </SheetTitle>
-            <Badge
-              variant="outline"
-              className="font-bold bg-white shadow-sm border-gray-200"
-            >
-              {account.status}
-            </Badge>
-          </div>
-          <SheetDescription className="font-medium text-gray-500">
-            Histórico de interações e movimentações do lead.
-          </SheetDescription>
-        </SheetHeader>
-
-        <div className="relative pl-6 before:absolute before:left-[11px] before:top-2 before:bottom-2 before:w-px before:bg-gray-200 space-y-6 mt-8">
-          {timeline.map((item) => (
-            <div key={item.id} className="relative">
-              <div
-                className={`absolute -left-[34px] top-1 flex items-center justify-center w-7 h-7 rounded-full border-[3px] border-white shadow-sm z-10 ${item.color}`}
-              >
-                {item.icon}
+      <SheetContent className="sm:max-w-[450px] md:max-w-[500px] w-full p-0 flex flex-col bg-gray-50/30">
+        <Tabs
+          value={activeTab}
+          onValueChange={setActiveTab}
+          className="flex flex-col h-full w-full"
+        >
+          <div className="p-6 pb-0 bg-white border-b border-gray-100 shrink-0">
+            <SheetHeader className="mb-5">
+              <div className="flex items-center justify-between">
+                <SheetTitle className="text-xl font-black text-gray-900">
+                  {account.name}
+                </SheetTitle>
+                <Badge
+                  variant="outline"
+                  className="font-bold bg-white shadow-sm border-gray-200"
+                >
+                  {account.status}
+                </Badge>
               </div>
-              <div className="bg-white border border-gray-100 rounded-xl p-3 shadow-sm hover:border-gray-200 transition-colors">
-                <div className="flex items-center justify-between mb-1.5">
-                  <h4 className="font-bold text-sm text-gray-900">
-                    {item.title}
-                  </h4>
-                  <time className="text-[10px] font-bold text-gray-500 bg-gray-50 px-2 py-0.5 rounded-md border border-gray-100 whitespace-nowrap">
-                    {format(item.date, "dd MMM yy 'às' HH:mm", {
-                      locale: ptBR,
-                    })}
-                  </time>
-                </div>
-                <p className="text-xs text-gray-600 font-medium leading-relaxed">
-                  {item.description}
-                </p>
-                {item.type === 'activity' && item.completed && (
-                  <div className="mt-2.5 flex items-center text-[10px] font-bold text-emerald-700 bg-emerald-50 w-fit px-1.5 py-0.5 rounded-md border border-emerald-100">
-                    <CheckCircle2 className="w-3 h-3 mr-1" /> Concluído
+              <SheetDescription className="font-medium text-gray-500">
+                Gestão e histórico de interações do lead.
+              </SheetDescription>
+            </SheetHeader>
+
+            <TabsList className="w-full bg-gray-100/70 p-1 mb-4 h-11">
+              <TabsTrigger
+                value="history"
+                className="w-1/2 h-full text-sm font-bold data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-black text-gray-500"
+              >
+                Histórico
+              </TabsTrigger>
+              <TabsTrigger
+                value="new"
+                className="w-1/2 h-full text-sm font-bold data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-black text-gray-500"
+              >
+                Nova Ação
+              </TabsTrigger>
+            </TabsList>
+          </div>
+
+          <div className="flex-1 overflow-y-auto p-6 relative">
+            <TabsContent
+              value="history"
+              className="m-0 h-full animate-in fade-in duration-300"
+            >
+              <div className="relative pl-6 before:absolute before:left-[11px] before:top-2 before:bottom-2 before:w-px before:bg-gray-200 space-y-6">
+                {timeline.map((item) => (
+                  <div key={item.id} className="relative">
+                    <div
+                      className={`absolute -left-[34px] top-1 flex items-center justify-center w-7 h-7 rounded-full border-[3px] border-white shadow-sm z-10 ${item.color}`}
+                    >
+                      {item.icon}
+                    </div>
+                    <div className="bg-white border border-gray-100 rounded-xl p-3 shadow-sm hover:border-gray-200 transition-colors">
+                      <div className="flex items-center justify-between mb-1.5">
+                        <h4 className="font-bold text-sm text-gray-900">
+                          {item.title}
+                        </h4>
+                        <time className="text-[10px] font-bold text-gray-500 bg-gray-50 px-2 py-0.5 rounded-md border border-gray-100 whitespace-nowrap">
+                          {format(item.date, "dd MMM yy 'às' HH:mm", {
+                            locale: ptBR,
+                          })}
+                        </time>
+                      </div>
+                      <p className="text-xs text-gray-600 font-medium leading-relaxed whitespace-pre-wrap">
+                        {item.description}
+                      </p>
+                      {item.type === 'activity' && item.completed && (
+                        <div className="mt-2.5 flex items-center text-[10px] font-bold text-emerald-700 bg-emerald-50 w-fit px-1.5 py-0.5 rounded-md border border-emerald-100">
+                          <CheckCircle2 className="w-3 h-3 mr-1" /> Concluído
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ))}
+                {timeline.length === 0 && (
+                  <div className="text-center py-10 text-gray-500 font-medium text-sm bg-white border border-dashed border-gray-200 rounded-xl">
+                    Nenhuma interação registrada.
                   </div>
                 )}
               </div>
-            </div>
-          ))}
-          {timeline.length === 0 && (
-            <div className="text-center py-10 text-gray-500 font-medium text-sm bg-white border border-dashed border-gray-200 rounded-xl">
-              Nenhuma interação registrada.
-            </div>
-          )}
-        </div>
+            </TabsContent>
+
+            <TabsContent value="new" className="m-0 h-full">
+              <LeadInteractionForm
+                account={account}
+                onSuccess={() => setActiveTab('history')}
+              />
+            </TabsContent>
+          </div>
+        </Tabs>
       </SheetContent>
     </Sheet>
   )
