@@ -19,8 +19,10 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog'
-import { Download, Plus, Search, Upload, AlertCircle } from 'lucide-react'
+import { Download, Plus, Search, Upload, AlertCircle, Eye } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
+import LeadHistorySheet from '@/components/LeadHistorySheet'
+import { Account } from '@/types/crm'
 
 export default function Accounts() {
   const { accounts, addAccount } = useMainStore()
@@ -29,6 +31,8 @@ export default function Accounts() {
   const [filterStatus, setFilterStatus] = useState('')
   const [filterInterest, setFilterInterest] = useState('')
   const [isOpen, setIsOpen] = useState(false)
+  const [selectedHistoryAccount, setSelectedHistoryAccount] =
+    useState<Account | null>(null)
 
   const filtered = accounts.filter((a) => {
     const matchSearch = a.name.toLowerCase().includes(search.toLowerCase())
@@ -292,6 +296,9 @@ export default function Accounts() {
               <TableHead className="font-bold text-black">
                 Próxima Ação
               </TableHead>
+              <TableHead className="font-bold text-black text-right">
+                Ações
+              </TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -356,13 +363,24 @@ export default function Accounts() {
                       </div>
                     )}
                   </TableCell>
+                  <TableCell className="text-right">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="text-gray-400 hover:text-black hover:bg-gray-100 rounded-lg"
+                      onClick={() => setSelectedHistoryAccount(acc)}
+                      title="Ver Histórico"
+                    >
+                      <Eye className="w-4 h-4" />
+                    </Button>
+                  </TableCell>
                 </TableRow>
               )
             })}
             {filtered.length === 0 && (
               <TableRow>
                 <TableCell
-                  colSpan={4}
+                  colSpan={5}
                   className="text-center py-10 text-gray-500 font-medium"
                 >
                   Nenhuma conta encontrada com estes filtros.
@@ -372,6 +390,12 @@ export default function Accounts() {
           </TableBody>
         </Table>
       </div>
+
+      <LeadHistorySheet
+        account={selectedHistoryAccount}
+        open={!!selectedHistoryAccount}
+        onOpenChange={(open) => !open && setSelectedHistoryAccount(null)}
+      />
     </div>
   )
 }
