@@ -33,7 +33,6 @@ type SignupFormValues = z.infer<typeof signupSchema>
 
 export default function Signup() {
   const [isLoading, setIsLoading] = useState(false)
-  const [imgError, setImgError] = useState(false)
   const { signUp } = useAuth()
   const navigate = useNavigate()
   const { toast } = useToast()
@@ -76,18 +75,9 @@ export default function Signup() {
     <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
       <div className="max-w-md w-full bg-white rounded-2xl shadow-xl border border-gray-200 p-8">
         <div className="flex flex-col items-center justify-center mb-8">
-          {imgError ? (
-            <div className="h-12 w-12 bg-black rounded-xl flex items-center justify-center text-white mb-4 shadow-md">
-              <Crosshair className="w-6 h-6" />
-            </div>
-          ) : (
-            <img
-              src="/logo.png"
-              alt="Atos3"
-              className="h-16 w-auto max-w-[200px] object-contain mb-4"
-              onError={() => setImgError(true)}
-            />
-          )}
+          <div className="h-12 w-12 bg-black rounded-xl flex items-center justify-center text-white mb-4 shadow-md">
+            <Crosshair className="w-6 h-6" />
+          </div>
           <h1 className="text-2xl font-black text-black tracking-tight">
             Criar Conta
           </h1>
