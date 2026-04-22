@@ -25,9 +25,10 @@ const STAGES = [
   'Prospecção',
   'Qualificação',
   'Proposta',
+  'Projeto Piloto',
   'Negociação',
-  'Fechado ganho',
-  'Fechado perdido',
+  'Fechado Ganho',
+  'Fechado Perdido',
 ]
 
 export default function Pipeline() {
@@ -46,7 +47,7 @@ export default function Pipeline() {
     const nextAction = fd.get('nextAction') as string
     const nextActionDate = fd.get('nextActionDate') as string
 
-    if (stage === 'Fechado perdido' && !lossReason) {
+    if (stage === 'Fechado Perdido' && !lossReason) {
       toast({
         title: 'Atenção',
         description: 'Motivo de perda é obrigatório.',
@@ -91,7 +92,7 @@ export default function Pipeline() {
     e.preventDefault()
     const oppId = e.dataTransfer.getData('oppId')
     if (oppId) {
-      if (stage === 'Fechado perdido') {
+      if (stage === 'Fechado Perdido') {
         const opp = opportunities.find((o) => o.id === oppId)
         if (opp) {
           setSelectedOpp({ ...opp, stage })

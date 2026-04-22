@@ -94,8 +94,8 @@ export type ActivityResult =
   | 'Não interessado'
   | 'Em análise'
   | 'Proposta em andamento'
-  | 'Fechado ganho'
-  | 'Fechado perdido'
+  | 'Fechado Ganho'
+  | 'Fechado Perdido'
 
 export interface Activity {
   id: string
@@ -116,9 +116,10 @@ export type OpportunityStage =
   | 'Prospecção'
   | 'Qualificação'
   | 'Proposta'
+  | 'Projeto Piloto'
   | 'Negociação'
-  | 'Fechado ganho'
-  | 'Fechado perdido'
+  | 'Fechado Ganho'
+  | 'Fechado Perdido'
 
 export interface Opportunity {
   id: string

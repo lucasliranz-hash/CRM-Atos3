@@ -19,13 +19,21 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog'
-import { Download, Plus, Search, Upload, AlertCircle, Eye } from 'lucide-react'
+import {
+  Download,
+  Plus,
+  Search,
+  Upload,
+  AlertCircle,
+  Eye,
+  Edit,
+} from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
 import LeadHistorySheet from '@/components/LeadHistorySheet'
 import { Account } from '@/types/crm'
 
 export default function Accounts() {
-  const { accounts, addAccount } = useMainStore()
+  const { accounts, addAccount, updateAccount } = useMainStore()
   const { toast } = useToast()
   const [search, setSearch] = useState('')
   const [filterStatus, setFilterStatus] = useState('')
@@ -33,6 +41,7 @@ export default function Accounts() {
   const [isOpen, setIsOpen] = useState(false)
   const [selectedHistoryAccount, setSelectedHistoryAccount] =
     useState<Account | null>(null)
+  const [editingAccount, setEditingAccount] = useState<Account | null>(null)
 
   const filtered = accounts.filter((a) => {
     const matchSearch = a.name.toLowerCase().includes(search.toLowerCase())
@@ -48,6 +57,31 @@ export default function Accounts() {
     const diff = new Date().getTime() - new Date(date).getTime()
     const days = Math.floor(diff / (1000 * 3600 * 24))
     return days <= 0 ? 'Hoje' : `${days} d`
+  }
+
+  const handleUpdate = (e: any) => {
+    e.preventDefault()
+    const fd = new FormData(e.target)
+    if (editingAccount) {
+      updateAccount(editingAccount.id, {
+        name: fd.get('name') as string,
+        website: fd.get('website') as string,
+        phone: fd.get('phone') as string,
+        segment: fd.get('segment') as string,
+        fleetModel: fd.get('fleetModel') as string,
+        fleetEstimate: Number(fd.get('fleetEstimate')) || 0,
+        leadSource: fd.get('leadSource') as string,
+        detailedSource: fd.get('detailedSource') as string,
+        status: fd.get('status') as any,
+        priority: fd.get('priority') as any,
+        icpFit: fd.get('icpFit') as string,
+        interestLevel: fd.get('interestLevel') as any,
+        accountPotential: fd.get('accountPotential') as any,
+        cadenceStage: fd.get('cadenceStage') as string,
+      })
+      setEditingAccount(null)
+      toast({ title: 'Conta atualizada com sucesso!' })
+    }
   }
 
   const handleCreate = (e: any) => {
@@ -364,15 +398,26 @@ export default function Accounts() {
                     )}
                   </TableCell>
                   <TableCell className="text-right">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="text-gray-400 hover:text-black hover:bg-gray-100 rounded-lg"
-                      onClick={() => setSelectedHistoryAccount(acc)}
-                      title="Ver Histórico"
-                    >
-                      <Eye className="w-4 h-4" />
-                    </Button>
+                    <div className="flex items-center justify-end gap-1">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="text-gray-400 hover:text-black hover:bg-gray-100 rounded-lg"
+                        onClick={() => setSelectedHistoryAccount(acc)}
+                        title="Ver Histórico"
+                      >
+                        <Eye className="w-4 h-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="text-gray-400 hover:text-black hover:bg-gray-100 rounded-lg"
+                        onClick={() => setEditingAccount(acc)}
+                        title="Editar Conta"
+                      >
+                        <Edit className="w-4 h-4" />
+                      </Button>
+                    </div>
                   </TableCell>
                 </TableRow>
               )
@@ -396,6 +441,175 @@ export default function Accounts() {
         open={!!selectedHistoryAccount}
         onOpenChange={(open) => !open && setSelectedHistoryAccount(null)}
       />
+
+      <Dialog
+        open={!!editingAccount}
+        onOpenChange={(open) => !open && setEditingAccount(null)}
+      >
+        <DialogContent className="sm:max-w-[700px]">
+          <DialogHeader>
+            <DialogTitle>Editar Conta</DialogTitle>
+          </DialogHeader>
+          {editingAccount && (
+            <form onSubmit={handleUpdate} className="space-y-6 mt-2">
+              <div className="grid grid-cols-2 gap-4 border border-gray-100 p-4 rounded-xl bg-gray-50/50">
+                <div className="space-y-1 col-span-2 sm:col-span-1">
+                  <label className="text-xs font-bold text-gray-700">
+                    Empresa *
+                  </label>
+                  <Input
+                    name="name"
+                    defaultValue={editingAccount.name}
+                    required
+                    placeholder="Ex: Logística Alfa"
+                    className="bg-white"
+                  />
+                </div>
+                <div className="space-y-1 col-span-2 sm:col-span-1">
+                  <label className="text-xs font-bold text-gray-700">
+                    Website
+                  </label>
+                  <Input
+                    name="website"
+                    defaultValue={editingAccount.website}
+                    placeholder="exemplo.com.br"
+                    className="bg-white"
+                  />
+                </div>
+                <div className="space-y-1 col-span-2 sm:col-span-1">
+                  <label className="text-xs font-bold text-gray-700">
+                    Telefone Geral
+                  </label>
+                  <Input
+                    name="phone"
+                    defaultValue={editingAccount.phone}
+                    placeholder="(00) 0000-0000"
+                    className="bg-white"
+                  />
+                </div>
+                <div className="space-y-1 col-span-2 sm:col-span-1">
+                  <label className="text-xs font-bold text-gray-700">
+                    Status *
+                  </label>
+                  <select
+                    name="status"
+                    defaultValue={editingAccount.status}
+                    required
+                    className="flex h-10 w-full rounded-md border border-input bg-white px-3 py-2 text-sm focus:ring-2 focus:ring-black"
+                  >
+                    <option value="Novo">Novo</option>
+                    <option value="Em pesquisa">Em pesquisa</option>
+                    <option value="Pronto para contato">
+                      Pronto para contato
+                    </option>
+                    <option value="Em prospecção">Em prospecção</option>
+                    <option value="Qualificado">Qualificado</option>
+                    <option value="Aguardando retorno">
+                      Aguardando retorno
+                    </option>
+                    <option value="Sem fit">Sem fit</option>
+                    <option value="Perdido">Perdido</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-3 gap-4">
+                <div className="space-y-1">
+                  <label className="text-xs font-bold text-gray-700">
+                    Segmento
+                  </label>
+                  <Input
+                    name="segment"
+                    defaultValue={editingAccount.segment}
+                    placeholder="Ex: Transporte"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-xs font-bold text-gray-700">
+                    Tam. Frota
+                  </label>
+                  <Input
+                    name="fleetEstimate"
+                    defaultValue={editingAccount.fleetEstimate}
+                    type="number"
+                    placeholder="0"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-xs font-bold text-gray-700">
+                    Interesse
+                  </label>
+                  <select
+                    name="interestLevel"
+                    defaultValue={editingAccount.interestLevel}
+                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                  >
+                    <option value="">Desconhecido</option>
+                    <option value="Frio">Frio</option>
+                    <option value="Morno">Morno</option>
+                    <option value="Quente">Quente</option>
+                  </select>
+                </div>
+                <div className="space-y-1">
+                  <label className="text-xs font-bold text-gray-700">
+                    Origem Detalhada
+                  </label>
+                  <Input
+                    name="detailedSource"
+                    defaultValue={editingAccount.detailedSource}
+                    placeholder="Ex: Google Ads"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-xs font-bold text-gray-700">
+                    Prioridade
+                  </label>
+                  <select
+                    name="priority"
+                    defaultValue={editingAccount.priority}
+                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                  >
+                    <option value="B">B - Média</option>
+                    <option value="A">A - Alta</option>
+                    <option value="C">C - Baixa</option>
+                  </select>
+                </div>
+                <div className="space-y-1">
+                  <label className="text-xs font-bold text-gray-700">
+                    Potencial
+                  </label>
+                  <select
+                    name="accountPotential"
+                    defaultValue={editingAccount.accountPotential}
+                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                  >
+                    <option value="">Desconhecido</option>
+                    <option value="Baixo">Baixo</option>
+                    <option value="Médio">Médio</option>
+                    <option value="Alto">Alto</option>
+                  </select>
+                </div>
+                <div className="space-y-1">
+                  <label className="text-xs font-bold text-gray-700">
+                    Cadência Atual
+                  </label>
+                  <Input
+                    name="cadenceStage"
+                    defaultValue={editingAccount.cadenceStage}
+                    placeholder="Ex: Toque 1"
+                  />
+                </div>
+              </div>
+              <Button
+                type="submit"
+                className="w-full bg-black text-white font-bold"
+              >
+                Salvar Alterações
+              </Button>
+            </form>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
