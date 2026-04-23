@@ -108,6 +108,8 @@ export interface Activity {
   nextAction?: string
   nextActionDate?: string
   completed: boolean
+  google_event_id?: string
+  meet_link?: string
   loja_id?: string
   createdAt: string
 }

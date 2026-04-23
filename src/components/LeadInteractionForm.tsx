@@ -42,11 +42,47 @@ export default function LeadInteractionForm({ account, onSuccess }: Props) {
   const [nextActionDate, setNextActionDate] = useState<Date | undefined>(
     new Date(),
   )
+  const [createMeet, setCreateMeet] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsSubmitting(true)
+
+    let meetLink = ''
+    let googleEventId = ''
+
+    if (scheduleNext && createMeet && nextAction) {
+      try {
+        const { supabase } = await import('@/lib/supabase/client')
+        const { data, error } = await supabase.functions.invoke(
+          'google-calendar',
+          {
+            body: {
+              action: 'createEvent',
+              payload: {
+                title: `${nextAction} - ${account.name}`,
+                date: nextActionDate?.toISOString() || new Date().toISOString(),
+              },
+            },
+          },
+        )
+        if (data?.success) {
+          meetLink = data.meetLink
+          googleEventId = data.eventId
+          toast({ title: 'Google Meet gerado com sucesso!' })
+        } else {
+          toast({
+            title: 'Aviso Google Agenda',
+            description: error?.message || data?.error,
+            variant: 'destructive',
+          })
+        }
+      } catch (err) {
+        console.error(err)
+      }
+    }
+
     try {
       await addActivity({
         accountId: account.id,
@@ -61,7 +97,9 @@ export default function LeadInteractionForm({ account, onSuccess }: Props) {
               nextActionDate: nextActionDate?.toISOString(),
             }
           : {}),
-      })
+        google_event_id: googleEventId,
+        meet_link: meetLink,
+      } as any)
       toast({ title: 'Ação registrada com sucesso!' })
       onSuccess()
     } catch (error) {
@@ -144,47 +182,60 @@ export default function LeadInteractionForm({ account, onSuccess }: Props) {
         </div>
 
         {scheduleNext && (
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-4 border-t border-gray-200">
-            <div className="space-y-1.5">
-              <label className="text-xs font-bold text-gray-700">
-                O que fazer? *
-              </label>
-              <Input
-                required
-                value={nextAction}
-                onChange={(e) => setNextAction(e.target.value)}
-                placeholder="Ex: Ligar para diretor"
-                className="bg-white"
-              />
+          <div className="space-y-4 pt-4 border-t border-gray-200">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-gray-700">
+                  O que fazer? *
+                </label>
+                <Input
+                  required
+                  value={nextAction}
+                  onChange={(e) => setNextAction(e.target.value)}
+                  placeholder="Ex: Reunião de apresentação"
+                  className="bg-white"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-gray-700">
+                  Quando? *
+                </label>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className={cn(
+                        'w-full justify-start text-left font-medium bg-white',
+                        !nextActionDate && 'text-muted-foreground',
+                      )}
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {nextActionDate
+                        ? format(nextActionDate, 'dd/MM/yyyy', { locale: ptBR })
+                        : 'Selecionar data'}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="end">
+                    <Calendar
+                      mode="single"
+                      selected={nextActionDate}
+                      onSelect={setNextActionDate}
+                      initialFocus
+                    />
+                  </PopoverContent>
+                </Popover>
+              </div>
             </div>
-            <div className="space-y-1.5">
-              <label className="text-xs font-bold text-gray-700">
-                Quando? *
-              </label>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    className={cn(
-                      'w-full justify-start text-left font-medium bg-white',
-                      !nextActionDate && 'text-muted-foreground',
-                    )}
-                  >
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    {nextActionDate
-                      ? format(nextActionDate, 'dd/MM/yyyy', { locale: ptBR })
-                      : 'Selecionar data'}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="end">
-                  <Calendar
-                    mode="single"
-                    selected={nextActionDate}
-                    onSelect={setNextActionDate}
-                    initialFocus
-                  />
-                </PopoverContent>
-              </Popover>
+            <div className="flex items-center justify-between bg-blue-50/50 p-3 rounded-lg border border-blue-100">
+              <div className="space-y-0.5">
+                <label className="text-sm font-bold text-blue-900">
+                  Gerar link do Google Meet
+                </label>
+                <p className="text-xs text-blue-700/80 font-medium">
+                  Cria o evento na agenda e anexa o link.
+                </p>
+              </div>
+              <Switch checked={createMeet} onCheckedChange={setCreateMeet} />
             </div>
           </div>
         )}

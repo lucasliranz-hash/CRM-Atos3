@@ -165,6 +165,50 @@ export type Database = {
           },
         ]
       }
+      audit_logs: {
+        Row: {
+          action: string
+          changed_by: string | null
+          created_at: string
+          id: string
+          loja_id: string | null
+          new_data: Json | null
+          old_data: Json | null
+          record_id: string
+          table_name: string
+        }
+        Insert: {
+          action: string
+          changed_by?: string | null
+          created_at?: string
+          id?: string
+          loja_id?: string | null
+          new_data?: Json | null
+          old_data?: Json | null
+          record_id: string
+          table_name: string
+        }
+        Update: {
+          action?: string
+          changed_by?: string | null
+          created_at?: string
+          id?: string
+          loja_id?: string | null
+          new_data?: Json | null
+          old_data?: Json | null
+          record_id?: string
+          table_name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'audit_logs_loja_id_fkey'
+            columns: ['loja_id']
+            isOneToOne: false
+            referencedRelation: 'lojas'
+            referencedColumns: ['id']
+          },
+        ]
+      }
       company_settings: {
         Row: {
           created_at: string | null
@@ -571,6 +615,16 @@ export const Constants = {
 //   completed: boolean (nullable, default: false)
 //   loja_id: uuid (nullable)
 //   createdAt: timestamp with time zone (nullable, default: now())
+// Table: audit_logs
+//   id: uuid (not null, default: gen_random_uuid())
+//   table_name: text (not null)
+//   record_id: uuid (not null)
+//   action: text (not null)
+//   old_data: jsonb (nullable)
+//   new_data: jsonb (nullable)
+//   changed_by: uuid (nullable)
+//   created_at: timestamp with time zone (not null, default: now())
+//   loja_id: uuid (nullable)
 // Table: company_settings
 //   id: uuid (not null, default: gen_random_uuid())
 //   loja_id: uuid (nullable)
@@ -629,6 +683,10 @@ export const Constants = {
 //   FOREIGN KEY activities_contactId_fkey: FOREIGN KEY ("contactId") REFERENCES contacts(id) ON DELETE SET NULL
 //   FOREIGN KEY activities_loja_id_fkey: FOREIGN KEY (loja_id) REFERENCES lojas(id)
 //   PRIMARY KEY activities_pkey: PRIMARY KEY (id)
+// Table: audit_logs
+//   FOREIGN KEY audit_logs_changed_by_fkey: FOREIGN KEY (changed_by) REFERENCES auth.users(id)
+//   FOREIGN KEY audit_logs_loja_id_fkey: FOREIGN KEY (loja_id) REFERENCES lojas(id)
+//   PRIMARY KEY audit_logs_pkey: PRIMARY KEY (id)
 // Table: company_settings
 //   FOREIGN KEY company_settings_loja_id_fkey: FOREIGN KEY (loja_id) REFERENCES lojas(id) ON DELETE CASCADE
 //   UNIQUE company_settings_loja_id_key: UNIQUE (loja_id)
@@ -656,6 +714,9 @@ export const Constants = {
 // Table: activities
 //   Policy "activities_all" (ALL, PERMISSIVE) roles={public}
 //     USING: ((get_user_role() = 'admin'::text) OR (loja_id = get_user_loja()))
+// Table: audit_logs
+//   Policy "audit_logs_read" (SELECT, PERMISSIVE) roles={authenticated}
+//     USING: ((loja_id = get_user_loja()) OR (get_user_role() = 'admin'::text))
 // Table: company_settings
 //   Policy "company_settings_all" (ALL, PERMISSIVE) roles={public}
 //     USING: ((loja_id = get_user_loja()) OR (get_user_role() = 'admin'::text))
@@ -805,12 +866,45 @@ export const Constants = {
 //   END;
 //   $function$
 //
+// FUNCTION log_contact_changes()
+//   CREATE OR REPLACE FUNCTION public.log_contact_changes()
+//    RETURNS trigger
+//    LANGUAGE plpgsql
+//    SECURITY DEFINER
+//   AS $function$
+//   DECLARE
+//     v_user_id UUID;
+//     v_loja_id UUID;
+//   BEGIN
+//     v_user_id := auth.uid();
+//
+//     IF TG_OP = 'INSERT' THEN
+//       v_loja_id := NEW.loja_id;
+//       INSERT INTO public.audit_logs (table_name, record_id, action, new_data, changed_by, loja_id)
+//       VALUES ('contacts', NEW.id, 'INSERT', row_to_json(NEW)::jsonb, v_user_id, v_loja_id);
+//       RETURN NEW;
+//     ELSIF TG_OP = 'UPDATE' THEN
+//       v_loja_id := NEW.loja_id;
+//       INSERT INTO public.audit_logs (table_name, record_id, action, old_data, new_data, changed_by, loja_id)
+//       VALUES ('contacts', NEW.id, 'UPDATE', row_to_json(OLD)::jsonb, row_to_json(NEW)::jsonb, v_user_id, v_loja_id);
+//       RETURN NEW;
+//     ELSIF TG_OP = 'DELETE' THEN
+//       v_loja_id := OLD.loja_id;
+//       INSERT INTO public.audit_logs (table_name, record_id, action, old_data, changed_by, loja_id)
+//       VALUES ('contacts', OLD.id, 'DELETE', row_to_json(OLD)::jsonb, v_user_id, v_loja_id);
+//       RETURN OLD;
+//     END IF;
+//     RETURN NULL;
+//   END;
+//   $function$
+//
 
 // --- TRIGGERS ---
 // Table: accounts
 //   on_account_created_after_insert: CREATE TRIGGER on_account_created_after_insert AFTER INSERT ON public.accounts FOR EACH ROW EXECUTE FUNCTION handle_new_account_after_insert()
 //   on_account_created_auto_pipeline: CREATE TRIGGER on_account_created_auto_pipeline BEFORE INSERT ON public.accounts FOR EACH ROW EXECUTE FUNCTION handle_new_account_auto_pipeline()
 // Table: contacts
+//   on_contact_change: CREATE TRIGGER on_contact_change AFTER INSERT OR DELETE OR UPDATE ON public.contacts FOR EACH ROW EXECUTE FUNCTION log_contact_changes()
 //   on_contact_created_auto_pipeline: CREATE TRIGGER on_contact_created_auto_pipeline AFTER INSERT ON public.contacts FOR EACH ROW EXECUTE FUNCTION handle_new_contact_auto_pipeline()
 
 // --- INDEXES ---
