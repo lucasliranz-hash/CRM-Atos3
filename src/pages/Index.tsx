@@ -15,15 +15,10 @@ import {
   Briefcase,
   Target,
   ArrowRight,
-  Calendar as CalendarIcon,
-  RefreshCw,
-  Video,
 } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '@/hooks/use-auth'
-import { Calendar } from '@/components/ui/calendar'
 import { useToast } from '@/hooks/use-toast'
-import { supabase } from '@/lib/supabase/client'
 import { cn } from '@/lib/utils'
 
 const MiniList = ({
@@ -71,8 +66,6 @@ export default function Index() {
   const { profile } = useAuth()
   const { toast } = useToast()
 
-  const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date())
-  const [syncing, setSyncing] = useState(false)
   const [notifiedActs, setNotifiedActs] = useState<Set<string>>(new Set())
 
   useEffect(() => {
@@ -103,28 +96,6 @@ export default function Index() {
     return () => clearInterval(interval)
   }, [activities, accounts, toast, notifiedActs])
 
-  const handleSyncCalendar = async () => {
-    setSyncing(true)
-    try {
-      const { error } = await supabase.functions.invoke('google-calendar', {
-        body: { action: 'syncEvents' },
-      })
-      if (error) throw error
-      toast({
-        title: 'Agenda sincronizada!',
-        description: 'Seus eventos foram atualizados com o Google Agenda.',
-      })
-    } catch (err: any) {
-      toast({
-        title: 'Erro de sincronização',
-        description: err.message,
-        variant: 'destructive',
-      })
-    } finally {
-      setSyncing(false)
-    }
-  }
-
   const overdue = useMemo(
     () => activities.filter((a) => !a.completed && isOverdue(a.date)),
     [activities],
@@ -133,19 +104,6 @@ export default function Index() {
     () => activities.filter((a) => !a.completed && isToday(a.date)),
     [activities],
   )
-  const selectedDateActs = useMemo(() => {
-    if (!selectedDate) return []
-    return activities
-      .filter((a) => {
-        const d = new Date(a.date)
-        return (
-          d.getDate() === selectedDate.getDate() &&
-          d.getMonth() === selectedDate.getMonth() &&
-          d.getFullYear() === selectedDate.getFullYear()
-        )
-      })
-      .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
-  }, [activities, selectedDate])
 
   const priorityA = useMemo(
     () =>
@@ -218,74 +176,6 @@ export default function Index() {
         >
           <CheckCircle2 className="w-5 h-5" />
         </Button>
-      </div>
-    )
-  }
-
-  const renderAgendaAct = (act: any) => {
-    const acc = accounts.find((a) => a.id === act.accountId)
-    const timeStr = new Date(act.date).toLocaleTimeString([], {
-      hour: '2-digit',
-      minute: '2-digit',
-    })
-
-    return (
-      <div
-        key={act.id}
-        className={cn(
-          'p-4 border-b border-gray-50 flex items-start gap-4 transition-colors hover:bg-slate-50/50 group',
-          act.completed && 'opacity-60',
-        )}
-      >
-        <div className="pt-1 text-center min-w-[60px]">
-          <span className="text-sm font-black text-gray-900 block">
-            {timeStr}
-          </span>
-        </div>
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 mb-1 flex-wrap">
-            <span
-              className={cn(
-                'px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider',
-                act.completed
-                  ? 'bg-green-100 text-green-700'
-                  : isOverdue(act.date)
-                    ? 'bg-red-100 text-red-700'
-                    : 'bg-blue-100 text-blue-700',
-              )}
-            >
-              {act.completed
-                ? 'Concluído'
-                : isOverdue(act.date)
-                  ? 'Atrasado'
-                  : act.type}
-            </span>
-            {act.meet_link && (
-              <a
-                href={act.meet_link}
-                target="_blank"
-                rel="noreferrer"
-                className="text-blue-500 hover:text-blue-700 flex items-center gap-1 text-xs font-bold bg-blue-50 px-2 py-0.5 rounded"
-              >
-                <Video className="w-3 h-3" /> Meet
-              </a>
-            )}
-          </div>
-          <div className="font-bold text-sm text-gray-900 truncate">
-            {acc?.name || 'Conta Removida'}
-          </div>
-        </div>
-        {!act.completed && (
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={() => completeActivity(act.id)}
-            className="h-9 w-9 p-0 rounded-xl text-gray-400 border-gray-200 hover:text-green-600 hover:border-green-600 hover:bg-green-50 transition-all shadow-sm shrink-0 md:opacity-0 group-hover:opacity-100"
-            title="Marcar como Concluído"
-          >
-            <CheckCircle2 className="w-5 h-5" />
-          </Button>
-        )}
       </div>
     )
   }
@@ -458,66 +348,6 @@ export default function Index() {
                 na fila
               </span>
             </h3>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Agenda Section */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <Card className="shadow-[0_2px_12px_rgba(0,0,0,0.03)] border-gray-100 rounded-2xl lg:col-span-1 bg-white">
-          <CardHeader className="py-4 px-5 border-b border-gray-50 flex flex-row items-center justify-between">
-            <CardTitle className="text-sm font-black flex items-center gap-2 text-gray-800">
-              <div className="p-2 rounded-xl bg-blue-50 text-blue-600">
-                <CalendarIcon className="w-4 h-4" />
-              </div>
-              Minha Agenda
-            </CardTitle>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="w-8 h-8 rounded-lg text-gray-400 hover:text-black hover:bg-gray-100"
-              onClick={handleSyncCalendar}
-              disabled={syncing}
-              title="Sincronizar com Google Agenda"
-            >
-              <RefreshCw className={cn('w-4 h-4', syncing && 'animate-spin')} />
-            </Button>
-          </CardHeader>
-          <CardContent className="p-4 flex justify-center border-b border-gray-50">
-            <Calendar
-              mode="single"
-              selected={selectedDate}
-              onSelect={(date) => date && setSelectedDate(date)}
-              className="rounded-md border-0 w-full flex justify-center"
-            />
-          </CardContent>
-        </Card>
-
-        <Card className="shadow-[0_2px_12px_rgba(0,0,0,0.03)] border-gray-100 rounded-2xl lg:col-span-2 bg-white flex flex-col h-full min-h-[420px]">
-          <CardHeader className="py-4 px-5 border-b border-gray-50 bg-white/50 backdrop-blur-sm sticky top-0 z-10">
-            <CardTitle className="text-sm font-black text-gray-800 flex items-center justify-between">
-              <span>
-                Compromissos do dia:{' '}
-                {selectedDate ? selectedDate.toLocaleDateString() : 'hoje'}
-              </span>
-              <span className="bg-gray-100 text-gray-600 px-2.5 py-0.5 rounded-full text-[10px] font-bold">
-                {selectedDateActs.length}
-              </span>
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="p-0 flex-1 overflow-y-auto max-h-[380px] custom-scrollbar">
-            {selectedDateActs.length === 0 ? (
-              <div className="flex flex-col items-center justify-center h-full min-h-[250px] text-sm text-gray-400 font-semibold p-6 text-center">
-                <div className="w-12 h-12 rounded-full bg-gray-50 flex items-center justify-center mb-3">
-                  <CheckCircle2 className="w-6 h-6 text-gray-300" />
-                </div>
-                Nenhuma atividade para este dia.
-              </div>
-            ) : (
-              <div className="flex flex-col">
-                {selectedDateActs.map(renderAgendaAct)}
-              </div>
-            )}
           </CardContent>
         </Card>
       </div>

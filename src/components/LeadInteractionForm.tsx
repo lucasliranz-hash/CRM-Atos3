@@ -43,45 +43,11 @@ export default function LeadInteractionForm({ account, onSuccess }: Props) {
   const [nextActionDate, setNextActionDate] = useState<Date | undefined>(
     new Date(),
   )
-  const [createMeet, setCreateMeet] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsSubmitting(true)
-
-    let meetLink = ''
-    let googleEventId = ''
-
-    if (scheduleNext && createMeet && nextAction) {
-      try {
-        const { data, error } = await supabase.functions.invoke(
-          'google-calendar',
-          {
-            body: {
-              action: 'createEvent',
-              payload: {
-                title: `${nextAction} - ${account.name}`,
-                date: nextActionDate?.toISOString() || new Date().toISOString(),
-              },
-            },
-          },
-        )
-        if (data?.success) {
-          meetLink = data.meetLink
-          googleEventId = data.eventId
-          toast({ title: 'Google Meet gerado com sucesso!' })
-        } else {
-          toast({
-            title: 'Aviso Google Agenda',
-            description: error?.message || data?.error,
-            variant: 'destructive',
-          })
-        }
-      } catch (err) {
-        console.error(err)
-      }
-    }
 
     try {
       await addActivity({
@@ -97,8 +63,6 @@ export default function LeadInteractionForm({ account, onSuccess }: Props) {
               nextActionDate: nextActionDate?.toISOString(),
             }
           : {}),
-        google_event_id: googleEventId,
-        meet_link: meetLink,
       } as any)
       toast({ title: 'Ação registrada com sucesso!' })
       onSuccess()
@@ -225,17 +189,6 @@ export default function LeadInteractionForm({ account, onSuccess }: Props) {
                   </PopoverContent>
                 </Popover>
               </div>
-            </div>
-            <div className="flex items-center justify-between bg-blue-50/50 p-3 rounded-lg border border-blue-100">
-              <div className="space-y-0.5">
-                <label className="text-sm font-bold text-blue-900">
-                  Gerar link do Google Meet
-                </label>
-                <p className="text-xs text-blue-700/80 font-medium">
-                  Cria o evento na agenda e anexa o link.
-                </p>
-              </div>
-              <Switch checked={createMeet} onCheckedChange={setCreateMeet} />
             </div>
           </div>
         )}
