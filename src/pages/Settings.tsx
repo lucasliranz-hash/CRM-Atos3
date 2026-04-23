@@ -76,7 +76,12 @@ export default function Settings() {
       )
       if (error) throw error
 
-      window.history.replaceState({}, document.title, window.location.pathname)
+      const url = new URL(window.location.href)
+      url.searchParams.delete('code')
+      url.searchParams.delete('scope')
+      url.searchParams.delete('authuser')
+      url.searchParams.delete('prompt')
+      window.history.replaceState({}, document.title, url.toString())
       setIsGoogleConnected(true)
       setActiveTab('integracoes')
       toast({ title: 'Google Agenda conectado com sucesso!' })
