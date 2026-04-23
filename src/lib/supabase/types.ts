@@ -106,8 +106,10 @@ export type Database = {
           contactId: string | null
           createdAt: string | null
           date: string
+          google_event_id: string | null
           id: string
           loja_id: string | null
+          meet_link: string | null
           nextAction: string | null
           nextActionDate: string | null
           result: string | null
@@ -120,8 +122,10 @@ export type Database = {
           contactId?: string | null
           createdAt?: string | null
           date: string
+          google_event_id?: string | null
           id?: string
           loja_id?: string | null
+          meet_link?: string | null
           nextAction?: string | null
           nextActionDate?: string | null
           result?: string | null
@@ -134,8 +138,10 @@ export type Database = {
           contactId?: string | null
           createdAt?: string | null
           date?: string
+          google_event_id?: string | null
           id?: string
           loja_id?: string | null
+          meet_link?: string | null
           nextAction?: string | null
           nextActionDate?: string | null
           result?: string | null
@@ -429,6 +435,39 @@ export type Database = {
           },
         ]
       }
+      user_integrations: {
+        Row: {
+          access_token: string | null
+          created_at: string | null
+          expires_at: string | null
+          id: string
+          provider: string
+          refresh_token: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          access_token?: string | null
+          created_at?: string | null
+          expires_at?: string | null
+          id?: string
+          provider: string
+          refresh_token?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          access_token?: string | null
+          created_at?: string | null
+          expires_at?: string | null
+          id?: string
+          provider?: string
+          refresh_token?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -615,6 +654,8 @@ export const Constants = {
 //   completed: boolean (nullable, default: false)
 //   loja_id: uuid (nullable)
 //   createdAt: timestamp with time zone (nullable, default: now())
+//   google_event_id: text (nullable)
+//   meet_link: text (nullable)
 // Table: audit_logs
 //   id: uuid (not null, default: gen_random_uuid())
 //   table_name: text (not null)
@@ -673,6 +714,15 @@ export const Constants = {
 //   loja_id: uuid (nullable)
 //   ativo: boolean (nullable, default: true)
 //   created_at: timestamp with time zone (nullable, default: now())
+// Table: user_integrations
+//   id: uuid (not null, default: gen_random_uuid())
+//   user_id: uuid (not null)
+//   provider: text (not null)
+//   access_token: text (nullable)
+//   refresh_token: text (nullable)
+//   expires_at: timestamp with time zone (nullable)
+//   created_at: timestamp with time zone (nullable, default: now())
+//   updated_at: timestamp with time zone (nullable, default: now())
 
 // --- CONSTRAINTS ---
 // Table: accounts
@@ -706,6 +756,10 @@ export const Constants = {
 //   FOREIGN KEY profiles_loja_id_fkey: FOREIGN KEY (loja_id) REFERENCES lojas(id)
 //   PRIMARY KEY profiles_pkey: PRIMARY KEY (id)
 //   CHECK profiles_role_check: CHECK ((role = ANY (ARRAY['admin'::text, 'gerente'::text, 'vendedor'::text])))
+// Table: user_integrations
+//   PRIMARY KEY user_integrations_pkey: PRIMARY KEY (id)
+//   FOREIGN KEY user_integrations_user_id_fkey: FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE
+//   UNIQUE user_integrations_user_id_provider_key: UNIQUE (user_id, provider)
 
 // --- ROW LEVEL SECURITY POLICIES ---
 // Table: accounts
@@ -734,6 +788,9 @@ export const Constants = {
 //     USING: ((auth.uid() = id) OR (get_user_role() = 'admin'::text))
 //   Policy "profiles_update" (UPDATE, PERMISSIVE) roles={public}
 //     USING: ((auth.uid() = id) OR (get_user_role() = 'admin'::text))
+// Table: user_integrations
+//   Policy "Users can manage their own integrations" (ALL, PERMISSIVE) roles={authenticated}
+//     USING: (auth.uid() = user_id)
 
 // --- DATABASE FUNCTIONS ---
 // FUNCTION get_user_loja()
@@ -910,3 +967,5 @@ export const Constants = {
 // --- INDEXES ---
 // Table: company_settings
 //   CREATE UNIQUE INDEX company_settings_loja_id_key ON public.company_settings USING btree (loja_id)
+// Table: user_integrations
+//   CREATE UNIQUE INDEX user_integrations_user_id_provider_key ON public.user_integrations USING btree (user_id, provider)

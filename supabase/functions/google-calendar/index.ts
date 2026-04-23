@@ -85,6 +85,32 @@ Deno.serve(async (req: Request) => {
       )
     }
 
+    if (action === 'syncEvents') {
+      const { data: integration } = await supabase
+        .from('user_integrations')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('provider', 'google')
+        .single()
+
+      if (!integration)
+        throw new Error(
+          'Google Calendar is not conectado. Por favor, conecte nas configurações.',
+        )
+
+      // Mock implementation to represent bi-directional sync behavior with Google Calendar API
+      // Here it would fetch the events using access_token and update the 'activities' table
+      return new Response(
+        JSON.stringify({
+          success: true,
+          message: 'Eventos sincronizados bidirecionalmente com sucesso (Mock)',
+        }),
+        {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        },
+      )
+    }
+
     throw new Error('Invalid action')
   } catch (error: any) {
     return new Response(JSON.stringify({ error: error.message }), {
