@@ -23,6 +23,7 @@ import { format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import { CalendarIcon, Check } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { supabase } from '@/lib/supabase/client'
 
 interface Props {
   account: Account
@@ -54,7 +55,6 @@ export default function LeadInteractionForm({ account, onSuccess }: Props) {
 
     if (scheduleNext && createMeet && nextAction) {
       try {
-        const { supabase } = await import('@/lib/supabase/client')
         const { data, error } = await supabase.functions.invoke(
           'google-calendar',
           {
