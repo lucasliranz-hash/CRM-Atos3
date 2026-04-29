@@ -146,6 +146,14 @@ export default function Index() {
     [opportunities],
   )
 
+  const closedWonTotal = useMemo(
+    () =>
+      opportunities
+        .filter((o) => o.stage === 'Fechado Ganho')
+        .reduce((s, o) => s + o.total, 0),
+    [opportunities],
+  )
+
   const renderAct = (act: any) => {
     const acc = accounts.find((a) => a.id === act.accountId)
     return (
@@ -264,7 +272,24 @@ export default function Index() {
       </div>
 
       {/* Top Metrics Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+        <Card className="rounded-2xl border-none shadow-[0_2px_12px_rgba(0,0,0,0.04)] bg-gradient-to-br from-white to-slate-50/50 relative overflow-hidden">
+          <CardContent className="p-5 relative z-10">
+            <div className="flex justify-between items-start mb-4">
+              <div className="p-2.5 bg-emerald-50 text-emerald-600 rounded-xl">
+                <CheckCircle2 className="w-5 h-5" />
+              </div>
+            </div>
+            <p className="text-sm font-bold text-gray-500 uppercase tracking-wider mb-1">
+              Receita Ganhos
+            </p>
+            <h3 className="text-2xl font-black text-gray-900">
+              {formatCurrency(closedWonTotal)}
+            </h3>
+          </CardContent>
+          <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-emerald-500 to-emerald-400" />
+        </Card>
+
         <Card className="rounded-2xl border-none shadow-[0_2px_12px_rgba(0,0,0,0.04)] bg-gradient-to-br from-white to-slate-50/50">
           <CardContent className="p-5">
             <div className="flex justify-between items-start mb-4">

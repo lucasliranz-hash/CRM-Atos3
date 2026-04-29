@@ -109,6 +109,9 @@ export default function LeadHistorySheet({
       } else if (act.type.includes('Reunião') || act.type === 'Diagnóstico') {
         icon = <Calendar className="w-3.5 h-3.5 text-indigo-600" />
         color = 'bg-indigo-50 border-indigo-200'
+      } else if (act.type === 'Negociação') {
+        icon = <Target className="w-3.5 h-3.5 text-blue-600" />
+        color = 'bg-blue-50 border-blue-200'
       }
 
       items.push({

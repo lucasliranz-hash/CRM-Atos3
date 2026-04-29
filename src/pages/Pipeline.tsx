@@ -1,8 +1,15 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import useMainStore from '@/stores/main'
 import { formatCurrency, isOverdue } from '@/lib/crm-utils'
 import { Badge } from '@/components/ui/badge'
-import { Building2, List, Trello, Plus, AlertCircle } from 'lucide-react'
+import {
+  Building2,
+  List,
+  Trello,
+  Plus,
+  AlertCircle,
+  ArrowUpDown,
+} from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
   Table,
@@ -32,12 +39,30 @@ const STAGES = [
 ]
 
 export default function Pipeline() {
-  const { opportunities, accounts, updateOpportunity, addOpportunity } =
-    useMainStore()
+  const {
+    opportunities,
+    accounts,
+    updateOpportunity,
+    addOpportunity,
+    addActivity,
+  } = useMainStore()
   const { toast } = useToast()
   const [view, setView] = useState<'kanban' | 'table'>('kanban')
   const [selectedOpp, setSelectedOpp] = useState<any>(null)
   const [isNewOpen, setIsNewOpen] = useState(false)
+  const [sortOrder, setSortOrder] = useState<'desc' | 'asc'>('desc')
+
+  const sortedOpportunities = useMemo(() => {
+    return [...opportunities].sort((a, b) => {
+      const valA = a.total || 0
+      const valB = b.total || 0
+      if (valA < valB) return sortOrder === 'asc' ? -1 : 1
+      if (valA > valB) return sortOrder === 'asc' ? 1 : -1
+      return 0
+    })
+  }, [opportunities, sortOrder])
+
+  const toggleSort = () => setSortOrder((p) => (p === 'desc' ? 'asc' : 'desc'))
 
   const handleUpdateStage = (e: any) => {
     e.preventDefault()
@@ -57,6 +82,8 @@ export default function Pipeline() {
       return
     }
 
+    const oldTotal = selectedOpp.total || 0
+
     updateOpportunity(selectedOpp.id, {
       stage,
       lossReason,
@@ -64,6 +91,18 @@ export default function Pipeline() {
       nextActionDate,
       total,
     })
+
+    if (oldTotal !== total && addActivity) {
+      addActivity({
+        accountId: selectedOpp.accountId,
+        type: 'Negociação',
+        channel: 'Presencial',
+        date: new Date().toISOString(),
+        result: `Valor da oportunidade "${selectedOpp.name}" alterado de ${formatCurrency(oldTotal)} para ${formatCurrency(total)}.`,
+        completed: true,
+      })
+    }
+
     toast({ title: 'Oportunidade atualizada' })
     setSelectedOpp(null)
   }
@@ -137,6 +176,17 @@ export default function Pipeline() {
           </div>
 
           <Button
+            variant="outline"
+            size="sm"
+            onClick={toggleSort}
+            className="hidden sm:flex border-gray-200 text-gray-600 hover:bg-gray-50 h-8 font-bold px-3 rounded mr-2"
+            title="Ordenar por Valor"
+          >
+            <ArrowUpDown className="w-4 h-4 mr-2" />
+            {sortOrder === 'desc' ? 'Maior Valor' : 'Menor Valor'}
+          </Button>
+
+          <Button
             onClick={() => setIsNewOpen(true)}
             className="bg-black text-white rounded font-bold hover:bg-gray-800"
           >
@@ -148,7 +198,15 @@ export default function Pipeline() {
       {view === 'kanban' ? (
         <div className="flex-1 flex gap-4 overflow-x-auto pb-4 pt-2">
           {STAGES.map((stage) => {
-            const opps = opportunities.filter((o) => o.stage === stage)
+            const opps = opportunities
+              .filter((o) => o.stage === stage)
+              .sort((a, b) => {
+                const valA = a.total || 0
+                const valB = b.total || 0
+                if (valA < valB) return sortOrder === 'asc' ? -1 : 1
+                if (valA > valB) return sortOrder === 'asc' ? 1 : -1
+                return 0
+              })
             const stageTotal = opps.reduce((sum, o) => sum + o.total, 0)
             return (
               <div
@@ -248,8 +306,14 @@ export default function Pipeline() {
                 <TableHead className="font-bold text-black">
                   Próxima Ação
                 </TableHead>
-                <TableHead className="font-bold text-black">
-                  Valor Total
+                <TableHead
+                  className="font-bold text-black cursor-pointer hover:bg-gray-100 transition-colors select-none"
+                  onClick={toggleSort}
+                >
+                  <div className="flex items-center gap-1">
+                    Valor Total
+                    <ArrowUpDown className="w-3 h-3 text-gray-400" />
+                  </div>
                 </TableHead>
                 <TableHead className="font-bold text-black text-right">
                   Ação
@@ -257,7 +321,7 @@ export default function Pipeline() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {opportunities.map((opp) => {
+              {sortedOpportunities.map((opp) => {
                 const acc = accounts.find((a) => a.id === opp.accountId)
                 const overdue = opp.nextActionDate
                   ? isOverdue(opp.nextActionDate)
