@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react'
 import useMainStore from '@/stores/main'
-import { formatCurrency, isOverdue } from '@/lib/crm-utils'
+import { formatCurrency, isOverdue, parseCurrencyInput } from '@/lib/crm-utils'
 import { Badge } from '@/components/ui/badge'
 import {
   Building2,
@@ -71,7 +71,7 @@ export default function Pipeline() {
     const lossReason = fd.get('lossReason') as string
     const nextAction = fd.get('nextAction') as string
     const nextActionDate = fd.get('nextActionDate') as string
-    const total = Number(fd.get('total')) || 0
+    const total = parseCurrencyInput(fd.get('total') as string)
 
     if (stage === 'Fechado Perdido' && !lossReason) {
       toast({
@@ -114,9 +114,9 @@ export default function Pipeline() {
       accountId: fd.get('accountId') as string,
       name: fd.get('name') as string,
       stage: fd.get('stage') as any,
-      mrr: Number(fd.get('mrr')) || 0,
-      setup: Number(fd.get('setup')) || 0,
-      total: Number(fd.get('total')) || 0,
+      mrr: parseCurrencyInput(fd.get('mrr') as string),
+      setup: parseCurrencyInput(fd.get('setup') as string),
+      total: parseCurrencyInput(fd.get('total') as string),
       probability: Number(fd.get('probability')) || 0,
       nextAction: fd.get('nextAction') as string,
       nextActionDate: fd.get('nextActionDate') as string,
@@ -413,7 +413,8 @@ export default function Pipeline() {
                   </label>
                   <Input
                     name="total"
-                    type="number"
+                    type="text"
+                    inputMode="decimal"
                     defaultValue={selectedOpp.total || 0}
                   />
                 </div>
@@ -515,7 +516,12 @@ export default function Pipeline() {
                 <label className="text-xs font-bold text-gray-700">
                   Valor Total (R$)
                 </label>
-                <Input name="total" type="number" defaultValue="0" />
+                <Input
+                  name="total"
+                  type="text"
+                  inputMode="decimal"
+                  defaultValue="0"
+                />
               </div>
             </div>
             <div className="grid grid-cols-2 gap-4">

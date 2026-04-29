@@ -41,3 +41,22 @@ export function formatCurrency(value: number) {
 export function getStatusColor(status: string) {
   return 'bg-gray-50 text-gray-700 border-gray-200'
 }
+
+export function parseCurrencyInput(
+  value: string | number | null | undefined,
+): number {
+  if (value === null || value === undefined || value === '') return 0
+  if (typeof value === 'number') return value
+
+  let cleanStr = String(value).replace(/[^\d.,-]/g, '')
+  if (cleanStr.includes('.') && cleanStr.includes(',')) {
+    if (cleanStr.lastIndexOf(',') > cleanStr.lastIndexOf('.')) {
+      cleanStr = cleanStr.replace(/\./g, '').replace(',', '.')
+    } else {
+      cleanStr = cleanStr.replace(/,/g, '')
+    }
+  } else if (cleanStr.includes(',')) {
+    cleanStr = cleanStr.replace(',', '.')
+  }
+  return Number(cleanStr) || 0
+}
