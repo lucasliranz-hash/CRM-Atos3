@@ -46,6 +46,7 @@ export default function Pipeline() {
     const lossReason = fd.get('lossReason') as string
     const nextAction = fd.get('nextAction') as string
     const nextActionDate = fd.get('nextActionDate') as string
+    const total = Number(fd.get('total')) || 0
 
     if (stage === 'Fechado Perdido' && !lossReason) {
       toast({
@@ -61,6 +62,7 @@ export default function Pipeline() {
       lossReason,
       nextAction,
       nextActionDate,
+      total,
     })
     toast({ title: 'Oportunidade atualizada' })
     setSelectedOpp(null)
@@ -323,22 +325,34 @@ export default function Pipeline() {
               <DialogTitle>Atualizar Oportunidade</DialogTitle>
             </DialogHeader>
             <form onSubmit={handleUpdateStage} className="space-y-4 mt-2">
-              <div className="space-y-1">
-                <label className="text-xs font-bold text-gray-700">
-                  Fase Atual *
-                </label>
-                <select
-                  name="stage"
-                  defaultValue={selectedOpp.stage}
-                  required
-                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:ring-2 focus:ring-black"
-                >
-                  {STAGES.map((s) => (
-                    <option key={s} value={s}>
-                      {s}
-                    </option>
-                  ))}
-                </select>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-1">
+                  <label className="text-xs font-bold text-gray-700">
+                    Fase Atual *
+                  </label>
+                  <select
+                    name="stage"
+                    defaultValue={selectedOpp.stage}
+                    required
+                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:ring-2 focus:ring-black"
+                  >
+                    {STAGES.map((s) => (
+                      <option key={s} value={s}>
+                        {s}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div className="space-y-1">
+                  <label className="text-xs font-bold text-gray-700">
+                    Valor Total (R$)
+                  </label>
+                  <Input
+                    name="total"
+                    type="number"
+                    defaultValue={selectedOpp.total || 0}
+                  />
+                </div>
               </div>
               <div className="space-y-1">
                 <label className="text-xs font-bold text-gray-700">

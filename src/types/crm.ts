@@ -6,6 +6,7 @@ export type AccountStatus =
   | 'Qualificado'
   | 'Aguardando retorno'
   | 'Sem fit'
+  | 'Cliente'
   | 'Perdido'
 
 export type Priority = 'A' | 'B' | 'C'

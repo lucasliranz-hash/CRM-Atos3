@@ -253,8 +253,8 @@ export function MainProvider({ children }: { children: ReactNode }) {
         const linkedOpps = oppsRef.current.filter(
           (o) =>
             o.accountId === act.accountId &&
-            o.stage !== 'Fechado ganho' &&
-            o.stage !== 'Fechado perdido',
+            o.stage !== 'Fechado Ganho' &&
+            o.stage !== 'Fechado Perdido',
         )
         for (const opp of linkedOpps) {
           await updateOpportunity(opp.id, {
@@ -318,6 +318,12 @@ export function MainProvider({ children }: { children: ReactNode }) {
   }
 
   const updateOpportunity = async (id: string, opp: Partial<Opportunity>) => {
+    if (opp.stage === 'Fechado Ganho') {
+      opp.probability = 100
+    } else if (opp.stage === 'Fechado Perdido') {
+      opp.probability = 0
+    }
+
     const { error } = await supabase
       .from('opportunities')
       .update(opp)
@@ -336,9 +342,9 @@ export function MainProvider({ children }: { children: ReactNode }) {
           accountUpdates.nextActionDate = opp.nextActionDate
         }
 
-        if (opp.stage === 'Fechado ganho') {
-          accountUpdates.status = 'Qualificado'
-        } else if (opp.stage === 'Fechado perdido') {
+        if (opp.stage === 'Fechado Ganho') {
+          accountUpdates.status = 'Cliente'
+        } else if (opp.stage === 'Fechado Perdido') {
           accountUpdates.status = 'Perdido'
         }
 
