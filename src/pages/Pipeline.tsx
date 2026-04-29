@@ -1,6 +1,28 @@
 import { useState, useMemo } from 'react'
 import useMainStore from '@/stores/main'
-import { formatCurrency, isOverdue, parseCurrencyInput } from '@/lib/crm-utils'
+import { formatCurrency, isOverdue } from '@/lib/crm-utils'
+
+const parseLocalCurrency = (val: string) => {
+  if (!val) return 0
+  const str = val.toString().trim()
+  if (/^(\d{1,3}(\.\d{3})*|\d+)(,\d{1,2})?$/.test(str)) {
+    const clean = str.replace(/\./g, '').replace(',', '.')
+    return parseFloat(clean) || 0
+  }
+  let clean = str.replace(/[^\d,.-]/g, '')
+  if (clean.includes(',') && clean.includes('.')) {
+    const lastComma = clean.lastIndexOf(',')
+    const lastDot = clean.lastIndexOf('.')
+    if (lastComma > lastDot) {
+      clean = clean.replace(/\./g, '').replace(',', '.')
+    } else {
+      clean = clean.replace(/,/g, '')
+    }
+  } else if (clean.includes(',')) {
+    clean = clean.replace(',', '.')
+  }
+  return parseFloat(clean) || 0
+}
 import { Badge } from '@/components/ui/badge'
 import {
   Building2,
@@ -71,7 +93,7 @@ export default function Pipeline() {
     const lossReason = fd.get('lossReason') as string
     const nextAction = fd.get('nextAction') as string
     const nextActionDate = fd.get('nextActionDate') as string
-    const total = parseCurrencyInput(fd.get('total') as string)
+    const total = parseLocalCurrency(fd.get('total') as string)
 
     if (stage === 'Fechado Perdido' && !lossReason) {
       toast({
@@ -114,9 +136,9 @@ export default function Pipeline() {
       accountId: fd.get('accountId') as string,
       name: fd.get('name') as string,
       stage: fd.get('stage') as any,
-      mrr: parseCurrencyInput(fd.get('mrr') as string),
-      setup: parseCurrencyInput(fd.get('setup') as string),
-      total: parseCurrencyInput(fd.get('total') as string),
+      mrr: parseLocalCurrency(fd.get('mrr') as string),
+      setup: parseLocalCurrency(fd.get('setup') as string),
+      total: parseLocalCurrency(fd.get('total') as string),
       probability: Number(fd.get('probability')) || 0,
       nextAction: fd.get('nextAction') as string,
       nextActionDate: fd.get('nextActionDate') as string,
@@ -415,7 +437,9 @@ export default function Pipeline() {
                     name="total"
                     type="text"
                     inputMode="decimal"
-                    defaultValue={selectedOpp.total || 0}
+                    defaultValue={
+                      selectedOpp.total?.toString().replace('.', ',') || '0'
+                    }
                   />
                 </div>
               </div>

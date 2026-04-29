@@ -33,7 +33,7 @@ export default function Reports() {
     },
     {
       stage: 'Ganhos',
-      count: opportunities.filter((o) => o.stage === 'Fechado ganho').length,
+      count: opportunities.filter((o) => o.stage === 'Fechado Ganho').length,
     },
   ]
 
@@ -42,7 +42,7 @@ export default function Reports() {
   }
 
   const wonValue = opportunities
-    .filter((o) => o.stage === 'Fechado ganho')
+    .filter((o) => o.stage === 'Fechado Ganho')
     .reduce((s, o) => s + o.total, 0)
   const pipelineValue = opportunities
     .filter((o) => !o.stage.includes('Fechado'))
