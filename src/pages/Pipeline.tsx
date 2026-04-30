@@ -14,7 +14,13 @@ import {
   Search,
   MessageSquare,
   MessageCircle,
+  MoreVertical,
 } from 'lucide-react'
+import {
+  Popover,
+  PopoverTrigger,
+  PopoverContent,
+} from '@/components/ui/popover'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import {
@@ -573,40 +579,51 @@ function KanbanCard({ opp, acc, contact, onClick, onDragStart }: any) {
         )}
       </div>
 
-      {/* Quick Actions on Hover */}
-      <div className="absolute inset-0 bg-white/95 backdrop-blur-[1px] opacity-0 group-hover:opacity-100 transition-opacity rounded-xl flex flex-wrap items-center justify-center gap-2 p-2">
-        <Button
-          variant="outline"
-          size="sm"
-          className="h-8 text-xs font-bold flex-1 border-slate-200 bg-white shadow-sm"
-          onClick={(e) => {
-            e.stopPropagation()
-            onClick()
-          }}
-        >
-          Editar
-        </Button>
-        <Button
-          variant="outline"
-          size="sm"
-          className="h-8 text-xs font-bold flex-1 border-slate-200 bg-white shadow-sm"
-          onClick={(e) => {
-            e.stopPropagation()
-            onClick()
-          }}
-        >
-          + Contato
-        </Button>
-        <Button
-          size="sm"
-          className="h-8 bg-orange-500 text-white hover:bg-orange-600 font-bold text-xs w-full shadow-sm"
-          onClick={(e) => {
-            e.stopPropagation()
-            onClick()
-          }}
-        >
-          Agendar Ação
-        </Button>
+      <div className="absolute top-3 right-2">
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-6 w-6 text-slate-400 hover:text-slate-900 bg-white/50 backdrop-blur-sm shadow-none"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <MoreVertical className="h-4 w-4" />
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent align="end" className="w-40 p-1 flex flex-col gap-1">
+            <Button
+              variant="ghost"
+              className="justify-start h-8 text-xs font-bold w-full"
+              onClick={(e) => {
+                e.stopPropagation()
+                onClick()
+              }}
+            >
+              Editar
+            </Button>
+            <Button
+              variant="ghost"
+              className="justify-start h-8 text-xs font-bold w-full"
+              onClick={(e) => {
+                e.stopPropagation()
+                onClick()
+              }}
+            >
+              Registrar contato
+            </Button>
+            <Button
+              variant="ghost"
+              className="justify-start h-8 text-xs font-bold w-full"
+              onClick={(e) => {
+                e.stopPropagation()
+                onClick()
+              }}
+            >
+              Agendar ação
+            </Button>
+          </PopoverContent>
+        </Popover>
       </div>
     </div>
   )

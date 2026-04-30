@@ -56,6 +56,8 @@ export default function Activities() {
     (t) => new Date(t.date).getTime() > new Date().setHours(23, 59, 59, 999),
   )
 
+  const { updateAccount, updateOpportunity } = useMainStore()
+
   const handleCompleteTask = async (task: any) => {
     await addActivity({
       accountId: task.accountId,
@@ -65,6 +67,20 @@ export default function Activities() {
       result: `Concluído: ${task.text}`,
       completed: true,
     } as any)
+
+    await updateAccount(task.accountId, {
+      nextAction: null as any,
+      nextActionDate: null as any,
+    })
+
+    if (task.id.startsWith('opp-')) {
+      const oppId = task.id.replace('opp-', '')
+      await updateOpportunity(oppId, {
+        nextAction: null as any,
+        nextActionDate: null as any,
+      })
+    }
+
     toast({ title: 'Tarefa concluída!' })
   }
 

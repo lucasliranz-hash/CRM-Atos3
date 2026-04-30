@@ -68,6 +68,7 @@ export default function LeadHistorySheet({
     opportunities,
     contacts,
     updateOpportunity,
+    updateAccount,
     addActivity,
   } = useMainStore()
   const { toast } = useToast()
@@ -95,10 +96,34 @@ export default function LeadHistorySheet({
     setQuickNote('')
     toast({ title: 'Nota salva no histórico!' })
   }
+
   const activeOpp =
     opportunities.find(
       (o) => o.accountId === account?.id && !o.stage.includes('Fechado'),
     ) || opportunities.find((o) => o.accountId === account?.id)
+
+  const handleCompleteAction = async () => {
+    if (!account) return
+    await addActivity({
+      accountId: account.id,
+      type: 'Mensagem',
+      channel: 'Presencial',
+      date: new Date().toISOString(),
+      result: `Ação "${account.nextAction}" foi marcada como concluída.`,
+      completed: true,
+    } as any)
+    await updateAccount(account.id, {
+      nextAction: null as any,
+      nextActionDate: null as any,
+    })
+    if (activeOpp) {
+      await updateOpportunity(activeOpp.id, {
+        nextAction: null as any,
+        nextActionDate: null as any,
+      })
+    }
+    toast({ title: 'Ação concluída com sucesso!' })
+  }
 
   const handleUpdateValue = (e: React.FormEvent) => {
     e.preventDefault()
@@ -302,21 +327,36 @@ export default function LeadHistorySheet({
                   </span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <div className="text-sm font-bold text-slate-800">
-                    {account.nextAction ||
-                      'Nenhuma ação definida (Risco de Perda)'}
-                  </div>
-                  {account.nextActionDate && (
-                    <div
-                      className={cn(
-                        'text-xs font-bold px-2 py-1 rounded border',
-                        new Date(account.nextActionDate) < new Date()
-                          ? 'bg-red-100 text-red-800 border-red-200'
-                          : 'bg-white/50 border-black/5 text-slate-700',
-                      )}
-                    >
-                      {format(new Date(account.nextActionDate), 'dd/MM HH:mm')}
+                  <div className="flex-1">
+                    <div className="text-sm font-bold text-slate-800">
+                      {account.nextAction ||
+                        'Nenhuma ação definida (Risco de Perda)'}
                     </div>
+                    {account.nextActionDate && (
+                      <div
+                        className={cn(
+                          'text-xs font-bold px-2 py-1 rounded border inline-block mt-1',
+                          new Date(account.nextActionDate) < new Date()
+                            ? 'bg-red-100 text-red-800 border-red-200'
+                            : 'bg-white/50 border-black/5 text-slate-700',
+                        )}
+                      >
+                        {format(
+                          new Date(account.nextActionDate),
+                          'dd/MM HH:mm',
+                        )}
+                      </div>
+                    )}
+                  </div>
+                  {account.nextAction && (
+                    <Button
+                      size="sm"
+                      onClick={() => handleCompleteAction()}
+                      className="ml-2 bg-white text-slate-700 hover:bg-slate-50 border border-slate-200"
+                    >
+                      <CheckCircle2 className="w-4 h-4 mr-1 text-emerald-500" />{' '}
+                      Concluir
+                    </Button>
                   )}
                 </div>
               </div>

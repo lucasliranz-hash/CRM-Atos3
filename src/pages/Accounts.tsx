@@ -27,13 +27,14 @@ import {
   AlertCircle,
   Eye,
   Edit,
+  Trash2,
 } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
 import LeadHistorySheet from '@/components/LeadHistorySheet'
 import { Account } from '@/types/crm'
 
 export default function Accounts() {
-  const { accounts, addAccount, updateAccount } = useMainStore()
+  const { accounts, addAccount, updateAccount, deleteAccount } = useMainStore()
   const { toast } = useToast()
   const [search, setSearch] = useState('')
   const [filterStatus, setFilterStatus] = useState('')
@@ -81,6 +82,17 @@ export default function Accounts() {
       })
       setEditingAccount(null)
       toast({ title: 'Conta atualizada com sucesso!' })
+    }
+  }
+
+  const handleDelete = async (id: string) => {
+    if (
+      confirm(
+        'Tem certeza que deseja excluir esta conta? Isso removerá oportunidades, contatos e atividades associados.',
+      )
+    ) {
+      await deleteAccount(id)
+      toast({ title: 'Conta excluída com sucesso!' })
     }
   }
 
@@ -416,6 +428,18 @@ export default function Accounts() {
                         title="Editar Conta"
                       >
                         <Edit className="w-4 h-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg"
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          handleDelete(acc.id)
+                        }}
+                        title="Excluir Conta"
+                      >
+                        <Trash2 className="w-4 h-4" />
                       </Button>
                     </div>
                   </TableCell>

@@ -14,6 +14,7 @@ import {
 } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '@/hooks/use-auth'
+import { useToast } from '@/hooks/use-toast'
 
 const getVariance = (items: any[], dateField = 'createdAt') => {
   const now = new Date()
@@ -118,6 +119,7 @@ export default function Index() {
           text: o.nextAction,
           date: o.nextActionDate,
           name: acc?.name || o.name,
+          accountId: o.accountId,
           item: o,
         })
       }
@@ -137,6 +139,7 @@ export default function Index() {
             text: a.nextAction,
             date: a.nextActionDate,
             name: a.name,
+            accountId: a.id,
             item: a,
           })
         }
@@ -146,6 +149,32 @@ export default function Index() {
       (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime(),
     )
   }, [opportunities, accounts])
+
+  const { addActivity, updateAccount, updateOpportunity } = useMainStore()
+  const { toast } = useToast()
+
+  const handleCompleteTask = async (task: any) => {
+    await addActivity({
+      accountId: task.accountId,
+      type: 'Mensagem',
+      channel: 'Presencial',
+      date: new Date().toISOString(),
+      result: `Ação concluída via Dashboard: ${task.text}`,
+      completed: true,
+    } as any)
+    await updateAccount(task.accountId, {
+      nextAction: null as any,
+      nextActionDate: null as any,
+    })
+    if (task.id.startsWith('opp-')) {
+      const oppId = task.id.replace('opp-', '')
+      await updateOpportunity(oppId, {
+        nextAction: null as any,
+        nextActionDate: null as any,
+      })
+    }
+    toast({ title: 'Ação concluída com sucesso!' })
+  }
 
   const overdue = tasks.filter((t) => isOverdue(t.date))
   const today = tasks.filter((t) => isToday(t.date))
@@ -210,7 +239,18 @@ export default function Index() {
                   {new Date(task.date).toLocaleDateString()}
                 </div>
               </div>
-              <p className="text-xs font-medium text-slate-600">{task.text}</p>
+              <p className="text-xs font-medium text-slate-600 mb-3">
+                {task.text}
+              </p>
+              <div className="flex justify-end">
+                <Button
+                  size="sm"
+                  onClick={() => handleCompleteTask(task)}
+                  className={`h-7 text-[10px] font-bold ${isRed ? 'bg-red-100 text-red-700 hover:bg-red-200' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'} shadow-none`}
+                >
+                  Concluir
+                </Button>
+              </div>
             </div>
           ))
         )}

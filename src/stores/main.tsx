@@ -19,8 +19,9 @@ interface MainStore {
   setLogoUrl: (url: string | null) => void
   addAccount: (
     acc: Omit<Account, 'id' | 'createdAt' | 'updatedAt'>,
-  ) => Promise<void>
+  ) => Promise<Account | undefined>
   updateAccount: (id: string, acc: Partial<Account>) => Promise<void>
+  deleteAccount: (id: string) => Promise<void>
   addActivity: (act: Omit<Activity, 'id' | 'createdAt'>) => Promise<void>
   completeActivity: (id: string) => Promise<void>
   addContact: (
@@ -212,6 +213,16 @@ export function MainProvider({ children }: { children: ReactNode }) {
     }
   }
 
+  const deleteAccount = async (id: string) => {
+    const { error } = await supabase.from('accounts').delete().eq('id', id)
+    if (!error) {
+      setAccounts((prev) => prev.filter((a) => a.id !== id))
+      setOpportunities((prev) => prev.filter((o) => o.accountId !== id))
+      setContacts((prev) => prev.filter((c) => c.accountId !== id))
+      setActivities((prev) => prev.filter((a) => a.accountId !== id))
+    }
+  }
+
   const addAccount = async (
     acc: Omit<Account, 'id' | 'createdAt' | 'updatedAt'>,
   ) => {
@@ -225,7 +236,9 @@ export function MainProvider({ children }: { children: ReactNode }) {
       setAccounts((prev) =>
         prev.some((a) => a.id === data.id) ? prev : [data as Account, ...prev],
       )
+      return data as Account
     }
+    return undefined
   }
 
   const addActivity = async (act: Omit<Activity, 'id' | 'createdAt'>) => {
@@ -371,6 +384,7 @@ export function MainProvider({ children }: { children: ReactNode }) {
         addContact,
         addOpportunity,
         updateOpportunity,
+        deleteAccount,
       }}
     >
       {children}

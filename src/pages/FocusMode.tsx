@@ -15,7 +15,13 @@ import { Card, CardContent } from '@/components/ui/card'
 import { useToast } from '@/hooks/use-toast'
 
 export default function FocusMode() {
-  const { accounts, opportunities, addActivity } = useMainStore()
+  const {
+    accounts,
+    opportunities,
+    addActivity,
+    updateAccount,
+    updateOpportunity,
+  } = useMainStore()
   const { toast } = useToast()
 
   const focusTasks = useMemo(() => {
@@ -71,6 +77,20 @@ export default function FocusMode() {
       result: `Ação concluída via Focus Mode: ${task.text}`,
       completed: true,
     } as any)
+
+    await updateAccount(task.accountId, {
+      nextAction: null as any,
+      nextActionDate: null as any,
+    })
+
+    if (task.id.startsWith('opp-')) {
+      const oppId = task.id.replace('opp-', '')
+      await updateOpportunity(oppId, {
+        nextAction: null as any,
+        nextActionDate: null as any,
+      })
+    }
+
     toast({ title: 'Ação concluída com sucesso!' })
   }
 
