@@ -20,6 +20,8 @@ export interface Account {
   website?: string
   phone?: string
   segment?: string
+  city?: string
+  tags?: string[]
   fleetModel?: string
   fleetEstimate?: number
   leadSource?: string
@@ -114,11 +116,13 @@ export interface Activity {
 }
 
 export type OpportunityStage =
-  | 'Prospecção'
-  | 'Qualificação'
-  | 'Proposta'
-  | 'Projeto Piloto'
-  | 'Negociação'
+  | 'Leads Mapeados'
+  | 'Conexão Enviada'
+  | 'Primeiro Contato'
+  | 'Follow-up'
+  | 'Em Conversa / Diagnóstico'
+  | 'Reunião Agendada'
+  | 'Proposta / Fechamento'
   | 'Fechado Ganho'
   | 'Fechado Perdido'
 

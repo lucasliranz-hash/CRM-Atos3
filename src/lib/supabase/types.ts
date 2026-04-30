@@ -39,6 +39,8 @@ export type Database = {
           status: string
           updatedAt: string | null
           website: string | null
+          city: string | null
+          tags: string[] | null
         }
         Insert: {
           accountPotential?: string | null
@@ -63,6 +65,8 @@ export type Database = {
           status: string
           updatedAt?: string | null
           website?: string | null
+          city?: string | null
+          tags?: string[] | null
         }
         Update: {
           accountPotential?: string | null
@@ -87,6 +91,8 @@ export type Database = {
           status?: string
           updatedAt?: string | null
           website?: string | null
+          city?: string | null
+          tags?: string[] | null
         }
         Relationships: [
           {

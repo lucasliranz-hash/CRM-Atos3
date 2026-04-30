@@ -10,9 +10,9 @@ export default function Layout() {
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-50">
         <div className="flex flex-col items-center gap-4">
-          <div className="w-12 h-12 rounded-2xl bg-black animate-pulse flex items-center justify-center shadow-lg">
-            <span className="text-white font-black text-xl tracking-tighter">
-              A3
+          <div className="w-12 h-12 rounded-2xl bg-orange-500 animate-pulse flex items-center justify-center shadow-lg">
+            <span className="text-white font-black text-xl uppercase tracking-tighter">
+              Atos3
             </span>
           </div>
           <p className="text-gray-500 font-bold text-sm tracking-wide">

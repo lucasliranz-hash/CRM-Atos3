@@ -1,6 +1,45 @@
 import { useState, useMemo } from 'react'
 import useMainStore from '@/stores/main'
 import { formatCurrency, isOverdue } from '@/lib/crm-utils'
+import {
+  Building2,
+  List,
+  Trello,
+  Plus,
+  AlertTriangle,
+  ArrowUpDown,
+  Clock,
+  User,
+  Phone,
+  Linkedin,
+  MessageSquare,
+  Search,
+} from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
+import { Input } from '@/components/ui/input'
+import { useToast } from '@/hooks/use-toast'
+import LeadHistorySheet from '@/components/LeadHistorySheet'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 
 const parseLocalCurrency = (val: string) => {
   if (!val) return 0
@@ -23,111 +62,114 @@ const parseLocalCurrency = (val: string) => {
   }
   return parseFloat(clean) || 0
 }
-import { Badge } from '@/components/ui/badge'
-import {
-  Building2,
-  List,
-  Trello,
-  Plus,
-  AlertCircle,
-  ArrowUpDown,
-} from 'lucide-react'
-import { Button } from '@/components/ui/button'
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table'
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog'
-import { Input } from '@/components/ui/input'
-import { useToast } from '@/hooks/use-toast'
 
 const STAGES = [
-  'Prospecção',
-  'Qualificação',
-  'Proposta',
-  'Projeto Piloto',
-  'Negociação',
-  'Fechado Ganho',
-  'Fechado Perdido',
+  'Leads Mapeados',
+  'Conexão Enviada',
+  'Primeiro Contato',
+  'Follow-up',
+  'Em Conversa / Diagnóstico',
+  'Reunião Agendada',
+  'Proposta / Fechamento',
 ]
+
+const getTagForStage = (stage: string) => {
+  switch (stage) {
+    case 'Leads Mapeados':
+      return (
+        <span className="bg-blue-100 text-blue-800 text-[10px] px-1.5 py-0.5 rounded font-black uppercase">
+          Novo
+        </span>
+      )
+    case 'Conexão Enviada':
+    case 'Primeiro Contato':
+      return (
+        <span className="bg-yellow-100 text-yellow-800 text-[10px] px-1.5 py-0.5 rounded font-black uppercase">
+          Contato
+        </span>
+      )
+    case 'Follow-up':
+      return (
+        <span className="bg-orange-100 text-orange-800 text-[10px] px-1.5 py-0.5 rounded font-black uppercase">
+          Follow-up
+        </span>
+      )
+    case 'Em Conversa / Diagnóstico':
+      return (
+        <span className="bg-green-100 text-green-800 text-[10px] px-1.5 py-0.5 rounded font-black uppercase">
+          Conversa
+        </span>
+      )
+    case 'Reunião Agendada':
+      return (
+        <span className="bg-purple-100 text-purple-800 text-[10px] px-1.5 py-0.5 rounded font-black uppercase">
+          Reunião
+        </span>
+      )
+    case 'Proposta / Fechamento':
+      return (
+        <span className="bg-red-100 text-red-800 text-[10px] px-1.5 py-0.5 rounded font-black uppercase">
+          Proposta
+        </span>
+      )
+    default:
+      return (
+        <span className="bg-slate-100 text-slate-800 text-[10px] px-1.5 py-0.5 rounded font-black uppercase">
+          {stage}
+        </span>
+      )
+  }
+}
 
 export default function Pipeline() {
   const {
     opportunities,
     accounts,
+    contacts,
     updateOpportunity,
     addOpportunity,
-    addActivity,
   } = useMainStore()
   const { toast } = useToast()
   const [view, setView] = useState<'kanban' | 'table'>('kanban')
-  const [selectedOpp, setSelectedOpp] = useState<any>(null)
   const [isNewOpen, setIsNewOpen] = useState(false)
   const [sortOrder, setSortOrder] = useState<'desc' | 'asc'>('desc')
+  const [detailsAccountId, setDetailsAccountId] = useState<string | null>(null)
 
-  const sortedOpportunities = useMemo(() => {
-    return [...opportunities].sort((a, b) => {
-      const valA = a.total || 0
-      const valB = b.total || 0
-      if (valA < valB) return sortOrder === 'asc' ? -1 : 1
-      if (valA > valB) return sortOrder === 'asc' ? 1 : -1
-      return 0
-    })
-  }, [opportunities, sortOrder])
+  // Table filters
+  const [filterStage, setFilterStage] = useState('all')
+  const [filterCity, setFilterCity] = useState('')
+  const [filterStatus, setFilterStatus] = useState('all')
+
+  const sortedAndFilteredOpportunities = useMemo(() => {
+    return opportunities
+      .filter((o) => {
+        const acc = accounts.find((a) => a.id === o.accountId)
+        if (filterStage !== 'all' && o.stage !== filterStage) return false
+        if (filterStatus !== 'all' && acc?.status !== filterStatus) return false
+        if (
+          filterCity &&
+          !acc?.city?.toLowerCase().includes(filterCity.toLowerCase())
+        )
+          return false
+        return true
+      })
+      .sort((a, b) => {
+        const valA = a.total || 0
+        const valB = b.total || 0
+        if (valA < valB) return sortOrder === 'asc' ? -1 : 1
+        if (valA > valB) return sortOrder === 'asc' ? 1 : -1
+        return 0
+      })
+  }, [
+    opportunities,
+    accounts,
+    sortOrder,
+    filterStage,
+    filterCity,
+    filterStatus,
+  ])
 
   const toggleSort = () => setSortOrder((p) => (p === 'desc' ? 'asc' : 'desc'))
-
-  const handleUpdateStage = (e: any) => {
-    e.preventDefault()
-    const fd = new FormData(e.target)
-    const stage = fd.get('stage') as any
-    const lossReason = fd.get('lossReason') as string
-    const nextAction = fd.get('nextAction') as string
-    const nextActionDate = fd.get('nextActionDate') as string
-    const total = parseLocalCurrency(fd.get('total') as string)
-
-    if (stage === 'Fechado Perdido' && !lossReason) {
-      toast({
-        title: 'Atenção',
-        description: 'Motivo de perda é obrigatório.',
-        variant: 'destructive',
-      })
-      return
-    }
-
-    const oldTotal = selectedOpp.total || 0
-
-    updateOpportunity(selectedOpp.id, {
-      stage,
-      lossReason,
-      nextAction,
-      nextActionDate,
-      total,
-    })
-
-    if (oldTotal !== total && addActivity) {
-      addActivity({
-        accountId: selectedOpp.accountId,
-        type: 'Negociação',
-        channel: 'Presencial',
-        date: new Date().toISOString(),
-        result: `Valor da oportunidade "${selectedOpp.name}" alterado de ${formatCurrency(oldTotal)} para ${formatCurrency(total)}.`,
-        completed: true,
-      })
-    }
-
-    toast({ title: 'Oportunidade atualizada' })
-    setSelectedOpp(null)
-  }
 
   const handleCreateOpp = (e: any) => {
     e.preventDefault()
@@ -155,35 +197,28 @@ export default function Pipeline() {
     e.preventDefault()
     const oppId = e.dataTransfer.getData('oppId')
     if (oppId) {
-      if (stage === 'Fechado Perdido') {
-        const opp = opportunities.find((o) => o.id === oppId)
-        if (opp) {
-          setSelectedOpp({ ...opp, stage })
-        }
-      } else {
-        updateOpportunity(oppId, { stage: stage as any })
-      }
+      updateOpportunity(oppId, { stage: stage as any })
     }
   }
 
   return (
-    <div className="space-y-6 h-full flex flex-col max-w-[1400px] mx-auto pb-10">
+    <div className="space-y-6 h-full flex flex-col max-w-[1400px] mx-auto pb-10 animate-in fade-in duration-500">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-3xl font-black text-black tracking-tight">
+          <h1 className="text-3xl font-black text-slate-900 tracking-tight">
             Pipeline de Vendas
           </h1>
-          <p className="text-gray-500 mt-1 font-medium">
-            Gestão visual de negociações e oportunidades
+          <p className="text-slate-500 mt-1 font-medium">
+            Gestão visual de negociações
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <div className="flex bg-white p-1 rounded-lg border border-gray-200 shadow-sm mr-2 hidden sm:flex">
+          <div className="flex bg-white p-1 rounded-lg border border-slate-200 shadow-sm mr-2 hidden sm:flex">
             <Button
               variant="ghost"
               size="sm"
               onClick={() => setView('kanban')}
-              className={`rounded font-bold h-8 px-4 ${view === 'kanban' ? 'bg-black text-white hover:bg-black hover:text-white' : 'text-gray-500 hover:text-black'}`}
+              className={`rounded font-bold h-8 px-4 ${view === 'kanban' ? 'bg-slate-900 text-white hover:bg-slate-800' : 'text-slate-500 hover:text-slate-900'}`}
             >
               <Trello className="w-4 h-4 mr-2" /> Kanban
             </Button>
@@ -191,122 +226,185 @@ export default function Pipeline() {
               variant="ghost"
               size="sm"
               onClick={() => setView('table')}
-              className={`rounded font-bold h-8 px-4 ${view === 'table' ? 'bg-black text-white hover:bg-black hover:text-white' : 'text-gray-500 hover:text-black'}`}
+              className={`rounded font-bold h-8 px-4 ${view === 'table' ? 'bg-slate-900 text-white hover:bg-slate-800' : 'text-slate-500 hover:text-slate-900'}`}
             >
-              <List className="w-4 h-4 mr-2" /> Lista
+              <List className="w-4 h-4 mr-2" /> Lista / Aba Extra
             </Button>
           </div>
-
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={toggleSort}
-            className="hidden sm:flex border-gray-200 text-gray-600 hover:bg-gray-50 h-8 font-bold px-3 rounded mr-2"
-            title="Ordenar por Valor"
-          >
-            <ArrowUpDown className="w-4 h-4 mr-2" />
-            {sortOrder === 'desc' ? 'Maior Valor' : 'Menor Valor'}
-          </Button>
-
           <Button
             onClick={() => setIsNewOpen(true)}
-            className="bg-black text-white rounded font-bold hover:bg-gray-800"
+            className="bg-orange-500 text-white rounded font-bold hover:bg-orange-600 shadow-lg shadow-orange-500/20"
           >
             <Plus className="w-4 h-4 mr-2" /> Nova Oportunidade
           </Button>
         </div>
       </div>
 
+      {view === 'table' && (
+        <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex flex-wrap gap-4 items-end mb-4">
+          <div className="space-y-1.5 flex-1 min-w-[200px]">
+            <label className="text-xs font-bold text-slate-700">
+              Filtro por Etapa
+            </label>
+            <Select value={filterStage} onValueChange={setFilterStage}>
+              <SelectTrigger className="bg-slate-50 border-slate-200">
+                <SelectValue placeholder="Todas as etapas" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todas as etapas</SelectItem>
+                {STAGES.map((s) => (
+                  <SelectItem key={s} value={s}>
+                    {s}
+                  </SelectItem>
+                ))}
+                <SelectItem value="Fechado Ganho">Fechado Ganho</SelectItem>
+                <SelectItem value="Fechado Perdido">Fechado Perdido</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-1.5 flex-1 min-w-[200px]">
+            <label className="text-xs font-bold text-slate-700">
+              Filtro por Status da Conta
+            </label>
+            <Select value={filterStatus} onValueChange={setFilterStatus}>
+              <SelectTrigger className="bg-slate-50 border-slate-200">
+                <SelectValue placeholder="Todos" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos</SelectItem>
+                <SelectItem value="Em prospecção">Em prospecção</SelectItem>
+                <SelectItem value="Qualificado">Qualificado</SelectItem>
+                <SelectItem value="Cliente">Cliente</SelectItem>
+                <SelectItem value="Perdido">Perdido</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-1.5 flex-1 min-w-[200px]">
+            <label className="text-xs font-bold text-slate-700">
+              Filtro por Cidade
+            </label>
+            <div className="relative">
+              <Search className="w-4 h-4 absolute left-3 top-3 text-slate-400" />
+              <Input
+                placeholder="Filtrar por cidade..."
+                value={filterCity}
+                onChange={(e) => setFilterCity(e.target.value)}
+                className="pl-9 bg-slate-50 border-slate-200"
+              />
+            </div>
+          </div>
+        </div>
+      )}
+
       {view === 'kanban' ? (
         <div className="flex-1 flex gap-4 overflow-x-auto pb-4 pt-2">
           {STAGES.map((stage) => {
-            const opps = opportunities
-              .filter((o) => o.stage === stage)
-              .sort((a, b) => {
-                const valA = a.total || 0
-                const valB = b.total || 0
-                if (valA < valB) return sortOrder === 'asc' ? -1 : 1
-                if (valA > valB) return sortOrder === 'asc' ? 1 : -1
-                return 0
-              })
+            const opps = sortedAndFilteredOpportunities.filter(
+              (o) => o.stage === stage,
+            )
             const stageTotal = opps.reduce((sum, o) => sum + o.total, 0)
             return (
               <div
                 key={stage}
-                className="min-w-[320px] w-[320px] flex flex-col bg-gray-50 rounded-xl p-3 border border-gray-200"
+                className="min-w-[320px] w-[320px] flex flex-col bg-slate-50/80 rounded-xl p-3 border border-slate-200"
                 onDragOver={(e) => e.preventDefault()}
                 onDrop={(e) => onDrop(e, stage)}
               >
                 <div className="flex justify-between items-center mb-4 px-1">
-                  <h3 className="font-black text-sm text-black uppercase tracking-wider flex items-center">
+                  <h3 className="font-black text-[13px] text-slate-800 uppercase tracking-wider flex items-center">
                     {stage}
-                    <span className="ml-2 bg-white text-gray-500 text-[10px] px-2 py-0.5 rounded-full border border-gray-200">
+                    <span className="ml-2 bg-white text-slate-500 text-[10px] px-2 py-0.5 rounded-full border border-slate-200">
                       {opps.length}
                     </span>
                   </h3>
-                  <span className="text-xs font-bold text-gray-500">
+                  <span className="text-xs font-bold text-slate-500">
                     {formatCurrency(stageTotal)}
                   </span>
                 </div>
                 <div className="space-y-3">
                   {opps.map((opp) => {
                     const acc = accounts.find((a) => a.id === opp.accountId)
-                    const overdue = opp.nextActionDate
-                      ? isOverdue(opp.nextActionDate)
+                    const contact =
+                      contacts.find(
+                        (c) =>
+                          c.accountId === opp.accountId && c.isDecisionMaker,
+                      ) || contacts.find((c) => c.accountId === opp.accountId)
+                    const isStalled = acc?.lastTouchDate
+                      ? new Date().getTime() -
+                          new Date(acc.lastTouchDate).getTime() >
+                        14 * 24 * 60 * 60 * 1000
                       : true
-
-                    const isNewLead =
-                      opp.stage === 'Prospecção' &&
-                      opp.nextAction?.includes('Contato inicial')
+                    const needsAction = !opp.nextAction
 
                     return (
                       <div
                         key={opp.id}
                         draggable
                         onDragStart={(e) => onDragStart(e, opp.id)}
-                        onClick={() => setSelectedOpp(opp)}
-                        className={`bg-white p-4 rounded-xl shadow-sm border cursor-grab active:cursor-grabbing hover:border-black transition-colors group ${overdue && !isNewLead ? 'border-red-200' : isNewLead ? 'border-blue-200' : 'border-gray-200'}`}
+                        onClick={() => setDetailsAccountId(opp.accountId)}
+                        className="bg-white p-4 rounded-xl shadow-sm border border-slate-200 cursor-grab active:cursor-grabbing hover:border-slate-400 hover:shadow-md transition-all group relative"
                       >
-                        <div className="text-xs font-bold text-gray-500 mb-2 flex items-center justify-between group-hover:text-black transition-colors">
-                          <span className="flex items-center gap-1">
-                            <Building2 className="w-3 h-3" />
-                            {acc?.name}
-                          </span>
-                          <div className="flex items-center gap-1">
-                            {isNewLead && (
-                              <span className="bg-blue-100 text-blue-800 text-[9px] px-1.5 py-0.5 rounded font-black uppercase tracking-wider">
-                                Novo Lead
-                              </span>
-                            )}
-                            {overdue && !isNewLead && (
-                              <AlertCircle
-                                className="w-3 h-3 text-red-500"
-                                title="Ação atrasada ou pendente"
-                              />
-                            )}
-                          </div>
-                        </div>
-                        <h4 className="font-black text-sm text-black mb-3 leading-tight">
-                          {opp.name}
+                        <h4 className="font-black text-base text-slate-900 mb-1 leading-tight">
+                          {acc?.name}
                         </h4>
-                        <div className="flex justify-between items-center mb-3">
-                          <div className="font-black text-black">
-                            {formatCurrency(opp.total)}
+                        {contact && (
+                          <div className="text-xs text-slate-600 mb-2 flex items-center gap-1.5 truncate">
+                            <User className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                            <span className="truncate">
+                              {contact.name}{' '}
+                              <span className="text-slate-300 mx-0.5">•</span>{' '}
+                              {contact.role || contact.processRole}
+                            </span>
                           </div>
-                          <span className="text-[10px] font-bold bg-gray-100 px-2 py-1 rounded text-gray-600 border border-gray-200">
-                            {opp.probability}% WIN
-                          </span>
+                        )}
+                        <div className="text-[11px] font-semibold text-slate-500 mb-3 flex items-center gap-1.5">
+                          <Clock className="w-3.5 h-3.5 text-slate-400" />
+                          Últ. contato:{' '}
+                          {acc?.lastTouchDate
+                            ? new Date(acc.lastTouchDate).toLocaleDateString()
+                            : 'Nenhum'}
                         </div>
-                        <div
-                          className={`text-[10px] font-semibold px-2 py-1.5 rounded bg-gray-50 border ${overdue && !isNewLead ? 'border-red-100 text-red-700' : isNewLead ? 'border-blue-100 text-blue-800 bg-blue-50/50' : 'border-gray-100 text-gray-600'}`}
-                        >
-                          Ação: {opp.nextAction || 'Não definida'}
+                        <div className="flex flex-wrap gap-1.5 mb-3">
+                          {getTagForStage(opp.stage)}
+                          {(isStalled || needsAction) && (
+                            <span
+                              className="bg-red-100 text-red-700 text-[10px] px-1.5 py-0.5 rounded font-black uppercase flex items-center gap-1"
+                              title="Sem interação recente ou sem próxima ação"
+                            >
+                              <AlertTriangle className="w-3 h-3" />{' '}
+                              {needsAction ? 'Sem Ação' : 'Parado'}
+                            </span>
+                          )}
+                        </div>
+                        <div className="font-black text-slate-900 text-sm mb-1">
+                          {formatCurrency(opp.total)}
+                        </div>
+
+                        <div className="absolute bottom-4 right-4 flex gap-1.5 bg-slate-50 px-2 py-1 rounded-md border border-slate-100">
+                          {contact?.whatsapp && (
+                            <MessageSquare
+                              className="w-3.5 h-3.5 text-green-500"
+                              title="WhatsApp"
+                            />
+                          )}
+                          {contact?.linkedin && (
+                            <Linkedin
+                              className="w-3.5 h-3.5 text-blue-500"
+                              title="LinkedIn"
+                            />
+                          )}
+                          {acc?.phone && (
+                            <Phone
+                              className="w-3.5 h-3.5 text-slate-500"
+                              title="Telefone"
+                            />
+                          )}
                         </div>
                       </div>
                     )
                   })}
                   {opps.length === 0 && (
-                    <div className="h-20 border-2 border-dashed border-gray-200 rounded-xl flex items-center justify-center text-xs font-bold text-gray-400 bg-white/50">
+                    <div className="h-20 border-2 border-dashed border-slate-200 rounded-xl flex items-center justify-center text-xs font-bold text-slate-400 bg-white/50">
                       Solte aqui
                     </div>
                   )}
@@ -316,176 +414,147 @@ export default function Pipeline() {
           })}
         </div>
       ) : (
-        <div className="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm">
+        <div className="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm">
           <Table>
             <TableHeader>
-              <TableRow className="bg-gray-50">
-                <TableHead className="font-bold text-black">
-                  Oportunidade
+              <TableRow className="bg-slate-50">
+                <TableHead className="font-bold text-slate-900">
+                  Empresa / Oportunidade
                 </TableHead>
-                <TableHead className="font-bold text-black">Conta</TableHead>
-                <TableHead className="font-bold text-black">Fase</TableHead>
-                <TableHead className="font-bold text-black">
+                <TableHead className="font-bold text-slate-900">
+                  Contato / Responsável
+                </TableHead>
+                <TableHead className="font-bold text-slate-900">
+                  Etapa
+                </TableHead>
+                <TableHead className="font-bold text-slate-900">
+                  Último Contato
+                </TableHead>
+                <TableHead className="font-bold text-slate-900">
                   Próxima Ação
                 </TableHead>
                 <TableHead
-                  className="font-bold text-black cursor-pointer hover:bg-gray-100 transition-colors select-none"
+                  className="font-bold text-slate-900 cursor-pointer hover:bg-slate-100 transition-colors select-none group"
                   onClick={toggleSort}
                 >
                   <div className="flex items-center gap-1">
-                    Valor Total
-                    <ArrowUpDown className="w-3 h-3 text-gray-400" />
+                    Valor do Projeto{' '}
+                    <ArrowUpDown className="w-3 h-3 text-slate-400 group-hover:text-slate-900" />
                   </div>
                 </TableHead>
-                <TableHead className="font-bold text-black text-right">
+                <TableHead className="font-bold text-slate-900 text-right">
                   Ação
                 </TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {sortedOpportunities.map((opp) => {
+              {sortedAndFilteredOpportunities.map((opp) => {
                 const acc = accounts.find((a) => a.id === opp.accountId)
+                const contact =
+                  contacts.find(
+                    (c) => c.accountId === opp.accountId && c.isDecisionMaker,
+                  ) || contacts.find((c) => c.accountId === opp.accountId)
                 const overdue = opp.nextActionDate
                   ? isOverdue(opp.nextActionDate)
                   : true
 
-                const isNewLead =
-                  opp.stage === 'Prospecção' &&
-                  opp.nextAction?.includes('Contato inicial')
-
                 return (
-                  <TableRow key={opp.id} className="hover:bg-gray-50/50">
-                    <TableCell className="font-bold text-sm text-black">
-                      <div className="flex items-center gap-2">
-                        {opp.name}
-                        {isNewLead && (
-                          <span className="bg-blue-100 text-blue-800 text-[9px] px-1.5 py-0.5 rounded font-black uppercase tracking-wider">
-                            Novo
-                          </span>
-                        )}
+                  <TableRow
+                    key={opp.id}
+                    className="hover:bg-slate-50/50 cursor-pointer"
+                    onClick={() => setDetailsAccountId(opp.accountId)}
+                  >
+                    <TableCell>
+                      <div className="font-bold text-sm text-slate-900">
+                        {acc?.name}
                       </div>
-                    </TableCell>
-                    <TableCell className="text-sm font-semibold text-gray-700">
-                      {acc?.name}
+                      <div className="text-xs text-slate-500 font-medium">
+                        {opp.name}
+                      </div>
+                      {(acc?.city || acc?.tags?.length) && (
+                        <div className="flex items-center gap-2 mt-1">
+                          {acc.city && (
+                            <span className="text-[10px] text-slate-400 border border-slate-200 px-1 rounded">
+                              {acc.city}
+                            </span>
+                          )}
+                          {acc.tags?.map((t) => (
+                            <span
+                              key={t}
+                              className="text-[10px] text-slate-400 border border-slate-200 px-1 rounded"
+                            >
+                              {t}
+                            </span>
+                          ))}
+                        </div>
+                      )}
                     </TableCell>
                     <TableCell>
-                      <Badge
-                        variant="outline"
-                        className="border-gray-200 font-bold rounded bg-white"
-                      >
-                        {opp.stage}
-                      </Badge>
+                      <div className="text-sm font-semibold text-slate-700">
+                        {contact?.name || '-'}
+                      </div>
+                      <div className="text-xs text-slate-500">
+                        {contact?.role || contact?.processRole}
+                      </div>
+                    </TableCell>
+                    <TableCell>{getTagForStage(opp.stage)}</TableCell>
+                    <TableCell className="text-sm font-medium text-slate-600">
+                      {acc?.lastTouchDate
+                        ? new Date(acc.lastTouchDate).toLocaleDateString()
+                        : '-'}
                     </TableCell>
                     <TableCell>
                       <div
-                        className={`text-xs font-semibold ${overdue && !isNewLead ? 'text-red-600' : isNewLead ? 'text-blue-600' : 'text-gray-600'}`}
+                        className={`text-xs font-bold ${overdue ? 'text-red-600' : 'text-slate-600'}`}
                       >
                         {opp.nextAction || 'Pendente'}
                       </div>
+                      {opp.nextActionDate && (
+                        <div className="text-[10px] text-slate-400 mt-0.5">
+                          {new Date(opp.nextActionDate).toLocaleDateString()}
+                        </div>
+                      )}
                     </TableCell>
-                    <TableCell className="font-black text-black">
+                    <TableCell className="font-black text-slate-900">
                       {formatCurrency(opp.total)}
                     </TableCell>
                     <TableCell className="text-right">
                       <Button
                         size="sm"
                         variant="ghost"
-                        onClick={() => setSelectedOpp(opp)}
-                        className="h-8 text-xs font-bold rounded hover:bg-gray-100"
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          setDetailsAccountId(opp.accountId)
+                        }}
+                        className="h-8 text-xs font-bold rounded hover:bg-slate-100 text-slate-600"
                       >
-                        Editar
+                        Abrir Painel
                       </Button>
                     </TableCell>
                   </TableRow>
                 )
               })}
+              {sortedAndFilteredOpportunities.length === 0 && (
+                <TableRow>
+                  <TableCell
+                    colSpan={7}
+                    className="h-24 text-center text-slate-500 font-medium"
+                  >
+                    Nenhuma oportunidade encontrada com os filtros atuais.
+                  </TableCell>
+                </TableRow>
+              )}
             </TableBody>
           </Table>
         </div>
       )}
 
-      {selectedOpp && (
-        <Dialog open={!!selectedOpp} onOpenChange={() => setSelectedOpp(null)}>
-          <DialogContent className="sm:max-w-[400px]">
-            <DialogHeader>
-              <DialogTitle>Atualizar Oportunidade</DialogTitle>
-            </DialogHeader>
-            <form onSubmit={handleUpdateStage} className="space-y-4 mt-2">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-1">
-                  <label className="text-xs font-bold text-gray-700">
-                    Fase Atual *
-                  </label>
-                  <select
-                    name="stage"
-                    defaultValue={selectedOpp.stage}
-                    required
-                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:ring-2 focus:ring-black"
-                  >
-                    {STAGES.map((s) => (
-                      <option key={s} value={s}>
-                        {s}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <div className="space-y-1">
-                  <label className="text-xs font-bold text-gray-700">
-                    Valor Total (R$)
-                  </label>
-                  <Input
-                    name="total"
-                    type="text"
-                    inputMode="decimal"
-                    defaultValue={
-                      selectedOpp.total?.toString().replace('.', ',') || '0'
-                    }
-                  />
-                </div>
-              </div>
-              <div className="space-y-1">
-                <label className="text-xs font-bold text-gray-700">
-                  Motivo de Perda (Se Perdido)
-                </label>
-                <Input
-                  name="lossReason"
-                  defaultValue={selectedOpp.lossReason || ''}
-                  placeholder="Ex: Preço alto, Sem budget..."
-                />
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-1">
-                  <label className="text-xs font-bold text-gray-700">
-                    Próxima Ação
-                  </label>
-                  <Input
-                    name="nextAction"
-                    defaultValue={selectedOpp.nextAction || ''}
-                    placeholder="Ex: Follow-up"
-                  />
-                </div>
-                <div className="space-y-1">
-                  <label className="text-xs font-bold text-gray-700">
-                    Data Ação
-                  </label>
-                  <Input
-                    name="nextActionDate"
-                    type="date"
-                    defaultValue={
-                      selectedOpp.nextActionDate?.split('T')[0] || ''
-                    }
-                  />
-                </div>
-              </div>
-              <Button
-                type="submit"
-                className="w-full bg-black text-white font-bold mt-4"
-              >
-                Salvar Alteração
-              </Button>
-            </form>
-          </DialogContent>
-        </Dialog>
+      {detailsAccountId && (
+        <LeadHistorySheet
+          account={accounts.find((a) => a.id === detailsAccountId) || null}
+          open={!!detailsAccountId}
+          onOpenChange={(open) => !open && setDetailsAccountId(null)}
+        />
       )}
 
       <Dialog open={isNewOpen} onOpenChange={setIsNewOpen}>
@@ -495,11 +564,13 @@ export default function Pipeline() {
           </DialogHeader>
           <form onSubmit={handleCreateOpp} className="space-y-4 mt-2">
             <div className="space-y-1">
-              <label className="text-xs font-bold text-gray-700">Conta *</label>
+              <label className="text-xs font-bold text-slate-700">
+                Conta *
+              </label>
               <select
                 name="accountId"
                 required
-                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:ring-2 focus:ring-black"
+                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:ring-2 focus:ring-orange-500"
               >
                 <option value="">Selecione...</option>
                 {accounts.map((a) => (
@@ -510,8 +581,8 @@ export default function Pipeline() {
               </select>
             </div>
             <div className="space-y-1">
-              <label className="text-xs font-bold text-gray-700">
-                Nome da Oportunidade *
+              <label className="text-xs font-bold text-slate-700">
+                Nome do Projeto/Oportunidade *
               </label>
               <Input
                 name="name"
@@ -521,36 +592,39 @@ export default function Pipeline() {
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1">
-                <label className="text-xs font-bold text-gray-700">
+                <label className="text-xs font-bold text-slate-700">
                   Fase *
                 </label>
                 <select
                   name="stage"
                   required
-                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:ring-2 focus:ring-black"
+                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:ring-2 focus:ring-orange-500"
                 >
                   {STAGES.map((s) => (
                     <option key={s} value={s}>
                       {s}
                     </option>
                   ))}
+                  <option value="Fechado Ganho">Fechado Ganho</option>
+                  <option value="Fechado Perdido">Fechado Perdido</option>
                 </select>
               </div>
               <div className="space-y-1">
-                <label className="text-xs font-bold text-gray-700">
-                  Valor Total (R$)
+                <label className="text-xs font-bold text-slate-700">
+                  Valor do Projeto (R$)
                 </label>
                 <Input
                   name="total"
                   type="text"
                   inputMode="decimal"
-                  defaultValue="0"
+                  defaultValue="0,00"
+                  placeholder="0,00"
                 />
               </div>
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1">
-                <label className="text-xs font-bold text-gray-700">
+                <label className="text-xs font-bold text-slate-700">
                   Próxima Ação *
                 </label>
                 <Input
@@ -560,7 +634,7 @@ export default function Pipeline() {
                 />
               </div>
               <div className="space-y-1">
-                <label className="text-xs font-bold text-gray-700">
+                <label className="text-xs font-bold text-slate-700">
                   Data Ação *
                 </label>
                 <Input name="nextActionDate" type="date" required />
@@ -568,7 +642,7 @@ export default function Pipeline() {
             </div>
             <Button
               type="submit"
-              className="w-full bg-black text-white font-bold mt-4 hover:bg-gray-800"
+              className="w-full bg-orange-500 text-white font-bold mt-4 hover:bg-orange-600"
             >
               Criar Oportunidade
             </Button>

@@ -38,7 +38,7 @@ export default function LeadInteractionForm({ account, onSuccess }: Props) {
   const [type, setType] = useState<ActivityType>('Mensagem')
   const [result, setResult] = useState('')
 
-  const [scheduleNext, setScheduleNext] = useState(false)
+  const [scheduleNext, setScheduleNext] = useState(true)
   const [nextAction, setNextAction] = useState('')
   const [nextActionDate, setNextActionDate] = useState<Date | undefined>(
     new Date(),
@@ -129,24 +129,21 @@ export default function LeadInteractionForm({ account, onSuccess }: Props) {
         />
       </div>
 
-      <div className="border border-gray-200 rounded-xl p-4 bg-gray-50/80 space-y-4">
+      <div className="border border-orange-200 rounded-xl p-4 bg-orange-50/30 space-y-4">
         <div className="flex items-center justify-between">
           <div className="space-y-0.5">
-            <label
-              className="text-sm font-bold text-gray-900 cursor-pointer"
-              onClick={() => setScheduleNext(!scheduleNext)}
-            >
-              Agendar próxima ação?
+            <label className="text-sm font-bold text-slate-900">
+              Próxima ação (Obrigatório)
             </label>
-            <p className="text-xs text-gray-500 font-medium">
-              Defina um follow-up para este lead.
+            <p className="text-xs text-slate-500 font-medium">
+              Sempre saia com um follow-up agendado.
             </p>
           </div>
-          <Switch checked={scheduleNext} onCheckedChange={setScheduleNext} />
+          <Switch checked={scheduleNext} onCheckedChange={() => {}} disabled />
         </div>
 
         {scheduleNext && (
-          <div className="space-y-4 pt-4 border-t border-gray-200">
+          <div className="space-y-4 pt-4 border-t border-orange-100">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-1.5">
                 <label className="text-xs font-bold text-gray-700">
@@ -196,8 +193,8 @@ export default function LeadInteractionForm({ account, onSuccess }: Props) {
 
       <Button
         type="submit"
-        disabled={isSubmitting}
-        className="w-full font-bold bg-black text-white hover:bg-gray-800"
+        disabled={isSubmitting || !nextAction || !nextActionDate}
+        className="w-full font-bold bg-orange-500 text-white hover:bg-orange-600 shadow-lg shadow-orange-500/20"
       >
         {isSubmitting ? (
           'Salvando...'

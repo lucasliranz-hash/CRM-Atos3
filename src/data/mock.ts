@@ -101,7 +101,7 @@ export const mockOpportunities: Opportunity[] = [
     id: 'o1',
     accountId: 'a2',
     name: 'Projeto Renovação Frota',
-    stage: 'Proposta',
+    stage: 'Proposta / Fechamento',
     mrr: 5000,
     setup: 1500,
     total: 60500,

@@ -1,151 +1,44 @@
-import { useMemo, useState, useEffect } from 'react'
+import { useMemo } from 'react'
 import useMainStore from '@/stores/main'
 import { isOverdue, isToday, formatCurrency } from '@/lib/crm-utils'
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
+import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import {
-  AlertCircle,
-  CheckCircle2,
   Clock,
-  Play,
-  AlertTriangle,
   Building2,
-  TrendingDown,
-  Activity as ActivityIcon,
-  Briefcase,
+  TrendingUp,
   Target,
-  ArrowRight,
+  Phone,
+  Calendar,
+  Briefcase,
 } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '@/hooks/use-auth'
-import { useToast } from '@/hooks/use-toast'
-import { cn } from '@/lib/utils'
 
-const MiniList = ({
-  title,
-  items,
-  renderItem,
-  emptyText,
-  icon: Icon,
-  badgeColor = 'bg-gray-100 text-gray-600',
-}: any) => (
-  <Card className="shadow-[0_2px_12px_rgba(0,0,0,0.03)] hover:shadow-[0_4px_24px_rgba(0,0,0,0.06)] transition-all duration-300 rounded-2xl overflow-hidden border-gray-100 bg-white flex flex-col h-full group">
-    <CardHeader className="py-4 px-5 border-b border-gray-50/80 bg-white/50 backdrop-blur-sm sticky top-0 z-10">
-      <CardTitle className="text-sm font-black flex items-center justify-between text-gray-800">
-        <div className="flex items-center gap-2.5">
-          <div className="p-2 rounded-xl bg-gray-50 text-gray-500 group-hover:bg-black group-hover:text-white transition-colors duration-300">
-            <Icon className="w-4 h-4" />
-          </div>
-          {title}
-        </div>
-        <span
-          className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold ${badgeColor}`}
-        >
-          {items.length}
-        </span>
-      </CardTitle>
-    </CardHeader>
-    <CardContent className="p-0 flex-1 overflow-y-auto max-h-[360px] custom-scrollbar bg-white">
-      {items.length === 0 ? (
-        <div className="flex flex-col items-center justify-center h-40 text-sm text-gray-400 font-semibold px-6 text-center">
-          <div className="w-12 h-12 rounded-full bg-gray-50 flex items-center justify-center mb-3">
-            <CheckCircle2 className="w-6 h-6 text-gray-300" />
-          </div>
-          {emptyText}
-        </div>
-      ) : (
-        <div className="divide-y divide-gray-50">{items.map(renderItem)}</div>
-      )}
-    </CardContent>
-  </Card>
-)
+const getVariance = (items: any[], dateField = 'createdAt') => {
+  const now = new Date()
+  const thisWeekStart = new Date(now)
+  thisWeekStart.setDate(thisWeekStart.getDate() - 7)
+  const lastWeekStart = new Date(thisWeekStart)
+  lastWeekStart.setDate(lastWeekStart.getDate() - 7)
+
+  const thisWeek = items.filter(
+    (i: any) => new Date(i[dateField]) >= thisWeekStart,
+  ).length
+  const lastWeek = items.filter((i: any) => {
+    const d = new Date(i[dateField])
+    return d >= lastWeekStart && d < thisWeekStart
+  }).length
+
+  const diff = thisWeek - lastWeek
+  return diff >= 0 ? `+${diff}` : `${diff}`
+}
 
 export default function Index() {
-  const { activities, accounts, completeActivity, opportunities } =
-    useMainStore()
+  const { activities, accounts, opportunities } = useMainStore()
   const { profile } = useAuth()
-  const { toast } = useToast()
 
-  const [notifiedActs, setNotifiedActs] = useState<Set<string>>(new Set())
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      const now = new Date()
-      activities.forEach((act) => {
-        if (
-          !act.completed &&
-          (act.type.includes('Reunião') || act.type === 'Diagnóstico')
-        ) {
-          const actDate = new Date(act.date)
-          const diffMs = actDate.getTime() - now.getTime()
-          const diffMins = Math.round(diffMs / 60000)
-
-          if (diffMins === 15 && !notifiedActs.has(act.id)) {
-            const acc = accounts.find((a) => a.id === act.accountId)
-            toast({
-              title: '⏰ Lembrete de Reunião!',
-              description: `Sua atividade com ${acc?.name || 'Cliente'} começará em 15 minutos.`,
-              duration: 10000,
-            })
-            setNotifiedActs((prev) => new Set(prev).add(act.id))
-          }
-        }
-      })
-    }, 30000)
-
-    return () => clearInterval(interval)
-  }, [activities, accounts, toast, notifiedActs])
-
-  const overdue = useMemo(
-    () => activities.filter((a) => !a.completed && isOverdue(a.date)),
-    [activities],
-  )
-  const todayActs = useMemo(
-    () => activities.filter((a) => !a.completed && isToday(a.date)),
-    [activities],
-  )
-
-  const priorityA = useMemo(
-    () =>
-      accounts.filter(
-        (a) =>
-          a.priority === 'A' &&
-          (!a.lastTouchDate || isOverdue(a.lastTouchDate)),
-      ),
-    [accounts],
-  )
-  const newLeads = useMemo(
-    () =>
-      accounts.filter(
-        (a) =>
-          a.status === 'Novo' ||
-          a.status === 'Em pesquisa' ||
-          a.status === 'Em prospecção',
-      ),
-    [accounts],
-  )
-  const noActionAccs = useMemo(
-    () => accounts.filter((a) => !a.nextActionDate),
-    [accounts],
-  )
-  const stalledOpps = useMemo(
-    () =>
-      opportunities.filter(
-        (o) =>
-          !o.stage.includes('Fechado') &&
-          (!o.nextActionDate || isOverdue(o.nextActionDate)),
-      ),
-    [opportunities],
-  )
-
-  const pipelineTotal = useMemo(
-    () =>
-      opportunities
-        .filter((o) => !o.stage.includes('Fechado'))
-        .reduce((s, o) => s + o.total, 0),
-    [opportunities],
-  )
-
+  // Top Metrics
   const closedWonTotal = useMemo(
     () =>
       opportunities
@@ -154,279 +47,273 @@ export default function Index() {
     [opportunities],
   )
 
-  const renderAct = (act: any) => {
-    const acc = accounts.find((a) => a.id === act.accountId)
-    return (
-      <div
-        key={act.id}
-        className="p-4 hover:bg-slate-50/80 flex items-center justify-between transition-colors group relative"
-      >
-        <div className="flex-1 min-w-0 pr-4">
-          <div className="font-bold text-sm mb-1 text-gray-900 truncate">
-            {acc?.name || 'Conta Removida'}
-          </div>
-          <div className="text-xs text-gray-500 flex items-center gap-2 font-semibold">
-            <span className="bg-white border border-gray-200 px-2 py-0.5 rounded-md text-gray-700 shadow-sm">
-              {act.type}
-            </span>
-            <span className="flex items-center text-gray-400">
-              <Clock className="w-3 h-3 mr-1" />
-              {new Date(act.date).toLocaleDateString()}
-            </span>
-          </div>
-        </div>
-        <Button
-          size="sm"
-          variant="outline"
-          onClick={() => completeActivity(act.id)}
-          className="h-9 w-9 p-0 rounded-xl text-gray-400 border-gray-200 hover:text-green-600 hover:border-green-600 hover:bg-green-50 transition-all md:opacity-0 group-hover:opacity-100 shrink-0 shadow-sm"
-          title="Marcar como Concluído"
-        >
-          <CheckCircle2 className="w-5 h-5" />
-        </Button>
-      </div>
-    )
-  }
+  const mappedLeads = useMemo(() => accounts.length, [accounts])
+  const mappedLeadsVar = useMemo(() => getVariance(accounts), [accounts])
 
-  const renderAcc = (acc: any) => (
-    <div
-      key={acc.id}
-      className="p-4 hover:bg-slate-50/80 flex items-center justify-between transition-colors group"
-    >
-      <div className="flex-1 min-w-0 pr-4">
-        <div className="font-bold text-sm text-gray-900 truncate">
-          {acc.name}
-        </div>
-        <div className="text-xs text-gray-500 mt-1 font-semibold flex items-center gap-1.5">
-          <span className="w-1.5 h-1.5 rounded-full bg-blue-500 shrink-0"></span>
-          <span className="truncate">{acc.status}</span>
-          <span className="text-gray-300 shrink-0">•</span>
-          <span className="bg-gray-100 px-1.5 py-0.5 rounded text-[10px] font-black shrink-0 text-gray-600">
-            Prio {acc.priority}
+  const contactsMade = useMemo(
+    () =>
+      activities.filter(
+        (a) =>
+          a.completed &&
+          ['Ligação', 'Mensagem', 'E-mail', 'Follow-up'].includes(a.type),
+      ).length,
+    [activities],
+  )
+  const contactsMadeVar = useMemo(
+    () =>
+      getVariance(
+        activities.filter(
+          (a) =>
+            a.completed &&
+            ['Ligação', 'Mensagem', 'E-mail', 'Follow-up'].includes(a.type),
+        ),
+        'date',
+      ),
+    [activities],
+  )
+
+  const meetingsScheduled = useMemo(
+    () => activities.filter((a) => a.type === 'Reunião agendada').length,
+    [activities],
+  )
+  const meetingsScheduledVar = useMemo(
+    () =>
+      getVariance(
+        activities.filter((a) => a.type === 'Reunião agendada'),
+        'date',
+      ),
+    [activities],
+  )
+
+  const proposalsSent = useMemo(
+    () =>
+      opportunities.filter((o) => o.stage === 'Proposta / Fechamento').length,
+    [opportunities],
+  )
+  const proposalsSentVar = useMemo(
+    () =>
+      getVariance(
+        opportunities.filter((o) => o.stage === 'Proposta / Fechamento'),
+      ),
+    [opportunities],
+  )
+
+  const salesClosed = useMemo(
+    () => opportunities.filter((o) => o.stage === 'Fechado Ganho').length,
+    [opportunities],
+  )
+  const salesClosedVar = useMemo(
+    () => getVariance(opportunities.filter((o) => o.stage === 'Fechado Ganho')),
+    [opportunities],
+  )
+
+  // Tasks Dashboard System
+  const tasks = useMemo(() => {
+    const t: any[] = []
+    opportunities.forEach((o) => {
+      if (o.nextAction && o.nextActionDate && !o.stage.includes('Fechado')) {
+        const acc = accounts.find((a) => a.id === o.accountId)
+        t.push({
+          id: `opp-${o.id}`,
+          text: o.nextAction,
+          date: o.nextActionDate,
+          name: acc?.name || o.name,
+          item: o,
+        })
+      }
+    })
+    accounts.forEach((a) => {
+      if (a.nextAction && a.nextActionDate) {
+        if (
+          !t.find(
+            (task) =>
+              task.text === a.nextAction &&
+              task.date === a.nextActionDate &&
+              task.name === a.name,
+          )
+        ) {
+          t.push({
+            id: `acc-${a.id}`,
+            text: a.nextAction,
+            date: a.nextActionDate,
+            name: a.name,
+            item: a,
+          })
+        }
+      }
+    })
+    return t.sort(
+      (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime(),
+    )
+  }, [opportunities, accounts])
+
+  const overdue = tasks.filter((t) => isOverdue(t.date))
+  const today = tasks.filter((t) => isToday(t.date))
+  const upcoming = tasks.filter((t) => !isOverdue(t.date) && !isToday(t.date))
+
+  const MetricCard = ({
+    title,
+    value,
+    variance,
+    icon: Icon,
+    colorClass,
+  }: any) => (
+    <Card className="rounded-2xl border-none shadow-[0_2px_12px_rgba(0,0,0,0.04)] bg-white overflow-hidden">
+      <CardContent className="p-5">
+        <div className="flex justify-between items-start mb-4">
+          <div className={`p-2.5 rounded-xl ${colorClass}`}>
+            <Icon className="w-5 h-5" />
+          </div>
+          <span className="text-xs font-bold text-slate-500 bg-slate-50 px-2 py-1 rounded-md border border-slate-100">
+            {variance} esta semana
           </span>
         </div>
-      </div>
-      <Link to="/accounts" className="shrink-0">
-        <Button
-          size="sm"
-          variant="ghost"
-          className="h-8 w-8 p-0 rounded-lg text-gray-400 hover:bg-black hover:text-white transition-all md:opacity-0 group-hover:opacity-100"
+        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">
+          {title}
+        </p>
+        <h3 className="text-2xl font-black text-slate-900">{value}</h3>
+      </CardContent>
+    </Card>
+  )
+
+  const TaskList = ({ title, items, emptyText, isRed }: any) => (
+    <div className="flex flex-col h-full">
+      <h3
+        className={`font-black text-sm uppercase tracking-wider mb-4 flex items-center ${isRed ? 'text-red-600' : 'text-slate-800'}`}
+      >
+        {title}
+        <span
+          className={`ml-2 text-[10px] px-2 py-0.5 rounded-full ${isRed ? 'bg-red-100 text-red-700' : 'bg-slate-100 text-slate-600'}`}
         >
-          <ArrowRight className="w-4 h-4" />
-        </Button>
-      </Link>
+          {items.length}
+        </span>
+      </h3>
+      <div className="space-y-3 flex-1">
+        {items.length === 0 ? (
+          <div className="h-24 flex items-center justify-center border-2 border-dashed border-slate-200 rounded-xl text-xs font-bold text-slate-400 bg-slate-50/50">
+            {emptyText}
+          </div>
+        ) : (
+          items.map((task: any) => (
+            <div
+              key={task.id}
+              className={`p-4 rounded-xl border ${isRed ? 'bg-red-50/50 border-red-100' : 'bg-white border-slate-200 shadow-sm'} group`}
+            >
+              <div className="flex justify-between items-start mb-2">
+                <div className="font-bold text-sm text-slate-900">
+                  {task.name}
+                </div>
+                <div
+                  className={`text-[10px] font-bold px-2 py-0.5 rounded flex items-center gap-1 ${isRed ? 'bg-red-100 text-red-700' : 'bg-slate-100 text-slate-600'}`}
+                >
+                  <Clock className="w-3 h-3" />
+                  {new Date(task.date).toLocaleDateString()}
+                </div>
+              </div>
+              <p className="text-xs font-medium text-slate-600">{task.text}</p>
+            </div>
+          ))
+        )}
+      </div>
     </div>
   )
 
-  const renderOpp = (opp: any) => {
-    const acc = accounts.find((a) => a.id === opp.accountId)
-    return (
-      <div
-        key={opp.id}
-        className="p-4 hover:bg-slate-50/80 flex items-center justify-between transition-colors group"
-      >
-        <div className="flex-1 min-w-0 pr-4">
-          <div className="font-bold text-sm text-gray-900 truncate">
-            {opp.name}
-          </div>
-          <div className="text-xs text-gray-500 mt-1 font-semibold flex items-center gap-1.5">
-            <span className="truncate max-w-[100px]">{acc?.name}</span>
-            <span className="text-gray-300 shrink-0">•</span>
-            <span className="font-black text-black shrink-0">
-              {formatCurrency(opp.total)}
-            </span>
-          </div>
+  return (
+    <div className="space-y-8 pb-10 animate-in fade-in slide-in-from-bottom-4 duration-700">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4">
+        <div>
+          <h1 className="text-3xl md:text-4xl font-black text-slate-900 tracking-tight">
+            Olá, {profile?.nome?.split(' ')[0] || 'Líder'} 👋
+          </h1>
+          <p className="text-slate-500 mt-1.5 font-semibold text-sm md:text-base">
+            Aqui está o resumo da sua execução diária no Atos3 CRM.
+          </p>
         </div>
-        <Link to="/pipeline" className="shrink-0">
-          <Button
-            size="sm"
-            variant="ghost"
-            className="h-8 w-8 p-0 rounded-lg text-gray-400 hover:bg-black hover:text-white transition-all md:opacity-0 group-hover:opacity-100"
-          >
-            <ArrowRight className="w-4 h-4" />
+        <Link to="/pipeline" className="w-full sm:w-auto">
+          <Button className="w-full bg-orange-500 text-white hover:bg-orange-600 rounded-xl shadow-lg shadow-orange-500/20 font-bold text-sm h-11 px-6">
+            <Target className="w-4 h-4 mr-2" /> Ver Pipeline
           </Button>
         </Link>
       </div>
-    )
-  }
 
-  return (
-    <div className="space-y-8 pb-10 animate-in fade-in slide-in-from-bottom-4 duration-700">
-      {/* Header & Welcome */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4">
-        <div>
-          <h1 className="text-3xl md:text-4xl font-black text-gray-900 tracking-tight">
-            Olá, {profile?.nome?.split(' ')[0] || 'Líder'} 👋
-          </h1>
-          <p className="text-gray-500 mt-1.5 font-semibold text-sm md:text-base">
-            Aqui está o resumo da sua execução diária. Foco no próximo passo!
-          </p>
-        </div>
-        <div className="flex gap-2 w-full sm:w-auto">
-          <Link to="/pipeline" className="w-full sm:w-auto">
-            <Button className="w-full bg-white border border-gray-200 text-black hover:bg-gray-50 rounded-xl shadow-sm font-bold text-sm h-11 px-5">
-              <Target className="w-4 h-4 mr-2" /> Ver Pipeline
-            </Button>
-          </Link>
-        </div>
-      </div>
-
-      {/* Top Metrics Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
-        <Card className="rounded-2xl border-none shadow-[0_2px_12px_rgba(0,0,0,0.04)] bg-gradient-to-br from-white to-slate-50/50 relative overflow-hidden">
-          <CardContent className="p-5 relative z-10">
+      {/* Revenue Card & Metrics */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-4">
+        <Card className="col-span-1 sm:col-span-2 lg:col-span-2 rounded-2xl border-none shadow-[0_4px_20px_rgba(0,0,0,0.06)] bg-gradient-to-br from-slate-900 to-slate-800 text-white relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-32 h-32 bg-white opacity-5 rounded-full blur-2xl -translate-y-10 translate-x-10" />
+          <CardContent className="p-6 relative z-10 h-full flex flex-col justify-center">
             <div className="flex justify-between items-start mb-4">
-              <div className="p-2.5 bg-emerald-50 text-emerald-600 rounded-xl">
-                <CheckCircle2 className="w-5 h-5" />
+              <div className="p-3 bg-white/10 text-white rounded-xl backdrop-blur-sm border border-white/10">
+                <TrendingUp className="w-6 h-6 text-orange-400" />
               </div>
             </div>
-            <p className="text-sm font-bold text-gray-500 uppercase tracking-wider mb-1">
-              Receita Ganhos
+            <p className="text-sm font-bold text-slate-300 uppercase tracking-wider mb-1">
+              Receita Total (Ganhos)
             </p>
-            <h3 className="text-2xl font-black text-gray-900">
+            <h3 className="text-3xl sm:text-4xl font-black text-white">
               {formatCurrency(closedWonTotal)}
             </h3>
           </CardContent>
-          <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-emerald-500 to-emerald-400" />
         </Card>
 
-        <Card className="rounded-2xl border-none shadow-[0_2px_12px_rgba(0,0,0,0.04)] bg-gradient-to-br from-white to-slate-50/50">
-          <CardContent className="p-5">
-            <div className="flex justify-between items-start mb-4">
-              <div className="p-2.5 bg-blue-50 text-blue-600 rounded-xl">
-                <Briefcase className="w-5 h-5" />
-              </div>
-            </div>
-            <p className="text-sm font-bold text-gray-500 uppercase tracking-wider mb-1">
-              Pipeline Ativo
-            </p>
-            <h3 className="text-2xl font-black text-gray-900">
-              {formatCurrency(pipelineTotal)}
-            </h3>
-          </CardContent>
-        </Card>
-
-        <Card className="rounded-2xl border-none shadow-[0_2px_12px_rgba(0,0,0,0.04)] bg-gradient-to-br from-white to-slate-50/50 relative overflow-hidden">
-          <CardContent className="p-5 relative z-10">
-            <div className="flex justify-between items-start mb-4">
-              <div className="p-2.5 bg-red-50 text-red-600 rounded-xl">
-                <AlertCircle className="w-5 h-5" />
-              </div>
-              {overdue.length > 0 && (
-                <span className="bg-red-100 text-red-700 text-[10px] px-2.5 py-1 rounded-full font-black uppercase tracking-wider animate-pulse border border-red-200">
-                  Ação Necessária
-                </span>
-              )}
-            </div>
-            <p className="text-sm font-bold text-gray-500 uppercase tracking-wider mb-1">
-              Atrasados
-            </p>
-            <h3 className="text-2xl font-black text-gray-900">
-              {overdue.length}{' '}
-              <span className="text-sm text-gray-400 font-semibold normal-case">
-                tarefas
-              </span>
-            </h3>
-          </CardContent>
-          {overdue.length > 0 && (
-            <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-red-500 to-red-400" />
-          )}
-        </Card>
-
-        <Card className="rounded-2xl border-none shadow-[0_2px_12px_rgba(0,0,0,0.04)] bg-gradient-to-br from-white to-slate-50/50 relative overflow-hidden">
-          <CardContent className="p-5 relative z-10">
-            <div className="flex justify-between items-start mb-4">
-              <div className="p-2.5 bg-green-50 text-green-600 rounded-xl">
-                <ActivityIcon className="w-5 h-5" />
-              </div>
-            </div>
-            <p className="text-sm font-bold text-gray-500 uppercase tracking-wider mb-1">
-              Para Hoje
-            </p>
-            <h3 className="text-2xl font-black text-gray-900">
-              {todayActs.length}{' '}
-              <span className="text-sm text-gray-400 font-semibold normal-case">
-                tarefas
-              </span>
-            </h3>
-          </CardContent>
-          {todayActs.length > 0 && (
-            <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-green-500 to-green-400" />
-          )}
-        </Card>
-
-        <Card className="rounded-2xl border-none shadow-[0_4px_20px_rgba(0,0,0,0.1)] bg-gradient-to-br from-gray-900 to-black text-white relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-32 h-32 bg-white opacity-[0.03] rounded-full blur-2xl -translate-y-10 translate-x-10" />
-          <div className="absolute bottom-0 left-0 w-24 h-24 bg-blue-500 opacity-10 rounded-full blur-xl translate-y-10 -translate-x-5" />
-          <CardContent className="p-5 relative z-10">
-            <div className="flex justify-between items-start mb-4">
-              <div className="p-2.5 bg-white/10 text-white rounded-xl backdrop-blur-sm border border-white/5">
-                <Building2 className="w-5 h-5" />
-              </div>
-            </div>
-            <p className="text-sm font-bold text-gray-400 uppercase tracking-wider mb-1">
-              Novos Leads
-            </p>
-            <h3 className="text-2xl font-black text-white">
-              {newLeads.length}{' '}
-              <span className="text-sm text-gray-400 font-semibold normal-case">
-                na fila
-              </span>
-            </h3>
-          </CardContent>
-        </Card>
+        <MetricCard
+          title="Leads Mapeados"
+          value={mappedLeads}
+          variance={mappedLeadsVar}
+          icon={Building2}
+          colorClass="bg-blue-50 text-blue-600"
+        />
+        <MetricCard
+          title="Contatos Feitos"
+          value={contactsMade}
+          variance={contactsMadeVar}
+          icon={Phone}
+          colorClass="bg-yellow-50 text-yellow-600"
+        />
+        <MetricCard
+          title="Reuniões Agendadas"
+          value={meetingsScheduled}
+          variance={meetingsScheduledVar}
+          icon={Calendar}
+          colorClass="bg-purple-50 text-purple-600"
+        />
+        <MetricCard
+          title="Propostas / Vendas"
+          value={`${proposalsSent} / ${salesClosed}`}
+          variance={salesClosedVar}
+          icon={Briefcase}
+          colorClass="bg-emerald-50 text-emerald-600"
+        />
       </div>
 
-      {/* Grid of Lists */}
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-        <MiniList
-          title="Pendências Urgentes"
-          icon={AlertCircle}
-          items={overdue}
-          badgeColor="bg-red-100 text-red-700"
-          emptyText="Zero atrasos! Você está no controle."
-          renderItem={renderAct}
-        />
-        <MiniList
-          title="Agenda do Dia"
-          icon={Play}
-          items={todayActs}
-          badgeColor="bg-blue-100 text-blue-700"
-          emptyText="Nenhuma ação agendada para hoje."
-          renderItem={renderAct}
-        />
-        <MiniList
-          title="Novos Leads (Sem Contato)"
-          icon={Building2}
-          items={newLeads}
-          badgeColor="bg-emerald-100 text-emerald-700"
-          emptyText="Nenhum lead novo pendente."
-          renderItem={renderAcc}
-        />
-        <MiniList
-          title="Anti-Esquecimento"
-          icon={AlertTriangle}
-          items={noActionAccs}
-          badgeColor="bg-amber-100 text-amber-700"
-          emptyText="Todas as contas possuem próxima ação."
-          renderItem={renderAcc}
-        />
-        <MiniList
-          title="Prioridade A (S/ Ação)"
-          icon={Target}
-          items={priorityA}
-          badgeColor="bg-indigo-100 text-indigo-700"
-          emptyText="Prioridades A estão engajadas."
-          renderItem={renderAcc}
-        />
-        <MiniList
-          title="Oportunidades Paradas"
-          icon={TrendingDown}
-          items={stalledOpps}
-          badgeColor="bg-rose-100 text-rose-700"
-          emptyText="Pipeline com follow-up em dia."
-          renderItem={renderOpp}
-        />
+      {/* Tasks System */}
+      <div className="bg-white rounded-2xl p-6 shadow-[0_2px_12px_rgba(0,0,0,0.03)] border border-slate-100">
+        <div className="mb-6">
+          <h2 className="text-xl font-black text-slate-900">
+            Minhas ações do dia
+          </h2>
+          <p className="text-sm font-medium text-slate-500 mt-1">
+            Gestão de tarefas baseada nas próximas ações definidas.
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <TaskList
+            title="Atrasados"
+            items={overdue}
+            emptyText="Nenhum atraso. Mandou bem!"
+            isRed={true}
+          />
+          <TaskList
+            title="Hoje"
+            items={today}
+            emptyText="Tudo limpo para hoje."
+          />
+          <TaskList
+            title="Próximos"
+            items={upcoming}
+            emptyText="Nenhuma ação futura."
+          />
+        </div>
       </div>
     </div>
   )

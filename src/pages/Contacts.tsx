@@ -89,7 +89,7 @@ export default function Contacts() {
 
         <Dialog open={isOpen} onOpenChange={setIsOpen}>
           <DialogTrigger asChild>
-            <Button className="bg-black text-white rounded font-bold hover:bg-gray-800">
+            <Button className="bg-orange-500 text-white rounded font-bold hover:bg-orange-600 shadow-lg shadow-orange-500/20">
               <Plus className="w-4 h-4 mr-2" /> Novo Contato
             </Button>
           </DialogTrigger>

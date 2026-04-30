@@ -30,7 +30,7 @@ export function Sidebar() {
   const { logoUrl } = useMainStore()
 
   return (
-    <aside className="fixed left-0 top-0 h-screen w-20 z-50 hidden md:flex flex-col items-center py-6 bg-white border-r border-gray-200/60 shadow-[4px_0_24px_rgba(0,0,0,0.02)]">
+    <aside className="fixed left-0 top-0 h-screen w-20 z-50 hidden md:flex flex-col items-center py-6 bg-slate-900 border-r border-slate-800 shadow-[4px_0_24px_rgba(0,0,0,0.1)]">
       <div className="mb-8 px-2">
         {logoUrl ? (
           <img
@@ -39,8 +39,10 @@ export function Sidebar() {
             className="w-10 h-10 object-contain drop-shadow-sm"
           />
         ) : (
-          <div className="w-10 h-10 bg-black rounded-2xl flex items-center justify-center text-white shadow-md">
-            <span className="font-black text-lg tracking-tighter">A3</span>
+          <div className="w-10 h-10 bg-orange-500 rounded-2xl flex items-center justify-center text-white shadow-md">
+            <span className="font-black text-[10px] uppercase tracking-tighter">
+              Atos3
+            </span>
           </div>
         )}
       </div>
@@ -58,8 +60,8 @@ export function Sidebar() {
                   className={cn(
                     'p-3.5 rounded-xl transition-all duration-300 flex items-center justify-center relative group w-full',
                     isActive
-                      ? 'bg-black text-white shadow-md shadow-black/10'
-                      : 'text-gray-400 hover:text-black hover:bg-gray-100/80',
+                      ? 'bg-orange-500 text-white shadow-md shadow-orange-500/20'
+                      : 'text-slate-400 hover:text-white hover:bg-slate-800/80',
                   )}
                 >
                   <item.icon
@@ -71,7 +73,7 @@ export function Sidebar() {
                     )}
                   />
                   {isActive && (
-                    <div className="absolute -left-3 top-1/2 -translate-y-1/2 w-1.5 h-8 bg-black rounded-r-full" />
+                    <div className="absolute -left-3 top-1/2 -translate-y-1/2 w-1.5 h-8 bg-orange-500 rounded-r-full" />
                   )}
                 </Link>
               </TooltipTrigger>
@@ -94,8 +96,8 @@ export function Sidebar() {
               className={cn(
                 'p-3.5 rounded-xl transition-all duration-300 flex items-center justify-center relative group w-full',
                 location.pathname === '/settings'
-                  ? 'bg-black text-white shadow-md shadow-black/10'
-                  : 'text-gray-400 hover:text-black hover:bg-gray-100/80',
+                  ? 'bg-orange-500 text-white shadow-md shadow-orange-500/20'
+                  : 'text-slate-400 hover:text-white hover:bg-slate-800/80',
               )}
             >
               <SettingsIcon

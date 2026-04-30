@@ -24,6 +24,32 @@ import { Account } from '@/types/crm'
 import { Badge } from '@/components/ui/badge'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import LeadInteractionForm from './LeadInteractionForm'
+import { Input } from '@/components/ui/input'
+import { Button } from '@/components/ui/button'
+import { useToast } from '@/hooks/use-toast'
+import { formatCurrency } from '@/lib/crm-utils'
+
+const parseLocalCurrency = (val: string) => {
+  if (!val) return 0
+  const str = val.toString().trim()
+  if (/^(\d{1,3}(\.\d{3})*|\d+)(,\d{1,2})?$/.test(str)) {
+    const clean = str.replace(/\./g, '').replace(',', '.')
+    return parseFloat(clean) || 0
+  }
+  let clean = str.replace(/[^\d,.-]/g, '')
+  if (clean.includes(',') && clean.includes('.')) {
+    const lastComma = clean.lastIndexOf(',')
+    const lastDot = clean.lastIndexOf('.')
+    if (lastComma > lastDot) {
+      clean = clean.replace(/\./g, '').replace(',', '.')
+    } else {
+      clean = clean.replace(/,/g, '')
+    }
+  } else if (clean.includes(',')) {
+    clean = clean.replace(',', '.')
+  }
+  return parseFloat(clean) || 0
+}
 
 interface Props {
   account: Account | null
@@ -36,12 +62,59 @@ export default function LeadHistorySheet({
   open,
   onOpenChange,
 }: Props) {
-  const { activities, opportunities, contacts } = useMainStore()
+  const {
+    activities,
+    opportunities,
+    contacts,
+    updateOpportunity,
+    addActivity,
+  } = useMainStore()
+  const { toast } = useToast()
   const [activeTab, setActiveTab] = useState('history')
 
   useEffect(() => {
     if (open) setActiveTab('history')
   }, [open, account])
+
+  const mainContact =
+    contacts.find((c) => c.accountId === account?.id && c.isDecisionMaker) ||
+    contacts.find((c) => c.accountId === account?.id)
+  const activeOpp =
+    opportunities.find(
+      (o) => o.accountId === account?.id && !o.stage.includes('Fechado'),
+    ) || opportunities.find((o) => o.accountId === account?.id)
+
+  const handleUpdateValue = (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!activeOpp) return
+    const fd = new FormData(e.target as HTMLFormElement)
+    const total = parseLocalCurrency(fd.get('total') as string)
+    const stage = fd.get('stage') as string
+    const oldTotal = activeOpp.total || 0
+
+    let message = ''
+    if (total !== oldTotal) {
+      message += `Valor atualizado de ${formatCurrency(oldTotal)} para ${formatCurrency(total)}. `
+    }
+    if (stage !== activeOpp.stage) {
+      message += `Fase alterada de ${activeOpp.stage} para ${stage}.`
+    }
+
+    if (message) {
+      updateOpportunity(activeOpp.id, { total, stage: stage as any })
+      addActivity({
+        accountId: account!.id,
+        type: 'Negociação',
+        channel: 'Presencial',
+        date: new Date().toISOString(),
+        result: message,
+        completed: true,
+      })
+      toast({ title: 'Oportunidade atualizada e log registrado!' })
+    } else {
+      toast({ title: 'Nenhuma alteração detectada.' })
+    }
+  }
 
   const timeline = useMemo(() => {
     if (!account) return []
@@ -154,23 +227,50 @@ export default function LeadHistorySheet({
                   {account.status}
                 </Badge>
               </div>
-              <SheetDescription className="font-medium text-gray-500">
-                Gestão e histórico de interações do lead.
+              <SheetDescription className="font-medium text-slate-500 mt-2">
+                <div className="grid grid-cols-2 gap-y-1.5 text-[11px] bg-slate-50 p-2.5 rounded-lg border border-slate-100">
+                  <div>
+                    <strong className="text-slate-700">Contato:</strong>{' '}
+                    {mainContact?.name || '-'}
+                  </div>
+                  <div>
+                    <strong className="text-slate-700">Telefone:</strong>{' '}
+                    {account.phone || mainContact?.whatsapp || '-'}
+                  </div>
+                  <div>
+                    <strong className="text-slate-700">Cidade:</strong>{' '}
+                    {account.city || '-'}
+                  </div>
+                  <div>
+                    <strong className="text-slate-700">Veículos:</strong>{' '}
+                    {account.fleetEstimate || '-'}
+                  </div>
+                  <div className="col-span-2">
+                    <strong className="text-slate-700">LinkedIn:</strong>{' '}
+                    {mainContact?.linkedin || '-'}
+                  </div>
+                </div>
               </SheetDescription>
             </SheetHeader>
 
-            <TabsList className="w-full bg-gray-100/70 p-1 mb-4 h-11">
+            <TabsList className="w-full bg-slate-100 p-1 mb-4 h-11 flex">
               <TabsTrigger
                 value="history"
-                className="w-1/2 h-full text-sm font-bold data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-black text-gray-500"
+                className="flex-1 h-full text-xs font-bold data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-orange-600 text-slate-500"
               >
                 Histórico
               </TabsTrigger>
               <TabsTrigger
                 value="new"
-                className="w-1/2 h-full text-sm font-bold data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-black text-gray-500"
+                className="flex-1 h-full text-xs font-bold data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-orange-600 text-slate-500"
               >
                 Nova Ação
+              </TabsTrigger>
+              <TabsTrigger
+                value="opp"
+                className="flex-1 h-full text-xs font-bold data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-orange-600 text-slate-500"
+              >
+                Oportunidade
               </TabsTrigger>
             </TabsList>
           </div>
@@ -223,6 +323,78 @@ export default function LeadHistorySheet({
                 account={account}
                 onSuccess={() => setActiveTab('history')}
               />
+            </TabsContent>
+
+            <TabsContent
+              value="opp"
+              className="m-0 h-full animate-in fade-in duration-300"
+            >
+              {activeOpp ? (
+                <form
+                  onSubmit={handleUpdateValue}
+                  className="space-y-4 bg-white p-5 border border-slate-200 rounded-xl shadow-sm"
+                >
+                  <h4 className="font-black text-sm text-slate-900 leading-tight">
+                    Editar Projeto:
+                    <br />
+                    {activeOpp.name}
+                  </h4>
+                  <div className="space-y-1.5 pt-2">
+                    <label className="text-xs font-bold text-slate-700">
+                      Fase Atual
+                    </label>
+                    <select
+                      name="stage"
+                      defaultValue={activeOpp.stage}
+                      className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:ring-2 focus:ring-orange-500"
+                    >
+                      {[
+                        'Leads Mapeados',
+                        'Conexão Enviada',
+                        'Primeiro Contato',
+                        'Follow-up',
+                        'Em Conversa / Diagnóstico',
+                        'Reunião Agendada',
+                        'Proposta / Fechamento',
+                        'Fechado Ganho',
+                        'Fechado Perdido',
+                      ].map((s) => (
+                        <option key={s} value={s}>
+                          {s}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-bold text-slate-700">
+                      Valor do Projeto (R$)
+                    </label>
+                    <Input
+                      name="total"
+                      type="text"
+                      inputMode="decimal"
+                      defaultValue={
+                        activeOpp.total?.toString().replace('.', ',') || '0,00'
+                      }
+                      className="font-black text-lg h-12"
+                    />
+                    <p className="text-[10px] text-slate-500 font-medium">
+                      Aceita decimais. Ao salvar, um log será criado no
+                      histórico.
+                    </p>
+                  </div>
+                  <Button
+                    type="submit"
+                    className="w-full font-bold bg-orange-500 hover:bg-orange-600 text-white shadow-lg shadow-orange-500/20"
+                  >
+                    Atualizar Oportunidade
+                  </Button>
+                </form>
+              ) : (
+                <div className="text-center py-10 text-slate-500 font-medium text-sm bg-slate-50 rounded-xl border border-dashed border-slate-200">
+                  Nenhuma oportunidade ativa.
+                </div>
+              )}
             </TabsContent>
           </div>
         </Tabs>

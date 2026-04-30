@@ -32,8 +32,10 @@ export function Header() {
               className="h-8 w-auto max-w-[120px] object-contain drop-shadow-sm"
             />
           ) : (
-            <div className="w-8 h-8 bg-black rounded-lg flex items-center justify-center text-white shadow-sm">
-              <span className="font-black text-sm tracking-tighter">A3</span>
+            <div className="w-8 h-8 bg-orange-500 rounded-lg flex items-center justify-center text-white shadow-sm">
+              <span className="font-black text-[10px] uppercase tracking-tighter">
+                Atos3
+              </span>
             </div>
           )}
         </div>
@@ -60,8 +62,8 @@ export function Header() {
       <div className="flex items-center gap-2 md:gap-4">
         <Popover>
           <PopoverTrigger asChild>
-            <Button className="bg-black text-white rounded-full px-5 shadow-lg shadow-black/10 hover:bg-gray-800 transition-all duration-300 font-bold hidden sm:flex h-10">
-              <Plus className="w-4 h-4 mr-1.5" strokeWidth={3} /> Nova Ação
+            <Button className="bg-orange-500 text-white rounded-full px-5 shadow-lg shadow-orange-500/20 hover:bg-orange-600 transition-all duration-300 font-bold hidden sm:flex h-10">
+              <Plus className="w-4 h-4 mr-1.5" strokeWidth={3} /> Novo Lead
             </Button>
           </PopoverTrigger>
           <PopoverContent
