@@ -120,9 +120,9 @@ export type OpportunityStage =
   | 'Conexão Enviada'
   | 'Primeiro Contato'
   | 'Follow-up'
-  | 'Em Conversa / Diagnóstico'
-  | 'Reunião Agendada'
-  | 'Proposta / Fechamento'
+  | 'Em Conversa'
+  | 'Reunião'
+  | 'Proposta'
   | 'Fechado Ganho'
   | 'Fechado Perdido'
 

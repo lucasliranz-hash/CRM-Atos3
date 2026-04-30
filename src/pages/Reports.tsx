@@ -68,64 +68,48 @@ export default function Reports() {
         </p>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
         <Card className="shadow-sm border-gray-200 rounded-xl bg-white">
           <CardHeader className="pb-2">
             <CardTitle className="text-[10px] font-black uppercase tracking-widest text-gray-500">
-              Taxa de Follow-up (Em dia)
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div
-              className={`text-3xl font-black ${followUpRate < 80 ? 'text-red-600' : 'text-black'}`}
-            >
-              {followUpRate}%
-            </div>
-          </CardContent>
-        </Card>
-        <Card className="shadow-sm border-gray-200 rounded-xl bg-white">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-[10px] font-black uppercase tracking-widest text-gray-500">
-              Leads Envelhecidos (&gt;15 dias)
+              Total Leads (Mapeados)
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-3xl font-black text-black">
-              {
-                accounts.filter((a) => {
-                  if (!a.lastTouchDate) return true
-                  const days = Math.floor(
-                    (new Date().getTime() -
-                      new Date(a.lastTouchDate).getTime()) /
-                      (1000 * 3600 * 24),
-                  )
-                  return days > 15
-                }).length
-              }
+              {totalAccounts}
             </div>
           </CardContent>
         </Card>
         <Card className="shadow-sm border-gray-200 rounded-xl bg-white">
           <CardHeader className="pb-2">
             <CardTitle className="text-[10px] font-black uppercase tracking-widest text-gray-500">
-              Pipeline Ativo
+              Taxa de Conversão (Win)
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-black text-black">
-              {formatCurrency(pipelineValue)}
+            <div className="text-3xl font-black text-black">
+              {opportunities.length > 0
+                ? Math.round(
+                    (opportunities.filter((o) => o.stage === 'Fechado Ganho')
+                      .length /
+                      opportunities.length) *
+                      100,
+                  )
+                : 0}
+              %
             </div>
           </CardContent>
         </Card>
-        <Card className="shadow-sm border-gray-200 rounded-xl bg-black text-white">
+        <Card className="shadow-sm border-gray-200 rounded-xl bg-white">
           <CardHeader className="pb-2">
-            <CardTitle className="text-[10px] font-black uppercase tracking-widest text-gray-400">
-              Total Fechado (Win)
+            <CardTitle className="text-[10px] font-black uppercase tracking-widest text-gray-500">
+              Reuniões Agendadas
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-black text-white">
-              {formatCurrency(wonValue)}
+            <div className="text-3xl font-black text-black">
+              {activities.filter((a) => a.type.includes('Reunião')).length}
             </div>
           </CardContent>
         </Card>

@@ -121,13 +121,22 @@ export default function Activities() {
                   <CalendarIcon className="w-3 h-3" />
                   {new Date(task.date).toLocaleDateString('pt-BR')}
                 </span>
-                <Button
-                  size="sm"
-                  onClick={() => handleCompleteTask(task)}
-                  className="h-7 text-[10px] font-bold bg-white text-slate-700 border border-slate-200 hover:bg-slate-50"
-                >
-                  Concluir
-                </Button>
+                <div className="flex gap-2">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="h-7 text-[10px] font-bold border-slate-200"
+                  >
+                    Reagendar
+                  </Button>
+                  <Button
+                    size="sm"
+                    onClick={() => handleCompleteTask(task)}
+                    className="h-7 text-[10px] font-bold bg-emerald-500 text-white hover:bg-emerald-600 border-none"
+                  >
+                    Concluir
+                  </Button>
+                </div>
               </div>
             </div>
           ))}
@@ -164,13 +173,22 @@ export default function Activities() {
                     minute: '2-digit',
                   })}
                 </span>
-                <Button
-                  size="sm"
-                  onClick={() => handleCompleteTask(task)}
-                  className="h-7 text-[10px] font-bold bg-orange-500 text-white hover:bg-orange-600 shadow-sm"
-                >
-                  Concluir
-                </Button>
+                <div className="flex gap-2">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="h-7 text-[10px] font-bold border-slate-200"
+                  >
+                    Reagendar
+                  </Button>
+                  <Button
+                    size="sm"
+                    onClick={() => handleCompleteTask(task)}
+                    className="h-7 text-[10px] font-bold bg-emerald-500 text-white hover:bg-emerald-600 shadow-sm"
+                  >
+                    Concluir
+                  </Button>
+                </div>
               </div>
             </div>
           ))}
@@ -204,13 +222,22 @@ export default function Activities() {
                   <CalendarIcon className="w-3 h-3" />
                   {new Date(task.date).toLocaleDateString('pt-BR')}
                 </span>
-                <Button
-                  size="sm"
-                  onClick={() => handleCompleteTask(task)}
-                  className="h-7 text-[10px] font-bold bg-slate-50 text-slate-600 border border-slate-200 hover:bg-slate-100 shadow-sm"
-                >
-                  Concluir
-                </Button>
+                <div className="flex gap-2">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="h-7 text-[10px] font-bold border-slate-200"
+                  >
+                    Reagendar
+                  </Button>
+                  <Button
+                    size="sm"
+                    onClick={() => handleCompleteTask(task)}
+                    className="h-7 text-[10px] font-bold bg-emerald-500 text-white hover:bg-emerald-600 shadow-sm border-none"
+                  >
+                    Concluir
+                  </Button>
+                </div>
               </div>
             </div>
           ))}

@@ -18,7 +18,7 @@ const navItems = [
   { icon: Target, label: 'Focus Mode', path: '/focus' },
   { icon: LayoutDashboard, label: 'Pipeline', path: '/pipeline' },
   { icon: Users, label: 'Contatos', path: '/contacts' },
-  { icon: Building2, label: 'Empresas', path: '/accounts' },
+  { icon: Building2, label: 'Leads', path: '/accounts' },
   { icon: Activity, label: 'Atividades', path: '/activities' },
   { icon: Calendar, label: 'Calendário', path: '/calendar' },
   { icon: BarChart, label: 'Relatórios', path: '/reports' },
@@ -30,7 +30,7 @@ export function Sidebar() {
   const { logoUrl } = useMainStore()
 
   return (
-    <aside className="fixed left-0 top-0 h-screen w-64 z-50 hidden md:flex flex-col bg-[#0A1128] border-r border-slate-800 text-slate-300">
+    <aside className="fixed left-0 top-0 h-screen w-64 z-50 hidden md:flex flex-col bg-[#0D1B2A] border-r border-slate-800 text-slate-300">
       <div className="p-6 pb-8 flex items-center gap-3">
         {logoUrl ? (
           <img src={logoUrl} alt="Logo" className="h-8 object-contain" />

@@ -13,8 +13,37 @@ import { Input } from '@/components/ui/input'
 import { useToast } from '@/hooks/use-toast'
 import useMainStore from '@/stores/main'
 
+import { useLocation } from 'react-router-dom'
+
 export function Header() {
   const navigate = useNavigate()
+  const location = useLocation()
+
+  const getPageTitle = () => {
+    switch (location.pathname) {
+      case '/':
+        return 'Dashboard'
+      case '/focus':
+        return 'Focus Mode'
+      case '/pipeline':
+        return 'Pipeline'
+      case '/contacts':
+        return 'Contatos'
+      case '/accounts':
+        return 'Leads'
+      case '/activities':
+        return 'Atividades'
+      case '/calendar':
+        return 'Calendário'
+      case '/reports':
+        return 'Relatórios'
+      case '/settings':
+        return 'Configurações'
+      default:
+        return ''
+    }
+  }
+
   const { addAccount, addOpportunity, addContact } = useMainStore()
   const { toast } = useToast()
   const [isOpen, setIsOpen] = useState(false)
@@ -27,19 +56,29 @@ export function Header() {
       const fd = new FormData(e.target as HTMLFormElement)
       const companyName = fd.get('companyName') as string
       const contactName = fd.get('contactName') as string
-      const initialStage = fd.get('initialStage') as string
+      const phone = fd.get('phone') as string
+      const linkedin = fd.get('linkedin') as string
+      const city = fd.get('city') as string
+      const fleetEstimate = fd.get('fleetEstimate') as string
+      const initialStage =
+        (fd.get('initialStage') as string) || 'Leads Mapeados'
 
       const newAcc = await addAccount({
         name: companyName,
+        phone,
+        city,
+        fleetEstimate: fleetEstimate ? parseInt(fleetEstimate, 10) : undefined,
         status: 'Novo',
         priority: 'B',
       } as any)
 
       if (newAcc) {
-        if (contactName) {
+        if (contactName || linkedin) {
           await addContact({
             accountId: newAcc.id,
-            name: contactName,
+            name: contactName || 'Contato Principal',
+            whatsapp: phone,
+            linkedin,
           } as any)
         }
         await addOpportunity({
@@ -60,8 +99,13 @@ export function Header() {
   }
 
   return (
-    <header className="absolute top-0 right-0 p-6 z-40 flex items-center gap-4 pointer-events-none">
-      <div className="pointer-events-auto flex items-center gap-3">
+    <header className="sticky top-0 w-full bg-white/80 backdrop-blur-md border-b border-slate-200 p-4 z-40 flex items-center justify-between pointer-events-auto">
+      <div className="flex items-center gap-3">
+        <h1 className="text-xl font-bold text-slate-800 hidden sm:block">
+          {getPageTitle()}
+        </h1>
+      </div>
+      <div className="flex items-center gap-3">
         <Button
           variant="ghost"
           size="icon"
@@ -91,7 +135,7 @@ export function Header() {
 
         <Dialog open={isOpen} onOpenChange={setIsOpen}>
           <DialogTrigger asChild>
-            <Button className="bg-orange-500 hover:bg-orange-600 text-white rounded-md font-bold shadow-md h-10 px-4 ml-2">
+            <Button className="bg-[#FF6A00] hover:bg-[#e65c00] text-white rounded-md font-bold shadow-md h-10 px-4 ml-2">
               <Plus className="w-4 h-4 mr-2" /> Novo Lead
             </Button>
           </DialogTrigger>
@@ -102,7 +146,7 @@ export function Header() {
             <form onSubmit={handleCreateLead} className="space-y-4 mt-4">
               <div className="space-y-2">
                 <label className="text-sm font-bold text-slate-700">
-                  Nome da Empresa
+                  Empresa
                 </label>
                 <Input
                   name="companyName"
@@ -118,6 +162,36 @@ export function Header() {
               </div>
               <div className="space-y-2">
                 <label className="text-sm font-bold text-slate-700">
+                  Telefone
+                </label>
+                <Input name="phone" placeholder="Ex: (11) 99999-9999" />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-bold text-slate-700">
+                  LinkedIn
+                </label>
+                <Input name="linkedin" placeholder="URL do LinkedIn" />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <label className="text-sm font-bold text-slate-700">
+                    Cidade
+                  </label>
+                  <Input name="city" placeholder="Ex: São Paulo" />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-bold text-slate-700">
+                    Nº veículos
+                  </label>
+                  <Input
+                    name="fleetEstimate"
+                    type="number"
+                    placeholder="Ex: 10"
+                  />
+                </div>
+              </div>
+              <div className="space-y-2 hidden">
+                <label className="text-sm font-bold text-slate-700">
                   Etapa Inicial
                 </label>
                 <select
@@ -130,13 +204,23 @@ export function Header() {
                   <option value="Primeiro Contato">Primeiro Contato</option>
                 </select>
               </div>
-              <Button
-                disabled={isSubmitting}
-                type="submit"
-                className="w-full bg-orange-500 hover:bg-orange-600 text-white font-bold mt-2"
-              >
-                {isSubmitting ? 'Criando...' : 'Criar Lead'}
-              </Button>
+              <div className="flex gap-3 mt-4">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setIsOpen(false)}
+                  className="w-full font-bold"
+                >
+                  Cancelar
+                </Button>
+                <Button
+                  disabled={isSubmitting}
+                  type="submit"
+                  className="w-full bg-[#FF6A00] hover:bg-[#e65c00] text-white font-bold"
+                >
+                  {isSubmitting ? 'Salvando...' : 'Salvar'}
+                </Button>
+              </div>
             </form>
           </DialogContent>
         </Dialog>

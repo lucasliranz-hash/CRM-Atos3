@@ -87,15 +87,11 @@ export default function Index() {
   )
 
   const proposalsSent = useMemo(
-    () =>
-      opportunities.filter((o) => o.stage === 'Proposta / Fechamento').length,
+    () => opportunities.filter((o) => o.stage === 'Proposta').length,
     [opportunities],
   )
   const proposalsSentVar = useMemo(
-    () =>
-      getVariance(
-        opportunities.filter((o) => o.stage === 'Proposta / Fechamento'),
-      ),
+    () => getVariance(opportunities.filter((o) => o.stage === 'Proposta')),
     [opportunities],
   )
 
@@ -334,8 +330,8 @@ export default function Index() {
           {[
             'Leads Mapeados',
             'Primeiro Contato',
-            'Reunião Agendada',
-            'Proposta / Fechamento',
+            'Reunião',
+            'Proposta',
             'Fechado Ganho',
           ].map((stage, idx, arr) => {
             const count = opportunities.filter((o) => o.stage === stage).length

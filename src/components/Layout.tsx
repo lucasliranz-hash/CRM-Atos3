@@ -30,11 +30,14 @@ export default function Layout() {
   return (
     <div className="flex min-h-screen bg-[#F8FAFC] selection:bg-orange-500 selection:text-white">
       <Sidebar />
-      <div className="flex-1 flex flex-col md:ml-64 transition-all duration-300 min-h-screen overflow-x-hidden">
+      <div className="flex-1 flex flex-col md:ml-64 transition-all duration-300 min-h-screen overflow-x-hidden bg-[#F5F7FA]">
         <Header />
-        <main className="flex-1 overflow-y-auto px-4 md:px-8 pb-10 pt-20 sm:pt-6 w-full mx-auto custom-scrollbar relative">
+        <main className="flex-1 overflow-y-auto px-4 md:px-8 py-6 w-full mx-auto custom-scrollbar relative">
           <Outlet />
         </main>
+        <footer className="w-full p-4 text-center text-xs text-slate-500 font-medium border-t border-slate-200 mt-auto bg-white">
+          &copy; {new Date().getFullYear()} Atos3. Logado como {user?.email}
+        </footer>
       </div>
     </div>
   )

@@ -46,19 +46,19 @@ const STAGES = [
   'Conexão Enviada',
   'Primeiro Contato',
   'Follow-up',
-  'Em Conversa / Diagnóstico',
-  'Reunião Agendada',
-  'Proposta / Fechamento',
+  'Em Conversa',
+  'Reunião',
+  'Proposta',
 ]
 
 const COLUMNS_CONFIG = [
-  { id: 'Leads Mapeados', title: '1. LEADS MAPEADOS', count: 20 },
-  { id: 'Conexão Enviada', title: '2. CONEXÃO ENVIADA', count: 15 },
-  { id: 'Primeiro Contato', title: '3. PRIMEIRO CONTATO', count: 18 },
-  { id: 'Follow-up', title: '4. FOLLOW-UP', count: 16 },
-  { id: 'Em Conversa / Diagnóstico', title: '5. EM CONVERSA', count: 8 },
-  { id: 'Reunião Agendada', title: '6. REUNIÃO AGENDADA', count: 5 },
-  { id: 'Proposta / Fechamento', title: '7. PROPOSTA / FECHAMENTO', count: 4 },
+  { id: 'Leads Mapeados', title: '1. LEADS MAPEADOS' },
+  { id: 'Conexão Enviada', title: '2. CONEXÃO ENVIADA' },
+  { id: 'Primeiro Contato', title: '3. PRIMEIRO CONTATO' },
+  { id: 'Follow-up', title: '4. FOLLOW-UP' },
+  { id: 'Em Conversa', title: '5. EM CONVERSA' },
+  { id: 'Reunião', title: '6. REUNIÃO' },
+  { id: 'Proposta', title: '7. PROPOSTA' },
 ]
 
 export default function Pipeline() {
@@ -174,7 +174,7 @@ export default function Pipeline() {
                   {col.title}
                 </h3>
                 <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-white text-blue-600 border border-blue-100 shadow-sm">
-                  {col.count}
+                  {oppsInStage.length}
                 </span>
               </div>
               <div className="space-y-3 flex-1">
@@ -200,7 +200,7 @@ export default function Pipeline() {
                 variant="ghost"
                 className="w-full mt-3 text-xs text-blue-600 font-bold hover:bg-blue-50"
               >
-                + Ver todos ({col.count})
+                + Ver todos ({oppsInStage.length})
               </Button>
             </div>
           )
@@ -481,17 +481,17 @@ const getTag = (stage: string) => {
         label: 'Follow-up',
         color: 'bg-orange-50 text-orange-600 border border-orange-100',
       }
-    case 'Em Conversa / Diagnóstico':
+    case 'Em Conversa':
       return {
         label: 'Conversa',
         color: 'bg-green-50 text-green-600 border border-green-100',
       }
-    case 'Reunião Agendada':
+    case 'Reunião':
       return {
         label: 'Reunião',
         color: 'bg-purple-50 text-purple-600 border border-purple-100',
       }
-    case 'Proposta / Fechamento':
+    case 'Proposta':
       return {
         label: 'Proposta',
         color: 'bg-red-50 text-red-600 border border-red-100',
@@ -600,7 +600,7 @@ function KanbanCard({ opp, acc, contact, onClick, onDragStart }: any) {
                 onClick()
               }}
             >
-              Editar
+              Editar lead
             </Button>
             <Button
               variant="ghost"
@@ -621,6 +621,15 @@ function KanbanCard({ opp, acc, contact, onClick, onDragStart }: any) {
               }}
             >
               Agendar ação
+            </Button>
+            <Button
+              variant="ghost"
+              className="justify-start h-8 text-xs font-bold w-full"
+              onClick={(e) => {
+                e.stopPropagation()
+              }}
+            >
+              Mover etapa
             </Button>
           </PopoverContent>
         </Popover>

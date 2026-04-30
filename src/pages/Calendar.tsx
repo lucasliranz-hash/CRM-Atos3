@@ -6,10 +6,12 @@ import { Card } from '@/components/ui/card'
 import { cn } from '@/lib/utils'
 import { format, addDays, startOfWeek, isSameDay } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
+import LeadHistorySheet from '@/components/LeadHistorySheet'
 
 export default function Calendar() {
   const { activities, opportunities, accounts } = useMainStore()
   const [currentDate, setCurrentDate] = useState(new Date())
+  const [detailsAccountId, setDetailsAccountId] = useState<string | null>(null)
 
   const scheduledEvents = useMemo(() => {
     const events: any[] = []
@@ -83,6 +85,14 @@ export default function Calendar() {
         </div>
       </div>
 
+      {detailsAccountId && (
+        <LeadHistorySheet
+          account={accounts.find((a) => a.id === detailsAccountId) || null}
+          open={!!detailsAccountId}
+          onOpenChange={(open) => !open && setDetailsAccountId(null)}
+        />
+      )}
+
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
         {weekDays.map((day) => {
           const dayEvents = scheduledEvents.filter((e) =>
@@ -126,6 +136,7 @@ export default function Calendar() {
                 {dayEvents.map((event) => (
                   <div
                     key={event.id}
+                    onClick={() => setDetailsAccountId(event.acc?.id || null)}
                     className="p-3 rounded-lg bg-blue-50 border border-blue-100 hover:shadow-md transition-shadow cursor-pointer"
                   >
                     <div className="flex items-center gap-1.5 text-[10px] font-bold text-blue-600 mb-1.5 bg-blue-100/50 w-fit px-1.5 py-0.5 rounded">

@@ -270,25 +270,46 @@ export default function LeadHistorySheet({
               </div>
               <SheetDescription className="font-medium text-slate-500 mt-2">
                 <div className="grid grid-cols-2 gap-y-1.5 text-[11px] bg-slate-50 p-2.5 rounded-lg border border-slate-100">
-                  <div>
+                  <div className="col-span-2">
                     <strong className="text-slate-700">Contato:</strong>{' '}
-                    {mainContact?.name || '-'}
+                    {mainContact?.name || '-'}{' '}
+                    {mainContact?.email ? `(${mainContact.email})` : ''}
                   </div>
                   <div>
                     <strong className="text-slate-700">Telefone:</strong>{' '}
-                    {account.phone || mainContact?.whatsapp || '-'}
+                    {account.phone || mainContact?.whatsapp ? (
+                      <a
+                        href={`tel:${account.phone || mainContact?.whatsapp}`}
+                        className="text-blue-600 hover:underline"
+                      >
+                        {account.phone || mainContact?.whatsapp}
+                      </a>
+                    ) : (
+                      '-'
+                    )}
+                  </div>
+                  <div>
+                    <strong className="text-slate-700">LinkedIn:</strong>{' '}
+                    {mainContact?.linkedin ? (
+                      <a
+                        href={mainContact.linkedin}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-blue-600 hover:underline"
+                      >
+                        Acessar perfil
+                      </a>
+                    ) : (
+                      '-'
+                    )}
                   </div>
                   <div>
                     <strong className="text-slate-700">Cidade:</strong>{' '}
                     {account.city || '-'}
                   </div>
                   <div>
-                    <strong className="text-slate-700">Veículos:</strong>{' '}
+                    <strong className="text-slate-700">Nº veículos:</strong>{' '}
                     {account.fleetEstimate || '-'}
-                  </div>
-                  <div className="col-span-2">
-                    <strong className="text-slate-700">LinkedIn:</strong>{' '}
-                    {mainContact?.linkedin || '-'}
                   </div>
                 </div>
               </SheetDescription>
@@ -301,7 +322,7 @@ export default function LeadHistorySheet({
                   !account.nextActionDate ||
                     new Date(account.nextActionDate) < new Date()
                     ? 'bg-red-50 border-red-200'
-                    : 'bg-orange-50 border-orange-200',
+                    : 'bg-yellow-50 border-yellow-200',
                 )}
               >
                 <div className="flex items-center gap-2">
@@ -311,7 +332,7 @@ export default function LeadHistorySheet({
                       !account.nextActionDate ||
                         new Date(account.nextActionDate) < new Date()
                         ? 'text-red-500'
-                        : 'text-orange-500',
+                        : 'text-yellow-600',
                     )}
                   />
                   <span
@@ -320,7 +341,7 @@ export default function LeadHistorySheet({
                       !account.nextActionDate ||
                         new Date(account.nextActionDate) < new Date()
                         ? 'text-red-700'
-                        : 'text-orange-700',
+                        : 'text-yellow-800',
                     )}
                   >
                     Próxima Ação
@@ -348,16 +369,25 @@ export default function LeadHistorySheet({
                       </div>
                     )}
                   </div>
-                  {account.nextAction && (
+                  <div className="flex gap-2">
+                    {account.nextAction && (
+                      <Button
+                        size="sm"
+                        onClick={() => handleCompleteAction()}
+                        className="bg-emerald-500 hover:bg-emerald-600 text-white border-none shadow-sm"
+                      >
+                        <CheckCircle2 className="w-4 h-4 mr-1" /> Concluir
+                      </Button>
+                    )}
                     <Button
                       size="sm"
-                      onClick={() => handleCompleteAction()}
-                      className="ml-2 bg-white text-slate-700 hover:bg-slate-50 border border-slate-200"
+                      variant="outline"
+                      onClick={() => setActiveTab('new')}
+                      className="bg-white text-slate-700 hover:bg-slate-50 border-slate-200"
                     >
-                      <CheckCircle2 className="w-4 h-4 mr-1 text-emerald-500" />{' '}
-                      Concluir
+                      Editar
                     </Button>
-                  )}
+                  </div>
                 </div>
               </div>
             </div>
@@ -384,7 +414,8 @@ export default function LeadHistorySheet({
             </TabsList>
           </div>
 
-          <div className="flex-1 overflow-y-auto p-6 relative">
+          <div className="flex-1 overflow-y-auto p-6 relative custom-scrollbar">
+            {' '}
             <TabsContent
               value="history"
               className="m-0 h-full animate-in fade-in duration-300"
@@ -447,14 +478,12 @@ export default function LeadHistorySheet({
                 </div>
               </div>
             </TabsContent>
-
             <TabsContent value="new" className="m-0 h-full">
               <LeadInteractionForm
                 account={account}
                 onSuccess={() => setActiveTab('history')}
               />
             </TabsContent>
-
             <TabsContent
               value="opp"
               className="m-0 h-full animate-in fade-in duration-300"
@@ -483,9 +512,9 @@ export default function LeadHistorySheet({
                         'Conexão Enviada',
                         'Primeiro Contato',
                         'Follow-up',
-                        'Em Conversa / Diagnóstico',
-                        'Reunião Agendada',
-                        'Proposta / Fechamento',
+                        'Em Conversa',
+                        'Reunião',
+                        'Proposta',
                         'Fechado Ganho',
                         'Fechado Perdido',
                       ].map((s) => (
