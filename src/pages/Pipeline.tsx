@@ -468,13 +468,36 @@ function KanbanCard({ opp, acc, contact, onClick, onDragStart }: any) {
           { day: '2-digit', month: '2-digit' },
         )
 
+  const isStalled =
+    acc.lastTouchDate &&
+    new Date().getTime() - new Date(acc.lastTouchDate).getTime() >
+      3 * 24 * 60 * 60 * 1000
+  const isMissingNextAction = !acc.nextActionDate || !acc.nextAction
+
   return (
     <div
       draggable
       onDragStart={(e) => onDragStart(e, opp.id)}
       onClick={onClick}
-      className="bg-white p-4 rounded-xl border border-slate-200 shadow-[0_2px_8px_rgba(0,0,0,0.04)] hover:shadow-md hover:border-slate-300 transition-all cursor-grab active:cursor-grabbing group"
+      className={cn(
+        'bg-white p-4 rounded-xl border shadow-[0_2px_8px_rgba(0,0,0,0.04)] hover:shadow-md transition-all cursor-grab active:cursor-grabbing group relative',
+        isStalled
+          ? 'border-amber-300 shadow-amber-100'
+          : isMissingNextAction
+            ? 'border-red-300 shadow-red-100'
+            : 'border-slate-200 hover:border-slate-300',
+      )}
     >
+      {isMissingNextAction && (
+        <div className="absolute -top-2 -right-2 bg-red-500 text-white text-[9px] font-black px-1.5 py-0.5 rounded-md shadow-sm border border-white z-10 animate-pulse">
+          SEM AÇÃO
+        </div>
+      )}
+      {isStalled && !isMissingNextAction && (
+        <div className="absolute -top-2 -right-2 bg-amber-500 text-white text-[9px] font-black px-1.5 py-0.5 rounded-md shadow-sm border border-white z-10">
+          PARADO &gt;3d
+        </div>
+      )}
       <h4 className="font-bold text-sm text-slate-900 leading-tight mb-1">
         {acc.name}
       </h4>
@@ -510,6 +533,31 @@ function KanbanCard({ opp, acc, contact, onClick, onDragStart }: any) {
             <FileText className="w-3.5 h-3.5 text-slate-500" />
           )}
         </div>
+      </div>
+
+      {/* Quick Actions on Hover */}
+      <div className="absolute inset-0 bg-white/95 backdrop-blur-[1px] opacity-0 group-hover:opacity-100 transition-opacity rounded-xl flex items-center justify-center gap-2">
+        <Button
+          variant="secondary"
+          size="sm"
+          className="h-8 bg-slate-100 text-slate-700 hover:bg-slate-200 font-bold text-xs"
+          onClick={(e) => {
+            e.stopPropagation()
+            onClick()
+          }}
+        >
+          Ver Ficha
+        </Button>
+        <Button
+          size="sm"
+          className="h-8 bg-orange-500 text-white hover:bg-orange-600 font-bold text-xs"
+          onClick={(e) => {
+            e.stopPropagation()
+            onClick()
+          }}
+        >
+          Agendar
+        </Button>
       </div>
     </div>
   )

@@ -28,7 +28,15 @@ export function Header() {
         </Button>
 
         <Button
-          className="bg-orange-500 hover:bg-orange-600 text-white rounded-md font-medium shadow-md h-10 px-4 ml-2"
+          variant="outline"
+          className="hidden sm:flex border-orange-200 text-orange-600 hover:bg-orange-50 hover:text-orange-700 bg-white font-bold h-10 px-4 rounded-md shadow-sm"
+          onClick={() => navigate('/focus')}
+        >
+          Focus Mode
+        </Button>
+
+        <Button
+          className="bg-orange-500 hover:bg-orange-600 text-white rounded-md font-bold shadow-md h-10 px-4 ml-2"
           onClick={() => navigate('/accounts')}
         >
           <Plus className="w-4 h-4 mr-2" /> Novo Lead

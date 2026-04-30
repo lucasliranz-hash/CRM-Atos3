@@ -285,6 +285,40 @@ export default function Index() {
         />
       </div>
 
+      {/* Funnel */}
+      <div className="bg-white rounded-2xl p-6 shadow-[0_2px_12px_rgba(0,0,0,0.03)] border border-slate-100 mb-8">
+        <h2 className="text-xl font-black text-slate-900 mb-4">
+          Pipeline Resumo
+        </h2>
+        <div className="flex flex-col sm:flex-row gap-2">
+          {[
+            'Leads Mapeados',
+            'Primeiro Contato',
+            'Reunião Agendada',
+            'Proposta / Fechamento',
+            'Fechado Ganho',
+          ].map((stage, idx, arr) => {
+            const count = opportunities.filter((o) => o.stage === stage).length
+            return (
+              <div
+                key={stage}
+                className="flex-1 bg-slate-50 border border-slate-100 rounded-xl p-4 flex flex-col items-center justify-center relative"
+              >
+                <span className="text-[10px] font-black uppercase text-slate-500 tracking-wider text-center">
+                  {stage}
+                </span>
+                <span className="text-2xl font-black text-slate-900 mt-1">
+                  {count}
+                </span>
+                {idx < arr.length - 1 && (
+                  <div className="hidden sm:block absolute right-0 top-1/2 -translate-y-1/2 translate-x-1/2 w-4 h-4 bg-slate-200 rotate-45 z-10 border-t border-r border-white"></div>
+                )}
+              </div>
+            )
+          })}
+        </div>
+      </div>
+
       {/* Tasks System */}
       <div className="bg-white rounded-2xl p-6 shadow-[0_2px_12px_rgba(0,0,0,0.03)] border border-slate-100">
         <div className="mb-6">

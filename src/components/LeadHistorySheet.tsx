@@ -6,6 +6,7 @@ import {
   SheetTitle,
   SheetDescription,
 } from '@/components/ui/sheet'
+import { cn } from '@/lib/utils'
 import useMainStore from '@/stores/main'
 import { format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
@@ -79,6 +80,21 @@ export default function LeadHistorySheet({
   const mainContact =
     contacts.find((c) => c.accountId === account?.id && c.isDecisionMaker) ||
     contacts.find((c) => c.accountId === account?.id)
+
+  const [quickNote, setQuickNote] = useState('')
+  const handleSaveNote = async () => {
+    if (!quickNote || !account) return
+    await addActivity({
+      accountId: account.id,
+      type: 'Mensagem',
+      channel: 'WhatsApp',
+      date: new Date().toISOString(),
+      result: `Nota: ${quickNote}`,
+      completed: true,
+    } as any)
+    setQuickNote('')
+    toast({ title: 'Nota salva no histórico!' })
+  }
   const activeOpp =
     opportunities.find(
       (o) => o.accountId === account?.id && !o.stage.includes('Fechado'),
@@ -253,6 +269,52 @@ export default function LeadHistorySheet({
               </SheetDescription>
             </SheetHeader>
 
+            <div className="px-6 mb-4">
+              <div
+                className={cn(
+                  'p-3 rounded-xl border flex flex-col gap-2',
+                  !account.nextActionDate ||
+                    new Date(account.nextActionDate) < new Date()
+                    ? 'bg-red-50 border-red-200'
+                    : 'bg-orange-50 border-orange-200',
+                )}
+              >
+                <div className="flex items-center gap-2">
+                  <Target
+                    className={cn(
+                      'w-4 h-4',
+                      !account.nextActionDate ||
+                        new Date(account.nextActionDate) < new Date()
+                        ? 'text-red-500'
+                        : 'text-orange-500',
+                    )}
+                  />
+                  <span
+                    className={cn(
+                      'font-black text-sm uppercase tracking-wider',
+                      !account.nextActionDate ||
+                        new Date(account.nextActionDate) < new Date()
+                        ? 'text-red-700'
+                        : 'text-orange-700',
+                    )}
+                  >
+                    Próxima Ação
+                  </span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <div className="text-sm font-bold text-slate-800">
+                    {account.nextAction ||
+                      'Nenhuma ação definida (Risco de Perda)'}
+                  </div>
+                  {account.nextActionDate && (
+                    <div className="text-xs font-bold bg-white/50 px-2 py-1 rounded border border-black/5 text-slate-700">
+                      {format(new Date(account.nextActionDate), 'dd/MM HH:mm')}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+
             <TabsList className="w-full bg-slate-100 p-1 mb-4 h-11 flex">
               <TabsTrigger
                 value="history"
@@ -315,6 +377,27 @@ export default function LeadHistorySheet({
                     Nenhuma interação registrada.
                   </div>
                 )}
+              </div>
+
+              <div className="mt-6 border-t border-gray-100 pt-6">
+                <h4 className="font-bold text-sm text-slate-900 mb-2">
+                  Notas Rápidas
+                </h4>
+                <div className="flex gap-2">
+                  <Input
+                    value={quickNote}
+                    onChange={(e) => setQuickNote(e.target.value)}
+                    placeholder="Adicione uma observação rápida..."
+                    className="bg-slate-50 border-slate-200"
+                    onKeyDown={(e) => e.key === 'Enter' && handleSaveNote()}
+                  />
+                  <Button
+                    onClick={handleSaveNote}
+                    className="bg-slate-900 text-white shrink-0 font-bold"
+                  >
+                    Salvar
+                  </Button>
+                </div>
               </div>
             </TabsContent>
 

@@ -14,8 +14,9 @@ import { Progress } from '@/components/ui/progress'
 import useMainStore from '@/stores/main'
 
 const navItems = [
+  { icon: LayoutDashboard, label: 'Dashboard', path: '/' },
+  { icon: Target, label: 'Focus Mode', path: '/focus' },
   { icon: LayoutDashboard, label: 'Pipeline', path: '/pipeline' },
-  { icon: Users, label: 'Leads', path: '/leads' },
   { icon: Users, label: 'Contatos', path: '/contacts' },
   { icon: Building2, label: 'Empresas', path: '/accounts' },
   { icon: Activity, label: 'Atividades', path: '/activities' },
@@ -43,8 +44,9 @@ export function Sidebar() {
       <div className="flex flex-col gap-1 px-4 flex-1 overflow-y-auto custom-scrollbar">
         {navItems.map((item) => {
           const isActive =
-            location.pathname.startsWith(item.path) ||
-            (item.path === '/pipeline' && location.pathname === '/')
+            item.path === '/'
+              ? location.pathname === '/'
+              : location.pathname.startsWith(item.path)
           return (
             <Link
               key={item.path}

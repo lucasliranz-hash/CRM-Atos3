@@ -9,6 +9,8 @@ import Activities from './pages/Activities'
 import Pipeline from './pages/Pipeline'
 import Reports from './pages/Reports'
 import Settings from './pages/Settings'
+import CalendarView from './pages/Calendar'
+import FocusMode from './pages/FocusMode'
 import NotFound from './pages/NotFound'
 import Login from './pages/Login'
 import Signup from './pages/Signup'
@@ -36,6 +38,8 @@ const App = () => (
               <Route path="/pipeline" element={<Pipeline />} />
               <Route path="/reports" element={<Reports />} />
               <Route path="/settings" element={<Settings />} />
+              <Route path="/calendar" element={<CalendarView />} />
+              <Route path="/focus" element={<FocusMode />} />
             </Route>
             <Route path="*" element={<NotFound />} />
           </Routes>
