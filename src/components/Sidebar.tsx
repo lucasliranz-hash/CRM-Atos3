@@ -1,28 +1,27 @@
 import { Link, useLocation } from 'react-router-dom'
 import {
   LayoutDashboard,
-  Building2,
   Users,
+  Building2,
   Activity,
-  Kanban,
+  Calendar,
   BarChart,
   Settings as SettingsIcon,
+  Target,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from '@/components/ui/tooltip'
+import { Progress } from '@/components/ui/progress'
 import useMainStore from '@/stores/main'
 
 const navItems = [
-  { icon: LayoutDashboard, label: 'Dashboard', path: '/' },
-  { icon: Building2, label: 'Contas & Leads', path: '/accounts' },
+  { icon: LayoutDashboard, label: 'Pipeline', path: '/pipeline' },
+  { icon: Users, label: 'Leads', path: '/leads' },
   { icon: Users, label: 'Contatos', path: '/contacts' },
+  { icon: Building2, label: 'Empresas', path: '/accounts' },
   { icon: Activity, label: 'Atividades', path: '/activities' },
-  { icon: Kanban, label: 'Pipeline', path: '/pipeline' },
+  { icon: Calendar, label: 'Calendário', path: '/calendar' },
   { icon: BarChart, label: 'Relatórios', path: '/reports' },
+  { icon: SettingsIcon, label: 'Configurações', path: '/settings' },
 ]
 
 export function Sidebar() {
@@ -30,90 +29,108 @@ export function Sidebar() {
   const { logoUrl } = useMainStore()
 
   return (
-    <aside className="fixed left-0 top-0 h-screen w-20 z-50 hidden md:flex flex-col items-center py-6 bg-slate-900 border-r border-slate-800 shadow-[4px_0_24px_rgba(0,0,0,0.1)]">
-      <div className="mb-8 px-2">
+    <aside className="fixed left-0 top-0 h-screen w-64 z-50 hidden md:flex flex-col bg-[#0A1128] border-r border-slate-800 text-slate-300">
+      <div className="p-6 pb-8 flex items-center gap-3">
         {logoUrl ? (
-          <img
-            src={logoUrl}
-            alt="Logo"
-            className="w-10 h-10 object-contain drop-shadow-sm"
-          />
+          <img src={logoUrl} alt="Logo" className="h-8 object-contain" />
         ) : (
-          <div className="w-10 h-10 bg-orange-500 rounded-2xl flex items-center justify-center text-white shadow-md">
-            <span className="font-black text-[10px] uppercase tracking-tighter">
-              Atos3
-            </span>
+          <div className="flex items-center gap-2 text-white font-black text-2xl tracking-tighter">
+            ATOS<span className="text-orange-500">3</span>
           </div>
         )}
       </div>
 
-      <div className="flex flex-col gap-2.5 flex-1 w-full px-3">
+      <div className="flex flex-col gap-1 px-4 flex-1 overflow-y-auto custom-scrollbar">
         {navItems.map((item) => {
           const isActive =
-            location.pathname === item.path ||
-            (item.path !== '/' && location.pathname.startsWith(item.path))
+            location.pathname.startsWith(item.path) ||
+            (item.path === '/pipeline' && location.pathname === '/')
           return (
-            <Tooltip key={item.path}>
-              <TooltipTrigger asChild>
-                <Link
-                  to={item.path}
-                  className={cn(
-                    'p-3.5 rounded-xl transition-all duration-300 flex items-center justify-center relative group w-full',
-                    isActive
-                      ? 'bg-orange-500 text-white shadow-md shadow-orange-500/20'
-                      : 'text-slate-400 hover:text-white hover:bg-slate-800/80',
-                  )}
-                >
-                  <item.icon
-                    size={22}
-                    strokeWidth={isActive ? 2.5 : 2}
-                    className={cn(
-                      'transition-transform duration-300 group-hover:scale-110',
-                      isActive && 'scale-110',
-                    )}
-                  />
-                  {isActive && (
-                    <div className="absolute -left-3 top-1/2 -translate-y-1/2 w-1.5 h-8 bg-orange-500 rounded-r-full" />
-                  )}
-                </Link>
-              </TooltipTrigger>
-              <TooltipContent
-                side="right"
-                className="bg-gray-900 text-white border-0 ml-4 shadow-xl font-bold px-3 py-1.5 text-xs rounded-lg"
-              >
-                {item.label}
-              </TooltipContent>
-            </Tooltip>
+            <Link
+              key={item.path}
+              to={item.path}
+              className={cn(
+                'flex items-center gap-3 px-4 py-3 rounded-lg transition-all font-medium',
+                isActive
+                  ? 'bg-orange-500 text-white shadow-md'
+                  : 'hover:bg-white/5 hover:text-white',
+              )}
+            >
+              <item.icon size={20} strokeWidth={isActive ? 2.5 : 2} />
+              {item.label}
+            </Link>
           )
         })}
       </div>
 
-      <div className="mt-auto px-3 w-full pb-2">
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Link
-              to="/settings"
-              className={cn(
-                'p-3.5 rounded-xl transition-all duration-300 flex items-center justify-center relative group w-full',
-                location.pathname === '/settings'
-                  ? 'bg-orange-500 text-white shadow-md shadow-orange-500/20'
-                  : 'text-slate-400 hover:text-white hover:bg-slate-800/80',
-              )}
-            >
-              <SettingsIcon
-                size={22}
-                strokeWidth={location.pathname === '/settings' ? 2.5 : 2}
-                className="transition-transform duration-500 group-hover:rotate-45"
-              />
-            </Link>
-          </TooltipTrigger>
-          <TooltipContent
-            side="right"
-            className="bg-gray-900 text-white border-0 ml-4 shadow-xl font-bold px-3 py-1.5 text-xs rounded-lg"
-          >
-            Configurações
-          </TooltipContent>
-        </Tooltip>
+      <div className="px-6 py-6 border-t border-white/10 space-y-4">
+        <h4 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-4 flex justify-between">
+          Metas do Mês <span className="text-slate-400">Abril/2025</span>
+        </h4>
+
+        <div className="space-y-2">
+          <div className="flex justify-between text-xs font-medium">
+            <span className="flex items-center gap-2 text-slate-300">
+              <Users className="w-3.5 h-3.5 text-blue-400" /> Leads Novos
+            </span>
+            <span className="text-white font-bold">62 / 100</span>
+          </div>
+          <Progress
+            value={62}
+            className="h-1.5 bg-white/10 [&>div]:bg-blue-500"
+          />
+        </div>
+
+        <div className="space-y-2">
+          <div className="flex justify-between text-xs font-medium">
+            <span className="flex items-center gap-2 text-slate-300">
+              <Calendar className="w-3.5 h-3.5 text-green-400" /> Reuniões
+            </span>
+            <span className="text-white font-bold">8 / 15</span>
+          </div>
+          <Progress
+            value={53}
+            className="h-1.5 bg-white/10 [&>div]:bg-green-500"
+          />
+        </div>
+
+        <div className="space-y-2">
+          <div className="flex justify-between text-xs font-medium">
+            <span className="flex items-center gap-2 text-slate-300">
+              <Target className="w-3.5 h-3.5 text-yellow-400" /> Propostas
+            </span>
+            <span className="text-white font-bold">3 / 8</span>
+          </div>
+          <Progress
+            value={37}
+            className="h-1.5 bg-white/10 [&>div]:bg-yellow-500"
+          />
+        </div>
+
+        <div className="space-y-2">
+          <div className="flex justify-between text-xs font-medium">
+            <span className="flex items-center gap-2 text-slate-300">
+              <BarChart className="w-3.5 h-3.5 text-purple-400" /> Vendas
+            </span>
+            <span className="text-white font-bold">1 / 4</span>
+          </div>
+          <Progress
+            value={25}
+            className="h-1.5 bg-white/10 [&>div]:bg-purple-500"
+          />
+        </div>
+      </div>
+
+      <div className="p-4 border-t border-white/10 flex items-center gap-3">
+        <img
+          src="https://img.usecurling.com/ppl/thumbnail?gender=male&seed=1"
+          alt="User"
+          className="w-10 h-10 rounded-full border-2 border-slate-700"
+        />
+        <div className="flex-1 min-w-0">
+          <p className="text-sm font-bold text-white truncate">Lucas</p>
+          <p className="text-xs text-slate-400 truncate">Atos3</p>
+        </div>
       </div>
     </aside>
   )

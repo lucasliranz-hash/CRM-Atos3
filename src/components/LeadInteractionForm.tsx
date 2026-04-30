@@ -13,17 +13,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Switch } from '@/components/ui/switch'
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@/components/ui/popover'
-import { Calendar } from '@/components/ui/calendar'
-import { format } from 'date-fns'
-import { ptBR } from 'date-fns/locale'
-import { CalendarIcon, Check } from 'lucide-react'
-import { cn } from '@/lib/utils'
-import { supabase } from '@/lib/supabase/client'
+import { Check } from 'lucide-react'
 
 interface Props {
   account: Account
@@ -40,8 +30,10 @@ export default function LeadInteractionForm({ account, onSuccess }: Props) {
 
   const [scheduleNext, setScheduleNext] = useState(true)
   const [nextAction, setNextAction] = useState('')
-  const [nextActionDate, setNextActionDate] = useState<Date | undefined>(
-    new Date(),
+  const [nextActionDate, setNextActionDate] = useState<string>(
+    new Date(new Date().getTime() - new Date().getTimezoneOffset() * 60000)
+      .toISOString()
+      .slice(0, 16),
   )
   const [isSubmitting, setIsSubmitting] = useState(false)
 
@@ -60,7 +52,7 @@ export default function LeadInteractionForm({ account, onSuccess }: Props) {
         ...(scheduleNext && nextAction
           ? {
               nextAction,
-              nextActionDate: nextActionDate?.toISOString(),
+              nextActionDate: new Date(nextActionDate).toISOString(),
             }
           : {}),
       } as any)
@@ -76,7 +68,7 @@ export default function LeadInteractionForm({ account, onSuccess }: Props) {
   return (
     <form
       onSubmit={handleSubmit}
-      className="space-y-5 animate-in fade-in slide-in-from-bottom-2 duration-300"
+      className="space-y-5 p-6 animate-in fade-in slide-in-from-bottom-2 duration-300 bg-slate-50/50 h-full"
     >
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-1.5">
@@ -129,7 +121,7 @@ export default function LeadInteractionForm({ account, onSuccess }: Props) {
         />
       </div>
 
-      <div className="border border-orange-200 rounded-xl p-4 bg-orange-50/30 space-y-4">
+      <div className="border border-orange-200 rounded-xl p-4 bg-orange-50/50 space-y-4">
         <div className="flex items-center justify-between">
           <div className="space-y-0.5">
             <label className="text-sm font-bold text-slate-900">
@@ -159,32 +151,15 @@ export default function LeadInteractionForm({ account, onSuccess }: Props) {
               </div>
               <div className="space-y-1.5">
                 <label className="text-xs font-bold text-gray-700">
-                  Quando? *
+                  Quando (Data/Hora)? *
                 </label>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant="outline"
-                      className={cn(
-                        'w-full justify-start text-left font-medium bg-white',
-                        !nextActionDate && 'text-muted-foreground',
-                      )}
-                    >
-                      <CalendarIcon className="mr-2 h-4 w-4" />
-                      {nextActionDate
-                        ? format(nextActionDate, 'dd/MM/yyyy', { locale: ptBR })
-                        : 'Selecionar data'}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" align="end">
-                    <Calendar
-                      mode="single"
-                      selected={nextActionDate}
-                      onSelect={setNextActionDate}
-                      initialFocus
-                    />
-                  </PopoverContent>
-                </Popover>
+                <Input
+                  type="datetime-local"
+                  required
+                  value={nextActionDate}
+                  onChange={(e) => setNextActionDate(e.target.value)}
+                  className="bg-white"
+                />
               </div>
             </div>
           </div>
@@ -194,7 +169,7 @@ export default function LeadInteractionForm({ account, onSuccess }: Props) {
       <Button
         type="submit"
         disabled={isSubmitting || !nextAction || !nextActionDate}
-        className="w-full font-bold bg-orange-500 text-white hover:bg-orange-600 shadow-lg shadow-orange-500/20"
+        className="w-full font-bold bg-orange-500 text-white hover:bg-orange-600 shadow-lg shadow-orange-500/20 mt-4"
       >
         {isSubmitting ? (
           'Salvando...'
