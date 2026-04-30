@@ -307,7 +307,14 @@ export default function LeadHistorySheet({
                       'Nenhuma ação definida (Risco de Perda)'}
                   </div>
                   {account.nextActionDate && (
-                    <div className="text-xs font-bold bg-white/50 px-2 py-1 rounded border border-black/5 text-slate-700">
+                    <div
+                      className={cn(
+                        'text-xs font-bold px-2 py-1 rounded border',
+                        new Date(account.nextActionDate) < new Date()
+                          ? 'bg-red-100 text-red-800 border-red-200'
+                          : 'bg-white/50 border-black/5 text-slate-700',
+                      )}
+                    >
                       {format(new Date(account.nextActionDate), 'dd/MM HH:mm')}
                     </div>
                   )}

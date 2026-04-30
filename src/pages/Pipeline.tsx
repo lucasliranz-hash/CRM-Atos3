@@ -71,14 +71,40 @@ export default function Pipeline() {
 
   const [search, setSearch] = useState('')
   const [filterStage, setFilterStage] = useState('all')
+  const [filterCity, setFilterCity] = useState('all')
+  const [filterStatus, setFilterStatus] = useState('all')
 
   const filteredOpps = opportunities.filter((o) => {
     const acc = accounts.find((a) => a.id === o.accountId)
+    const contact = contacts.find((c) => c.accountId === o.accountId)
+
     if (filterStage !== 'all' && o.stage !== filterStage) return false
-    if (search && acc && !acc.name.toLowerCase().includes(search.toLowerCase()))
-      return false
+    if (filterCity !== 'all' && acc?.city !== filterCity) return false
+    if (filterStatus !== 'all' && acc?.status !== filterStatus) return false
+
+    if (search) {
+      const s = search.toLowerCase()
+      const matchAcc = acc?.name?.toLowerCase().includes(s)
+      const matchContact = contact?.name?.toLowerCase().includes(s)
+      if (!matchAcc && !matchContact) return false
+    }
     return true
   })
+
+  const uniqueCities = Array.from(
+    new Set(accounts.map((a) => a.city).filter(Boolean)),
+  ) as string[]
+  const allStatuses = [
+    'Novo',
+    'Em pesquisa',
+    'Pronto para contato',
+    'Em prospecção',
+    'Qualificado',
+    'Aguardando retorno',
+    'Sem fit',
+    'Cliente',
+    'Perdido',
+  ]
 
   return (
     <div className="space-y-8 animate-in fade-in duration-500 pb-10">
@@ -189,7 +215,7 @@ export default function Pipeline() {
               />
             </div>
             <Select value={filterStage} onValueChange={setFilterStage}>
-              <SelectTrigger className="w-44 bg-slate-50 border-slate-200 font-bold">
+              <SelectTrigger className="w-[180px] bg-slate-50 border-slate-200 font-bold">
                 <SelectValue placeholder="Todas as etapas" />
               </SelectTrigger>
               <SelectContent>
@@ -201,13 +227,32 @@ export default function Pipeline() {
                 ))}
               </SelectContent>
             </Select>
-            <Select defaultValue="all">
-              <SelectTrigger className="w-48 bg-slate-50 border-slate-200 font-bold hidden sm:flex">
-                <SelectValue placeholder="Todos os responsáveis" />
+
+            <Select value={filterCity} onValueChange={setFilterCity}>
+              <SelectTrigger className="w-[160px] bg-slate-50 border-slate-200 font-bold">
+                <SelectValue placeholder="Cidade" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">Todos os responsáveis</SelectItem>
-                <SelectItem value="lucas">Lucas</SelectItem>
+                <SelectItem value="all">Todas as cidades</SelectItem>
+                {uniqueCities.map((city) => (
+                  <SelectItem key={city} value={city}>
+                    {city}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            <Select value={filterStatus} onValueChange={setFilterStatus}>
+              <SelectTrigger className="w-[160px] bg-slate-50 border-slate-200 font-bold">
+                <SelectValue placeholder="Status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos os status</SelectItem>
+                {allStatuses.map((s) => (
+                  <SelectItem key={s} value={s}>
+                    {s}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
             <Button
@@ -420,13 +465,9 @@ const getTag = (stage: string) => {
         color: 'bg-blue-50 text-blue-600 border border-blue-100',
       }
     case 'Conexão Enviada':
-      return {
-        label: 'Conexão enviada',
-        color: 'bg-purple-50 text-purple-600 border border-purple-100',
-      }
     case 'Primeiro Contato':
       return {
-        label: 'Mensagem enviada',
+        label: 'Contato',
         color: 'bg-yellow-50 text-yellow-600 border border-yellow-100',
       }
     case 'Follow-up':
@@ -436,17 +477,17 @@ const getTag = (stage: string) => {
       }
     case 'Em Conversa / Diagnóstico':
       return {
-        label: 'Em conversa',
+        label: 'Conversa',
         color: 'bg-green-50 text-green-600 border border-green-100',
       }
     case 'Reunião Agendada':
       return {
-        label: 'Reunião agendada',
-        color: 'bg-blue-50 text-blue-600 border border-blue-100',
+        label: 'Reunião',
+        color: 'bg-purple-50 text-purple-600 border border-purple-100',
       }
     case 'Proposta / Fechamento':
       return {
-        label: 'Proposta enviada',
+        label: 'Proposta',
         color: 'bg-red-50 text-red-600 border border-red-100',
       }
     default:
@@ -506,7 +547,7 @@ function KanbanCard({ opp, acc, contact, onClick, onDragStart }: any) {
         {contact?.role ? `- ${contact.role}` : ''}
       </p>
 
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between mb-2">
         <span
           className={cn(
             'px-2 py-0.5 rounded text-[10px] font-black',
@@ -517,46 +558,54 @@ function KanbanCard({ opp, acc, contact, onClick, onDragStart }: any) {
         </span>
         <div className="flex items-center gap-1.5 text-[11px] font-bold text-slate-500">
           {dateText}
-          {opp.stage.includes('Contato') && (
-            <MessageCircle className="w-3.5 h-3.5 text-green-500" />
-          )}
-          {opp.stage.includes('Conexão') && (
-            <Linkedin className="w-3.5 h-3.5 text-blue-600" />
-          )}
-          {opp.stage.includes('Follow-up') && (
-            <Phone className="w-3.5 h-3.5 text-slate-400" />
-          )}
-          {opp.stage.includes('Reunião') && (
-            <CalendarIcon className="w-3.5 h-3.5 text-blue-500" />
-          )}
-          {opp.stage.includes('Proposta') && (
-            <FileText className="w-3.5 h-3.5 text-slate-500" />
-          )}
         </div>
       </div>
 
+      <div className="flex gap-1.5 items-center">
+        {contact?.whatsapp && (
+          <MessageCircle className="w-3.5 h-3.5 text-green-500" />
+        )}
+        {contact?.linkedin && (
+          <Linkedin className="w-3.5 h-3.5 text-blue-600" />
+        )}
+        {(contact?.whatsapp || acc?.phone) && (
+          <Phone className="w-3.5 h-3.5 text-slate-500" />
+        )}
+      </div>
+
       {/* Quick Actions on Hover */}
-      <div className="absolute inset-0 bg-white/95 backdrop-blur-[1px] opacity-0 group-hover:opacity-100 transition-opacity rounded-xl flex items-center justify-center gap-2">
+      <div className="absolute inset-0 bg-white/95 backdrop-blur-[1px] opacity-0 group-hover:opacity-100 transition-opacity rounded-xl flex flex-wrap items-center justify-center gap-2 p-2">
         <Button
-          variant="secondary"
+          variant="outline"
           size="sm"
-          className="h-8 bg-slate-100 text-slate-700 hover:bg-slate-200 font-bold text-xs"
+          className="h-8 text-xs font-bold flex-1 border-slate-200 bg-white shadow-sm"
           onClick={(e) => {
             e.stopPropagation()
             onClick()
           }}
         >
-          Ver Ficha
+          Editar
+        </Button>
+        <Button
+          variant="outline"
+          size="sm"
+          className="h-8 text-xs font-bold flex-1 border-slate-200 bg-white shadow-sm"
+          onClick={(e) => {
+            e.stopPropagation()
+            onClick()
+          }}
+        >
+          + Contato
         </Button>
         <Button
           size="sm"
-          className="h-8 bg-orange-500 text-white hover:bg-orange-600 font-bold text-xs"
+          className="h-8 bg-orange-500 text-white hover:bg-orange-600 font-bold text-xs w-full shadow-sm"
           onClick={(e) => {
             e.stopPropagation()
             onClick()
           }}
         >
-          Agendar
+          Agendar Ação
         </Button>
       </div>
     </div>
