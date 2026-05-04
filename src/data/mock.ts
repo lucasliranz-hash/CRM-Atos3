@@ -132,7 +132,48 @@ export const mockContacts: Contact[] = [
   },
 ]
 
-export const mockActivities: Activity[] = []
+export const mockActivities: Activity[] = [
+  {
+    id: 'act1',
+    accountId: 'a1',
+    date: '2025-04-30T14:30:00Z',
+    channel: 'WhatsApp',
+    type: 'Mensagem',
+    result: 'Mensagem enviada via WhatsApp',
+    completed: true,
+    createdAt: new Date().toISOString(),
+  },
+  {
+    id: 'act2',
+    accountId: 'a1',
+    date: '2025-04-30T10:15:00Z',
+    channel: 'LinkedIn',
+    type: 'Mensagem',
+    result: 'Conexão aceita no LinkedIn',
+    completed: true,
+    createdAt: new Date().toISOString(),
+  },
+  {
+    id: 'act3',
+    accountId: 'a1',
+    date: '2025-04-29T16:45:00Z',
+    channel: 'Telefone',
+    type: 'Ligação',
+    result: 'Ligação realizada',
+    completed: true,
+    createdAt: new Date().toISOString(),
+  },
+  {
+    id: 'act4',
+    accountId: 'a1',
+    date: '2025-04-28T09:20:00Z',
+    channel: 'Presencial',
+    type: 'Reunião agendada',
+    result: 'Reunião agendada',
+    completed: true,
+    createdAt: new Date().toISOString(),
+  },
+]
 
 export const mockOpportunities: Opportunity[] = [
   {
