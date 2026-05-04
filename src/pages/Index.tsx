@@ -15,6 +15,7 @@ import {
 import { Link } from 'react-router-dom'
 import { useAuth } from '@/hooks/use-auth'
 import { useToast } from '@/hooks/use-toast'
+import { cn } from '@/lib/utils'
 
 const getVariance = (items: any[], dateField = 'createdAt') => {
   const now = new Date()
