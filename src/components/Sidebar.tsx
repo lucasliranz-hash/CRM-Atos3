@@ -8,6 +8,7 @@ import {
   BarChart,
   Settings as SettingsIcon,
   Target,
+  KanbanSquare,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Progress } from '@/components/ui/progress'
@@ -16,7 +17,7 @@ import useMainStore from '@/stores/main'
 const navItems = [
   { icon: LayoutDashboard, label: 'Dashboard', path: '/' },
   { icon: Target, label: 'Focus Mode', path: '/focus' },
-  { icon: LayoutDashboard, label: 'Pipeline', path: '/pipeline' },
+  { icon: KanbanSquare, label: 'Pipeline', path: '/pipeline' },
   { icon: Users, label: 'Contatos', path: '/contacts' },
   { icon: Building2, label: 'Leads', path: '/accounts' },
   { icon: Activity, label: 'Atividades', path: '/activities' },

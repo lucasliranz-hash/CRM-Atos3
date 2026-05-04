@@ -15,6 +15,7 @@ import {
   MessageSquare,
   MessageCircle,
   MoreVertical,
+  ExternalLink,
 } from 'lucide-react'
 import {
   Popover,
@@ -310,7 +311,19 @@ function KanbanCard({ opp, acc, contact, onClick, onDragStart }: any) {
         )}
       </div>
 
-      <div className="absolute top-3 right-2">
+      <div className="absolute top-3 right-2 flex gap-1">
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-6 w-6 text-slate-400 hover:text-blue-600 bg-white/50 backdrop-blur-sm shadow-none"
+          onClick={(e) => {
+            e.stopPropagation()
+            onClick()
+          }}
+          title="Ver Detalhes"
+        >
+          <ExternalLink className="h-3.5 w-3.5" />
+        </Button>
         <Popover>
           <PopoverTrigger asChild>
             <Button
@@ -331,7 +344,7 @@ function KanbanCard({ opp, acc, contact, onClick, onDragStart }: any) {
                 onClick()
               }}
             >
-              Editar lead
+              Ver / Editar Detalhes
             </Button>
             <Button
               variant="ghost"
