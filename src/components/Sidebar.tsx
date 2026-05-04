@@ -54,8 +54,8 @@ export function Sidebar() {
               className={cn(
                 'flex items-center gap-3 px-4 py-3 rounded-lg transition-all font-medium',
                 isActive
-                  ? 'bg-orange-500 text-white shadow-md'
-                  : 'hover:bg-white/5 hover:text-white',
+                  ? 'bg-white/10 text-[#FF6A00]'
+                  : 'hover:bg-white/5 text-slate-400 hover:text-white',
               )}
             >
               <item.icon size={20} strokeWidth={isActive ? 2.5 : 2} />

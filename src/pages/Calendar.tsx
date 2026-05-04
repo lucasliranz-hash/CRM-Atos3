@@ -1,14 +1,25 @@
 import { useMemo, useState } from 'react'
 import useMainStore from '@/stores/main'
-import { Clock, Users, ChevronLeft, ChevronRight } from 'lucide-react'
+import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { cn } from '@/lib/utils'
-import { format, addDays, startOfWeek, isSameDay } from 'date-fns'
+import {
+  format,
+  addMonths,
+  subMonths,
+  startOfMonth,
+  endOfMonth,
+  startOfWeek,
+  endOfWeek,
+  eachDayOfInterval,
+  isSameMonth,
+  isSameDay,
+} from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import LeadHistorySheet from '@/components/LeadHistorySheet'
 
-export default function Calendar() {
+export default function CalendarView() {
   const { activities, opportunities, accounts } = useMainStore()
   const [currentDate, setCurrentDate] = useState(new Date())
   const [detailsAccountId, setDetailsAccountId] = useState<string | null>(null)
@@ -24,22 +35,30 @@ export default function Calendar() {
           title: `Reunião: ${acc?.name || 'Lead'}`,
           date: new Date(act.date),
           type: 'meeting',
+          color: 'bg-purple-100 text-purple-700 border-purple-200',
           acc,
         })
       }
     })
 
     opportunities.forEach((opp) => {
-      if (
-        opp.nextActionDate &&
-        opp.nextAction?.toLowerCase().includes('reunião')
-      ) {
+      if (opp.nextActionDate) {
         const acc = accounts.find((a) => a.id === opp.accountId)
+        const text = opp.nextAction?.toLowerCase() || ''
+        let color = 'bg-orange-100 text-orange-700 border-orange-200'
+        if (text.includes('reunião'))
+          color = 'bg-purple-100 text-purple-700 border-purple-200'
+        else if (text.includes('ligação') || text.includes('ligar'))
+          color = 'bg-blue-100 text-blue-700 border-blue-200'
+        else if (text.includes('follow'))
+          color = 'bg-yellow-100 text-yellow-700 border-yellow-200'
+
         events.push({
           id: `opp-meet-${opp.id}`,
           title: opp.nextAction,
           date: new Date(opp.nextActionDate),
           type: 'task',
+          color,
           acc,
         })
       }
@@ -48,39 +67,40 @@ export default function Calendar() {
     return events.sort((a, b) => a.date.getTime() - b.date.getTime())
   }, [activities, opportunities, accounts])
 
-  const weekStart = startOfWeek(currentDate, { weekStartsOn: 1 })
-  const weekDays = Array.from({ length: 5 }).map((_, i) =>
-    addDays(weekStart, i),
-  )
+  const monthStart = startOfMonth(currentDate)
+  const monthEnd = endOfMonth(monthStart)
+  const startDate = startOfWeek(monthStart, { weekStartsOn: 0 })
+  const endDate = endOfWeek(monthEnd, { weekStartsOn: 0 })
+  const calendarDays = eachDayOfInterval({ start: startDate, end: endDate })
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto pb-10 animate-in fade-in duration-500">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <h1 className="text-3xl font-black text-slate-900 tracking-tight">
-            Calendário de Vendas
+            Calendário
           </h1>
           <p className="text-slate-500 mt-1 font-medium">
-            Visão semanal de reuniões e compromissos.
+            Visão mensal de reuniões e compromissos.
           </p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 bg-white rounded-lg p-1 shadow-sm border border-slate-200">
           <Button
-            variant="outline"
+            variant="ghost"
             size="icon"
-            onClick={() => setCurrentDate(addDays(currentDate, -7))}
+            onClick={() => setCurrentDate(subMonths(currentDate, 1))}
           >
-            <ChevronLeft className="w-4 h-4" />
+            <ChevronLeft className="w-5 h-5 text-slate-600" />
           </Button>
-          <span className="font-bold text-sm w-32 text-center">
-            {format(weekStart, 'MMMM yyyy', { locale: ptBR })}
+          <span className="font-bold text-sm w-36 text-center capitalize text-slate-800">
+            {format(currentDate, 'MMMM yyyy', { locale: ptBR })}
           </span>
           <Button
-            variant="outline"
+            variant="ghost"
             size="icon"
-            onClick={() => setCurrentDate(addDays(currentDate, 7))}
+            onClick={() => setCurrentDate(addMonths(currentDate, 1))}
           >
-            <ChevronRight className="w-4 h-4" />
+            <ChevronRight className="w-5 h-5 text-slate-600" />
           </Button>
         </div>
       </div>
@@ -93,75 +113,64 @@ export default function Calendar() {
         />
       )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
-        {weekDays.map((day) => {
-          const dayEvents = scheduledEvents.filter((e) =>
-            isSameDay(e.date, day),
-          )
-          const isToday = isSameDay(day, new Date())
-
-          return (
-            <Card
-              key={day.toISOString()}
-              className={cn(
-                'min-h-[500px] border-slate-200 bg-white',
-                isToday &&
-                  'ring-2 ring-orange-500 border-transparent shadow-lg shadow-orange-500/10',
-              )}
+      <Card className="rounded-[10px] overflow-hidden bg-white shadow-sm border-slate-200">
+        <div className="grid grid-cols-7 border-b border-slate-200 bg-slate-50">
+          {['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'].map((d) => (
+            <div
+              key={d}
+              className="p-3 text-center text-xs font-black text-slate-500 uppercase tracking-wider"
             >
+              {d}
+            </div>
+          ))}
+        </div>
+        <div className="grid grid-cols-7 auto-rows-fr">
+          {calendarDays.map((day, i) => {
+            const dayEvents = scheduledEvents.filter((e) =>
+              isSameDay(e.date, day),
+            )
+            const isCurrentMonth = isSameMonth(day, currentDate)
+            const isToday = isSameDay(day, new Date())
+
+            return (
               <div
+                key={day.toISOString()}
                 className={cn(
-                  'p-4 border-b text-center',
-                  isToday ? 'bg-orange-50' : 'bg-slate-50',
+                  'min-h-[120px] p-2 border-b border-r border-slate-100 transition-colors hover:bg-slate-50',
+                  !isCurrentMonth && 'bg-slate-50/50 opacity-50',
+                  isToday && 'bg-orange-50/30',
                 )}
               >
-                <div
-                  className={cn(
-                    'text-xs font-bold uppercase tracking-wider mb-1',
-                    isToday ? 'text-orange-600' : 'text-slate-500',
-                  )}
-                >
-                  {format(day, 'EEEE', { locale: ptBR })}
-                </div>
-                <div
-                  className={cn(
-                    'text-2xl font-black',
-                    isToday ? 'text-orange-600' : 'text-slate-900',
-                  )}
-                >
-                  {format(day, 'dd')}
-                </div>
-              </div>
-              <div className="p-3 space-y-3">
-                {dayEvents.map((event) => (
-                  <div
-                    key={event.id}
-                    onClick={() => setDetailsAccountId(event.acc?.id || null)}
-                    className="p-3 rounded-lg bg-blue-50 border border-blue-100 hover:shadow-md transition-shadow cursor-pointer"
+                <div className="flex justify-between items-start mb-2">
+                  <span
+                    className={cn(
+                      'text-sm font-bold w-7 h-7 flex items-center justify-center rounded-full',
+                      isToday ? 'bg-[#FF6A00] text-white' : 'text-slate-700',
+                    )}
                   >
-                    <div className="flex items-center gap-1.5 text-[10px] font-bold text-blue-600 mb-1.5 bg-blue-100/50 w-fit px-1.5 py-0.5 rounded">
-                      <Clock className="w-3 h-3" />
-                      {format(event.date, 'HH:mm')}
+                    {format(day, 'd')}
+                  </span>
+                </div>
+                <div className="space-y-1">
+                  {dayEvents.map((event) => (
+                    <div
+                      key={event.id}
+                      onClick={() => setDetailsAccountId(event.acc?.id || null)}
+                      className={cn(
+                        'text-[10px] font-bold p-1.5 rounded border truncate cursor-pointer',
+                        event.color,
+                      )}
+                      title={event.title}
+                    >
+                      {format(event.date, 'HH:mm')} {event.title}
                     </div>
-                    <div className="font-bold text-sm text-slate-900 leading-tight mb-1">
-                      {event.title}
-                    </div>
-                    <div className="text-xs text-slate-600 font-medium flex items-center gap-1">
-                      <Users className="w-3.5 h-3.5" />
-                      {event.acc?.name}
-                    </div>
-                  </div>
-                ))}
-                {dayEvents.length === 0 && (
-                  <div className="h-20 flex items-center justify-center text-xs font-medium text-slate-400 border border-dashed border-slate-200 rounded-lg">
-                    Livre
-                  </div>
-                )}
+                  ))}
+                </div>
               </div>
-            </Card>
-          )
-        })}
-      </div>
+            )
+          })}
+        </div>
+      </Card>
     </div>
   )
 }

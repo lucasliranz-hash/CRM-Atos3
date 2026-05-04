@@ -22,22 +22,7 @@ import {
   PopoverContent,
 } from '@/components/ui/popover'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
+
 import LeadHistorySheet from '@/components/LeadHistorySheet'
 import { cn } from '@/lib/utils'
 
@@ -74,43 +59,6 @@ export default function Pipeline() {
     const oppId = e.dataTransfer.getData('oppId')
     if (oppId) updateOpportunity(oppId, { stage: stage as any })
   }
-
-  const [search, setSearch] = useState('')
-  const [filterStage, setFilterStage] = useState('all')
-  const [filterCity, setFilterCity] = useState('all')
-  const [filterStatus, setFilterStatus] = useState('all')
-
-  const filteredOpps = opportunities.filter((o) => {
-    const acc = accounts.find((a) => a.id === o.accountId)
-    const contact = contacts.find((c) => c.accountId === o.accountId)
-
-    if (filterStage !== 'all' && o.stage !== filterStage) return false
-    if (filterCity !== 'all' && acc?.city !== filterCity) return false
-    if (filterStatus !== 'all' && acc?.status !== filterStatus) return false
-
-    if (search) {
-      const s = search.toLowerCase()
-      const matchAcc = acc?.name?.toLowerCase().includes(s)
-      const matchContact = contact?.name?.toLowerCase().includes(s)
-      if (!matchAcc && !matchContact) return false
-    }
-    return true
-  })
-
-  const uniqueCities = Array.from(
-    new Set(accounts.map((a) => a.city).filter(Boolean)),
-  ) as string[]
-  const allStatuses = [
-    'Novo',
-    'Em pesquisa',
-    'Pronto para contato',
-    'Em prospecção',
-    'Qualificado',
-    'Aguardando retorno',
-    'Sem fit',
-    'Cliente',
-    'Perdido',
-  ]
 
   return (
     <div className="space-y-8 animate-in fade-in duration-500 pb-10">
@@ -207,227 +155,6 @@ export default function Pipeline() {
         })}
       </div>
 
-      <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden mb-10">
-        <div className="p-5 border-b border-slate-100 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
-          <h2 className="text-xl font-black text-slate-900">Todos os Leads</h2>
-          <div className="flex flex-wrap items-center gap-3">
-            <div className="relative">
-              <Search className="w-4 h-4 absolute left-3 top-3 text-slate-400" />
-              <Input
-                placeholder="Buscar por empresa, contato ou telefone..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                className="pl-9 w-[300px] bg-slate-50 border-slate-200 font-medium"
-              />
-            </div>
-            <Select value={filterStage} onValueChange={setFilterStage}>
-              <SelectTrigger className="w-[180px] bg-slate-50 border-slate-200 font-bold">
-                <SelectValue placeholder="Todas as etapas" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todas as etapas</SelectItem>
-                {STAGES.map((s) => (
-                  <SelectItem key={s} value={s}>
-                    {s}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-
-            <Select value={filterCity} onValueChange={setFilterCity}>
-              <SelectTrigger className="w-[160px] bg-slate-50 border-slate-200 font-bold">
-                <SelectValue placeholder="Cidade" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todas as cidades</SelectItem>
-                {uniqueCities.map((city) => (
-                  <SelectItem key={city} value={city}>
-                    {city}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-
-            <Select value={filterStatus} onValueChange={setFilterStatus}>
-              <SelectTrigger className="w-[160px] bg-slate-50 border-slate-200 font-bold">
-                <SelectValue placeholder="Status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todos os status</SelectItem>
-                {allStatuses.map((s) => (
-                  <SelectItem key={s} value={s}>
-                    {s}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Button
-              variant="outline"
-              className="text-slate-600 border-slate-200 font-bold shadow-sm h-10 hidden md:flex"
-            >
-              <Filter className="w-4 h-4 mr-2" /> Mais filtros
-            </Button>
-            <Button
-              variant="ghost"
-              className="text-slate-600 font-bold ml-auto lg:ml-0"
-            >
-              <Download className="w-4 h-4 mr-2" /> Exportar
-            </Button>
-          </div>
-        </div>
-
-        <div className="overflow-x-auto">
-          <Table className="min-w-[1000px]">
-            <TableHeader>
-              <TableRow className="bg-white hover:bg-white border-b-2 border-slate-100">
-                <TableHead className="font-bold text-slate-500 text-[11px] uppercase tracking-wider py-4">
-                  EMPRESA
-                </TableHead>
-                <TableHead className="font-bold text-slate-500 text-[11px] uppercase tracking-wider py-4">
-                  CONTATO
-                </TableHead>
-                <TableHead className="font-bold text-slate-500 text-[11px] uppercase tracking-wider py-4">
-                  ETAPA
-                </TableHead>
-                <TableHead className="font-bold text-slate-500 text-[11px] uppercase tracking-wider py-4">
-                  ÚLTIMO CONTATO
-                </TableHead>
-                <TableHead className="font-bold text-slate-500 text-[11px] uppercase tracking-wider py-4">
-                  PRÓXIMA AÇÃO
-                </TableHead>
-                <TableHead className="font-bold text-slate-500 text-[11px] uppercase tracking-wider py-4">
-                  RESPONSÁVEL
-                </TableHead>
-                <TableHead className="font-bold text-slate-500 text-[11px] uppercase tracking-wider py-4">
-                  TAGS
-                </TableHead>
-                <TableHead className="py-4 w-10"></TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredOpps.map((opp) => {
-                const acc = accounts.find((a) => a.id === opp.accountId)
-                const contact = contacts.find(
-                  (c) => c.accountId === opp.accountId,
-                )
-                if (!acc) return null
-                const tag = getTag(opp.stage)
-                return (
-                  <TableRow
-                    key={opp.id}
-                    className="hover:bg-slate-50/80 cursor-pointer transition-colors"
-                    onClick={() => setDetailsAccountId(acc.id)}
-                  >
-                    <TableCell>
-                      <div className="flex items-center gap-3 py-1">
-                        <div className="w-10 h-10 rounded-lg bg-slate-900 flex items-center justify-center text-white font-black text-sm shadow-sm">
-                          {acc.name.substring(0, 2).toUpperCase()}
-                        </div>
-                        <span className="font-bold text-slate-900">
-                          {acc.name}
-                        </span>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="font-bold text-slate-900 text-sm">
-                        {contact?.name || 'Sem contato'}
-                      </div>
-                      <div className="text-xs text-slate-500 font-medium">
-                        {contact?.role || '-'}
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <span
-                        className={cn(
-                          'px-2.5 py-1 rounded-md text-[11px] font-black whitespace-nowrap',
-                          tag.color,
-                        )}
-                      >
-                        {tag.label}
-                      </span>
-                    </TableCell>
-                    <TableCell>
-                      <div className="text-sm font-bold text-slate-700">
-                        {acc.lastTouchDate
-                          ? new Date(acc.lastTouchDate).toLocaleDateString(
-                              'pt-BR',
-                            )
-                          : '-'}
-                      </div>
-                      <div className="text-xs text-slate-500 font-medium">
-                        WhatsApp
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-2">
-                        <MessageSquare className="w-4 h-4 text-green-500 shrink-0" />
-                        <div>
-                          <div className="font-bold text-slate-900 text-sm whitespace-nowrap">
-                            {acc.nextAction || '-'}
-                          </div>
-                          <div className="text-xs text-slate-500 font-medium">
-                            {acc.nextActionDate
-                              ? new Date(acc.nextActionDate).toLocaleString(
-                                  'pt-BR',
-                                  {
-                                    day: '2-digit',
-                                    month: '2-digit',
-                                    year: 'numeric',
-                                    hour: '2-digit',
-                                    minute: '2-digit',
-                                  },
-                                )
-                              : '-'}
-                          </div>
-                        </div>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-2">
-                        <img
-                          src="https://img.usecurling.com/ppl/thumbnail?gender=male&seed=1"
-                          className="w-6 h-6 rounded-full border border-slate-200 shrink-0"
-                          alt="Lucas"
-                        />
-                        <span className="font-bold text-sm text-slate-700">
-                          Lucas
-                        </span>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex flex-wrap gap-1.5">
-                        {acc.tags?.map((t) => (
-                          <span
-                            key={t}
-                            className={cn(
-                              'px-2 py-0.5 rounded text-[10px] font-bold whitespace-nowrap',
-                              t.includes('Transporte')
-                                ? 'bg-purple-50 text-purple-600'
-                                : 'bg-blue-50 text-blue-600',
-                            )}
-                          >
-                            {t}
-                          </span>
-                        ))}
-                      </div>
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="w-8 h-8 text-slate-400 hover:text-slate-900"
-                      >
-                        <MoreHorizontal className="w-4 h-4" />
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                )
-              })}
-            </TableBody>
-          </Table>
-        </div>
-      </div>
-
       {detailsAccountId && (
         <LeadHistorySheet
           account={accounts.find((a) => a.id === detailsAccountId) || null}
@@ -471,6 +198,10 @@ const getTag = (stage: string) => {
         color: 'bg-blue-50 text-blue-600 border border-blue-100',
       }
     case 'Conexão Enviada':
+      return {
+        label: 'Conexão',
+        color: 'bg-slate-100 text-slate-700 border border-slate-200',
+      }
     case 'Primeiro Contato':
       return {
         label: 'Contato',

@@ -1,6 +1,12 @@
 import { useState } from 'react'
 import useMainStore from '@/stores/main'
-import { getActionColor } from '@/lib/crm-utils'
+import {
+  Search,
+  Filter,
+  Download,
+  MoreHorizontal,
+  MessageSquare,
+} from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import {
@@ -11,629 +17,236 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import { Badge } from '@/components/ui/badge'
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from '@/components/ui/dialog'
-import {
-  Download,
-  Plus,
-  Search,
-  Upload,
-  AlertCircle,
-  Eye,
-  Edit,
-  Trash2,
-} from 'lucide-react'
-import { useToast } from '@/hooks/use-toast'
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import LeadHistorySheet from '@/components/LeadHistorySheet'
-import { Account } from '@/types/crm'
+import { cn } from '@/lib/utils'
 
 export default function Accounts() {
-  const { accounts, addAccount, updateAccount, deleteAccount } = useMainStore()
-  const { toast } = useToast()
-  const [search, setSearch] = useState('')
-  const [filterStatus, setFilterStatus] = useState('')
-  const [filterInterest, setFilterInterest] = useState('')
-  const [isOpen, setIsOpen] = useState(false)
-  const [selectedHistoryAccount, setSelectedHistoryAccount] =
-    useState<Account | null>(null)
-  const [editingAccount, setEditingAccount] = useState<Account | null>(null)
+  const { accounts, contacts, opportunities } = useMainStore()
+  const [detailsAccountId, setDetailsAccountId] = useState<string | null>(null)
 
-  const filtered = accounts.filter((a) => {
-    const matchSearch = a.name.toLowerCase().includes(search.toLowerCase())
-    const matchStatus = filterStatus ? a.status === filterStatus : true
-    const matchInterest = filterInterest
-      ? a.interestLevel === filterInterest
-      : true
-    return matchSearch && matchStatus && matchInterest
+  const [search, setSearch] = useState('')
+  const [filterStage, setFilterStage] = useState('all')
+  const [filterCity, setFilterCity] = useState('all')
+  const [filterStatus, setFilterStatus] = useState('all')
+
+  const STAGES = [
+    'Leads Mapeados',
+    'Conexão Enviada',
+    'Primeiro Contato',
+    'Follow-up',
+    'Em Conversa',
+    'Reunião',
+    'Proposta',
+  ]
+
+  const uniqueCities = Array.from(
+    new Set(accounts.map((a) => a.city).filter(Boolean)),
+  ) as string[]
+
+  const filteredAccounts = accounts.filter((acc) => {
+    const opp = opportunities.find((o) => o.accountId === acc.id)
+    const contact = contacts.find((c) => c.accountId === acc.id)
+
+    if (filterStage !== 'all' && opp?.stage !== filterStage) return false
+    if (filterCity !== 'all' && acc.city !== filterCity) return false
+    if (filterStatus !== 'all' && acc.status !== filterStatus) return false
+
+    if (search) {
+      const s = search.toLowerCase()
+      if (
+        !acc.name.toLowerCase().includes(s) &&
+        !contact?.name?.toLowerCase().includes(s)
+      ) {
+        return false
+      }
+    }
+    return true
   })
 
-  const getDaysWithoutContact = (date?: string) => {
-    if (!date) return 'Nunca'
-    const diff = new Date().getTime() - new Date(date).getTime()
-    const days = Math.floor(diff / (1000 * 3600 * 24))
-    return days <= 0 ? 'Hoje' : `${days} d`
-  }
-
-  const handleUpdate = (e: any) => {
-    e.preventDefault()
-    const fd = new FormData(e.target)
-    if (editingAccount) {
-      updateAccount(editingAccount.id, {
-        name: fd.get('name') as string,
-        website: fd.get('website') as string,
-        phone: fd.get('phone') as string,
-        segment: fd.get('segment') as string,
-        fleetModel: fd.get('fleetModel') as string,
-        fleetEstimate: Number(fd.get('fleetEstimate')) || 0,
-        leadSource: fd.get('leadSource') as string,
-        detailedSource: fd.get('detailedSource') as string,
-        status: fd.get('status') as any,
-        priority: fd.get('priority') as any,
-        icpFit: fd.get('icpFit') as string,
-        interestLevel: fd.get('interestLevel') as any,
-        accountPotential: fd.get('accountPotential') as any,
-        cadenceStage: fd.get('cadenceStage') as string,
-      })
-      setEditingAccount(null)
-      toast({ title: 'Conta atualizada com sucesso!' })
-    }
-  }
-
-  const handleDelete = async (id: string) => {
-    if (
-      confirm(
-        'Tem certeza que deseja excluir esta conta? Isso removerá oportunidades, contatos e atividades associados.',
-      )
-    ) {
-      await deleteAccount(id)
-      toast({ title: 'Conta excluída com sucesso!' })
-    }
-  }
-
-  const handleCreate = (e: any) => {
-    e.preventDefault()
-    const fd = new FormData(e.target)
-    addAccount({
-      name: fd.get('name') as string,
-      website: fd.get('website') as string,
-      phone: fd.get('phone') as string,
-      segment: fd.get('segment') as string,
-      fleetModel: fd.get('fleetModel') as string,
-      fleetEstimate: Number(fd.get('fleetEstimate')) || 0,
-      leadSource: fd.get('leadSource') as string,
-      detailedSource: fd.get('detailedSource') as string,
-      status: fd.get('status') as any,
-      priority: fd.get('priority') as any,
-      icpFit: fd.get('icpFit') as string,
-      interestLevel: fd.get('interestLevel') as any,
-      accountPotential: fd.get('accountPotential') as any,
-      cadenceStage: fd.get('cadenceStage') as string,
-    })
-    setIsOpen(false)
-    toast({ title: 'Conta criada com sucesso!' })
-  }
-
-  const mockAction = (action: string) =>
-    toast({
-      title: action,
-      description: 'Funcionalidade simulada no protótipo.',
-    })
-
   return (
-    <div className="space-y-6 max-w-7xl mx-auto pb-10">
+    <div className="space-y-6 max-w-7xl mx-auto pb-10 animate-in fade-in duration-500">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-3xl font-black text-black tracking-tight">
-            Contas e Leads
+          <h1 className="text-3xl font-black text-slate-900 tracking-tight">
+            Lista de Leads
           </h1>
-          <p className="text-gray-500 mt-1 font-medium">
-            Gestão operacional da base de prospectos
+          <p className="text-slate-500 mt-1 font-medium">
+            Todos os leads cadastrados no sistema.
           </p>
         </div>
-        <div className="flex items-center gap-2">
-          <Button
-            variant="outline"
-            onClick={() => mockAction('Importar CSV')}
-            className="rounded font-bold border-gray-200 text-black hidden sm:flex hover:bg-gray-50"
-          >
-            <Upload className="w-4 h-4 mr-2" /> Importar
-          </Button>
-          <Button
-            variant="outline"
-            onClick={() => mockAction('Exportar')}
-            className="rounded font-bold border-gray-200 text-black hidden sm:flex hover:bg-gray-50"
-          >
-            <Download className="w-4 h-4 mr-2" /> Exportar
-          </Button>
-          <Dialog open={isOpen} onOpenChange={setIsOpen}>
-            <DialogTrigger asChild>
-              <Button className="bg-black text-white rounded font-bold hover:bg-gray-800">
-                <Plus className="w-4 h-4 mr-2" /> Nova Conta
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="sm:max-w-[700px]">
-              <DialogHeader>
-                <DialogTitle>Criar Nova Conta</DialogTitle>
-              </DialogHeader>
-              <form onSubmit={handleCreate} className="space-y-6 mt-2">
-                <div className="grid grid-cols-2 gap-4 border border-gray-100 p-4 rounded-xl bg-gray-50/50">
-                  <div className="space-y-1 col-span-2 sm:col-span-1">
-                    <label className="text-xs font-bold text-gray-700">
-                      Empresa *
-                    </label>
-                    <Input
-                      name="name"
-                      required
-                      placeholder="Ex: Logística Alfa"
-                      className="bg-white"
-                    />
-                  </div>
-                  <div className="space-y-1 col-span-2 sm:col-span-1">
-                    <label className="text-xs font-bold text-gray-700">
-                      Website
-                    </label>
-                    <Input
-                      name="website"
-                      placeholder="exemplo.com.br"
-                      className="bg-white"
-                    />
-                  </div>
-                  <div className="space-y-1 col-span-2 sm:col-span-1">
-                    <label className="text-xs font-bold text-gray-700">
-                      Telefone Geral
-                    </label>
-                    <Input
-                      name="phone"
-                      placeholder="(00) 0000-0000"
-                      className="bg-white"
-                    />
-                  </div>
-                  <div className="space-y-1 col-span-2 sm:col-span-1">
-                    <label className="text-xs font-bold text-gray-700">
-                      Status *
-                    </label>
-                    <select
-                      name="status"
-                      required
-                      className="flex h-10 w-full rounded-md border border-input bg-white px-3 py-2 text-sm focus:ring-2 focus:ring-black"
-                    >
-                      <option value="Novo">Novo</option>
-                      <option value="Em pesquisa">Em pesquisa</option>
-                      <option value="Pronto para contato">
-                        Pronto para contato
-                      </option>
-                      <option value="Em prospecção">Em prospecção</option>
-                      <option value="Aguardando retorno">
-                        Aguardando retorno
-                      </option>
-                    </select>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-3 gap-4">
-                  <div className="space-y-1">
-                    <label className="text-xs font-bold text-gray-700">
-                      Segmento
-                    </label>
-                    <Input name="segment" placeholder="Ex: Transporte" />
-                  </div>
-                  <div className="space-y-1">
-                    <label className="text-xs font-bold text-gray-700">
-                      Tam. Frota
-                    </label>
-                    <Input name="fleetEstimate" type="number" placeholder="0" />
-                  </div>
-                  <div className="space-y-1">
-                    <label className="text-xs font-bold text-gray-700">
-                      Interesse
-                    </label>
-                    <select
-                      name="interestLevel"
-                      className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                    >
-                      <option value="">Desconhecido</option>
-                      <option value="Frio">Frio</option>
-                      <option value="Morno">Morno</option>
-                      <option value="Quente">Quente</option>
-                    </select>
-                  </div>
-                  <div className="space-y-1">
-                    <label className="text-xs font-bold text-gray-700">
-                      Origem Detalhada
-                    </label>
-                    <Input name="detailedSource" placeholder="Ex: Google Ads" />
-                  </div>
-                  <div className="space-y-1">
-                    <label className="text-xs font-bold text-gray-700">
-                      Prioridade
-                    </label>
-                    <select
-                      name="priority"
-                      className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                    >
-                      <option value="B">B - Média</option>
-                      <option value="A">A - Alta</option>
-                      <option value="C">C - Baixa</option>
-                    </select>
-                  </div>
-                  <div className="space-y-1">
-                    <label className="text-xs font-bold text-gray-700">
-                      Potencial
-                    </label>
-                    <select
-                      name="accountPotential"
-                      className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                    >
-                      <option value="">Desconhecido</option>
-                      <option value="Baixo">Baixo</option>
-                      <option value="Médio">Médio</option>
-                      <option value="Alto">Alto</option>
-                    </select>
-                  </div>
-                  <div className="space-y-1">
-                    <label className="text-xs font-bold text-gray-700">
-                      Cadência Atual
-                    </label>
-                    <Input name="cadenceStage" placeholder="Ex: Toque 1" />
-                  </div>
-                </div>
-                <Button
-                  type="submit"
-                  className="w-full bg-black text-white font-bold"
-                >
-                  Salvar Conta
-                </Button>
-              </form>
-            </DialogContent>
-          </Dialog>
-        </div>
       </div>
 
-      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm">
-        <div className="p-4 border-b border-gray-100 flex flex-col sm:flex-row items-center gap-4 bg-gray-50/30">
-          <div className="flex items-center flex-1 bg-white border border-gray-200 rounded-lg px-3 py-1.5 focus-within:ring-2 focus-within:ring-black">
-            <Search className="w-4 h-4 text-gray-400 mr-2 shrink-0" />
-            <input
-              className="bg-transparent font-medium border-none outline-none text-sm w-full placeholder:text-gray-400"
-              placeholder="Buscar contas..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-            />
+      <div className="bg-white rounded-[10px] border border-slate-200 shadow-sm overflow-hidden">
+        <div className="p-5 border-b border-slate-100 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
+          <div className="flex flex-wrap items-center gap-3 w-full lg:w-auto">
+            <div className="relative flex-1 lg:w-[300px]">
+              <Search className="w-4 h-4 absolute left-3 top-3 text-slate-400" />
+              <Input
+                placeholder="Buscar lead..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="pl-9 bg-slate-50 border-slate-200 font-bold"
+              />
+            </div>
+            <Select value={filterStage} onValueChange={setFilterStage}>
+              <SelectTrigger className="w-[160px] bg-slate-50 border-slate-200 font-bold text-slate-600">
+                <SelectValue placeholder="Todas as etapas" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todas as etapas</SelectItem>
+                {STAGES.map((s) => (
+                  <SelectItem key={s} value={s}>
+                    {s}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Select value={filterCity} onValueChange={setFilterCity}>
+              <SelectTrigger className="w-[140px] bg-slate-50 border-slate-200 font-bold text-slate-600">
+                <SelectValue placeholder="Cidade" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todas cidades</SelectItem>
+                {uniqueCities.map((c) => (
+                  <SelectItem key={c} value={c}>
+                    {c}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
-          <div className="flex gap-2 w-full sm:w-auto">
-            <select
-              className="h-9 rounded-lg border border-gray-200 bg-white px-3 py-1 text-sm font-medium text-gray-700 outline-none w-full sm:w-auto"
-              value={filterStatus}
-              onChange={(e) => setFilterStatus(e.target.value)}
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              className="font-bold border-slate-200 text-slate-600"
             >
-              <option value="">Status: Todos</option>
-              <option value="Novo">Novo</option>
-              <option value="Em prospecção">Em prospecção</option>
-              <option value="Qualificado">Qualificado</option>
-              <option value="Aguardando retorno">Aguardando retorno</option>
-            </select>
-            <select
-              className="h-9 rounded-lg border border-gray-200 bg-white px-3 py-1 text-sm font-medium text-gray-700 outline-none w-full sm:w-auto"
-              value={filterInterest}
-              onChange={(e) => setFilterInterest(e.target.value)}
-            >
-              <option value="">Interesse: Todos</option>
-              <option value="Quente">Quente</option>
-              <option value="Morno">Morno</option>
-              <option value="Frio">Frio</option>
-            </select>
+              <Filter className="w-4 h-4 mr-2" /> Filtros
+            </Button>
+            <Button variant="ghost" className="font-bold text-slate-600">
+              <Download className="w-4 h-4 mr-2" /> Exportar
+            </Button>
           </div>
         </div>
 
-        <Table>
-          <TableHeader>
-            <TableRow className="bg-gray-50">
-              <TableHead className="font-bold text-black">Empresa</TableHead>
-              <TableHead className="font-bold text-black">Status</TableHead>
-              <TableHead className="font-bold text-black">
-                Último Toque
-              </TableHead>
-              <TableHead className="font-bold text-black">
-                Próxima Ação
-              </TableHead>
-              <TableHead className="font-bold text-black text-right">
-                Ações
-              </TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {filtered.map((acc) => {
-              const alertNoAction = !acc.nextActionDate
-
-              return (
-                <TableRow key={acc.id} className="hover:bg-gray-50/50">
-                  <TableCell>
-                    <div className="font-bold text-black text-sm">
-                      {acc.name}
-                    </div>
-                    <div className="text-xs text-gray-500 mt-0.5 font-medium flex items-center gap-2">
-                      <span>{acc.segment || '-'}</span>
-                      {acc.interestLevel && (
-                        <span className="bg-gray-100 border border-gray-200 px-1.5 rounded text-gray-600">
-                          {acc.interestLevel}
-                        </span>
-                      )}
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex flex-col items-start gap-1.5">
-                      <Badge
-                        variant="outline"
-                        className="border-gray-200 text-gray-700 font-bold rounded bg-white shadow-sm"
-                      >
-                        {acc.status}
-                      </Badge>
-                      <div className="flex items-center gap-1.5">
-                        <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-gray-100 text-gray-600 border border-gray-200">
-                          Prio {acc.priority}
-                        </span>
-                        {acc.accountPotential && (
-                          <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-gray-100 text-gray-600 border border-gray-200">
-                            Pot. {acc.accountPotential}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <span className="text-sm font-semibold text-gray-700">
-                      {getDaysWithoutContact(acc.lastTouchDate)}
-                    </span>
-                  </TableCell>
-                  <TableCell>
-                    {alertNoAction ? (
-                      <span className="text-red-600 text-xs font-bold flex items-center bg-red-50 border border-red-100 px-2 py-1 rounded w-fit">
-                        <AlertCircle className="w-3 h-3 mr-1" /> Sem Ação
-                      </span>
-                    ) : (
-                      <div className="flex flex-col items-start gap-1">
-                        <span className="text-xs font-bold text-black">
-                          {acc.nextAction}
-                        </span>
-                        <span
-                          className={`text-[10px] font-bold px-1.5 py-0.5 rounded border ${getActionColor(acc.nextActionDate)}`}
-                        >
-                          {new Date(acc.nextActionDate!).toLocaleDateString()}
-                        </span>
-                      </div>
-                    )}
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <div className="flex items-center justify-end gap-1">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="text-gray-400 hover:text-black hover:bg-gray-100 rounded-lg"
-                        onClick={() => setSelectedHistoryAccount(acc)}
-                        title="Ver Histórico"
-                      >
-                        <Eye className="w-4 h-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="text-gray-400 hover:text-black hover:bg-gray-100 rounded-lg"
-                        onClick={() => setEditingAccount(acc)}
-                        title="Editar Conta"
-                      >
-                        <Edit className="w-4 h-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg"
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          handleDelete(acc.id)
-                        }}
-                        title="Excluir Conta"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              )
-            })}
-            {filtered.length === 0 && (
-              <TableRow>
-                <TableCell
-                  colSpan={5}
-                  className="text-center py-10 text-gray-500 font-medium"
-                >
-                  Nenhuma conta encontrada com estes filtros.
-                </TableCell>
+        <div className="overflow-x-auto">
+          <Table>
+            <TableHeader>
+              <TableRow className="bg-slate-50 hover:bg-slate-50 border-b-2 border-slate-100">
+                <TableHead className="font-bold text-slate-500 text-[11px] uppercase tracking-wider py-4">
+                  Empresa
+                </TableHead>
+                <TableHead className="font-bold text-slate-500 text-[11px] uppercase tracking-wider py-4">
+                  Contato
+                </TableHead>
+                <TableHead className="font-bold text-slate-500 text-[11px] uppercase tracking-wider py-4">
+                  Etapa
+                </TableHead>
+                <TableHead className="font-bold text-slate-500 text-[11px] uppercase tracking-wider py-4">
+                  Último Contato
+                </TableHead>
+                <TableHead className="font-bold text-slate-500 text-[11px] uppercase tracking-wider py-4">
+                  Próxima Ação
+                </TableHead>
+                <TableHead className="w-10 py-4"></TableHead>
               </TableRow>
-            )}
-          </TableBody>
-        </Table>
+            </TableHeader>
+            <TableBody>
+              {filteredAccounts.map((acc) => {
+                const contact = contacts.find((c) => c.accountId === acc.id)
+                const opp = opportunities.find((o) => o.accountId === acc.id)
+
+                return (
+                  <TableRow
+                    key={acc.id}
+                    onClick={() => setDetailsAccountId(acc.id)}
+                    className="cursor-pointer hover:bg-slate-50/80 transition-colors"
+                  >
+                    <TableCell>
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded bg-slate-900 flex items-center justify-center text-white font-black text-xs shadow-sm">
+                          {acc.name.substring(0, 2).toUpperCase()}
+                        </div>
+                        <span className="font-bold text-sm text-slate-900">
+                          {acc.name}
+                        </span>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="font-bold text-slate-800 text-sm">
+                        {contact?.name || '-'}
+                      </div>
+                      <div className="text-xs text-slate-500 font-medium">
+                        {contact?.role || '-'}
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <span className="px-2.5 py-1 rounded text-xs font-bold whitespace-nowrap bg-slate-100 text-slate-700">
+                        {opp?.stage || 'Sem Oportunidade'}
+                      </span>
+                    </TableCell>
+                    <TableCell>
+                      <div className="text-sm font-bold text-slate-700">
+                        {acc.lastTouchDate
+                          ? new Date(acc.lastTouchDate).toLocaleDateString(
+                              'pt-BR',
+                            )
+                          : '-'}
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-2">
+                        <MessageSquare className="w-4 h-4 text-[#FF6A00]" />
+                        <div>
+                          <div className="font-bold text-slate-900 text-sm">
+                            {acc.nextAction || '-'}
+                          </div>
+                          <div className="text-xs text-slate-500 font-medium">
+                            {acc.nextActionDate
+                              ? new Date(acc.nextActionDate).toLocaleString(
+                                  'pt-BR',
+                                  {
+                                    day: '2-digit',
+                                    month: '2-digit',
+                                    hour: '2-digit',
+                                    minute: '2-digit',
+                                  },
+                                )
+                              : '-'}
+                          </div>
+                        </div>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="w-8 h-8 text-slate-400 hover:text-slate-900"
+                      >
+                        <MoreHorizontal className="w-4 h-4" />
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                )
+              })}
+            </TableBody>
+          </Table>
+        </div>
       </div>
 
-      <LeadHistorySheet
-        account={selectedHistoryAccount}
-        open={!!selectedHistoryAccount}
-        onOpenChange={(open) => !open && setSelectedHistoryAccount(null)}
-      />
-
-      <Dialog
-        open={!!editingAccount}
-        onOpenChange={(open) => !open && setEditingAccount(null)}
-      >
-        <DialogContent className="sm:max-w-[700px]">
-          <DialogHeader>
-            <DialogTitle>Editar Conta</DialogTitle>
-          </DialogHeader>
-          {editingAccount && (
-            <form onSubmit={handleUpdate} className="space-y-6 mt-2">
-              <div className="grid grid-cols-2 gap-4 border border-gray-100 p-4 rounded-xl bg-gray-50/50">
-                <div className="space-y-1 col-span-2 sm:col-span-1">
-                  <label className="text-xs font-bold text-gray-700">
-                    Empresa *
-                  </label>
-                  <Input
-                    name="name"
-                    defaultValue={editingAccount.name}
-                    required
-                    placeholder="Ex: Logística Alfa"
-                    className="bg-white"
-                  />
-                </div>
-                <div className="space-y-1 col-span-2 sm:col-span-1">
-                  <label className="text-xs font-bold text-gray-700">
-                    Website
-                  </label>
-                  <Input
-                    name="website"
-                    defaultValue={editingAccount.website}
-                    placeholder="exemplo.com.br"
-                    className="bg-white"
-                  />
-                </div>
-                <div className="space-y-1 col-span-2 sm:col-span-1">
-                  <label className="text-xs font-bold text-gray-700">
-                    Telefone Geral
-                  </label>
-                  <Input
-                    name="phone"
-                    defaultValue={editingAccount.phone}
-                    placeholder="(00) 0000-0000"
-                    className="bg-white"
-                  />
-                </div>
-                <div className="space-y-1 col-span-2 sm:col-span-1">
-                  <label className="text-xs font-bold text-gray-700">
-                    Status *
-                  </label>
-                  <select
-                    name="status"
-                    defaultValue={editingAccount.status}
-                    required
-                    className="flex h-10 w-full rounded-md border border-input bg-white px-3 py-2 text-sm focus:ring-2 focus:ring-black"
-                  >
-                    <option value="Novo">Novo</option>
-                    <option value="Em pesquisa">Em pesquisa</option>
-                    <option value="Pronto para contato">
-                      Pronto para contato
-                    </option>
-                    <option value="Em prospecção">Em prospecção</option>
-                    <option value="Qualificado">Qualificado</option>
-                    <option value="Aguardando retorno">
-                      Aguardando retorno
-                    </option>
-                    <option value="Sem fit">Sem fit</option>
-                    <option value="Perdido">Perdido</option>
-                  </select>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-3 gap-4">
-                <div className="space-y-1">
-                  <label className="text-xs font-bold text-gray-700">
-                    Segmento
-                  </label>
-                  <Input
-                    name="segment"
-                    defaultValue={editingAccount.segment}
-                    placeholder="Ex: Transporte"
-                  />
-                </div>
-                <div className="space-y-1">
-                  <label className="text-xs font-bold text-gray-700">
-                    Tam. Frota
-                  </label>
-                  <Input
-                    name="fleetEstimate"
-                    defaultValue={editingAccount.fleetEstimate}
-                    type="number"
-                    placeholder="0"
-                  />
-                </div>
-                <div className="space-y-1">
-                  <label className="text-xs font-bold text-gray-700">
-                    Interesse
-                  </label>
-                  <select
-                    name="interestLevel"
-                    defaultValue={editingAccount.interestLevel}
-                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                  >
-                    <option value="">Desconhecido</option>
-                    <option value="Frio">Frio</option>
-                    <option value="Morno">Morno</option>
-                    <option value="Quente">Quente</option>
-                  </select>
-                </div>
-                <div className="space-y-1">
-                  <label className="text-xs font-bold text-gray-700">
-                    Origem Detalhada
-                  </label>
-                  <Input
-                    name="detailedSource"
-                    defaultValue={editingAccount.detailedSource}
-                    placeholder="Ex: Google Ads"
-                  />
-                </div>
-                <div className="space-y-1">
-                  <label className="text-xs font-bold text-gray-700">
-                    Prioridade
-                  </label>
-                  <select
-                    name="priority"
-                    defaultValue={editingAccount.priority}
-                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                  >
-                    <option value="B">B - Média</option>
-                    <option value="A">A - Alta</option>
-                    <option value="C">C - Baixa</option>
-                  </select>
-                </div>
-                <div className="space-y-1">
-                  <label className="text-xs font-bold text-gray-700">
-                    Potencial
-                  </label>
-                  <select
-                    name="accountPotential"
-                    defaultValue={editingAccount.accountPotential}
-                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                  >
-                    <option value="">Desconhecido</option>
-                    <option value="Baixo">Baixo</option>
-                    <option value="Médio">Médio</option>
-                    <option value="Alto">Alto</option>
-                  </select>
-                </div>
-                <div className="space-y-1">
-                  <label className="text-xs font-bold text-gray-700">
-                    Cadência Atual
-                  </label>
-                  <Input
-                    name="cadenceStage"
-                    defaultValue={editingAccount.cadenceStage}
-                    placeholder="Ex: Toque 1"
-                  />
-                </div>
-              </div>
-              <Button
-                type="submit"
-                className="w-full bg-black text-white font-bold"
-              >
-                Salvar Alterações
-              </Button>
-            </form>
-          )}
-        </DialogContent>
-      </Dialog>
+      {detailsAccountId && (
+        <LeadHistorySheet
+          account={accounts.find((a) => a.id === detailsAccountId) || null}
+          open={!!detailsAccountId}
+          onOpenChange={(open) => !open && setDetailsAccountId(null)}
+        />
+      )}
     </div>
   )
 }

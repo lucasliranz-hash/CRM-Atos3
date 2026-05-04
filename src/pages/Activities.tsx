@@ -1,8 +1,9 @@
 import React from 'react'
 import useMainStore from '@/stores/main'
 import { Button } from '@/components/ui/button'
-import { Calendar as CalendarIcon } from 'lucide-react'
+import { Calendar as CalendarIcon, Clock } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
+import { cn } from '@/lib/utils'
 
 export default function Activities() {
   const { opportunities, accounts, addActivity } = useMainStore()
@@ -85,11 +86,11 @@ export default function Activities() {
   }
 
   return (
-    <div className="space-y-8 max-w-7xl mx-auto pb-10 animate-in fade-in duration-500">
+    <div className="space-y-6 max-w-5xl mx-auto pb-10 animate-in fade-in duration-500">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <h1 className="text-3xl font-black text-slate-900 tracking-tight">
-            Atividades & Tarefas
+            Atividades
           </h1>
           <p className="text-slate-500 mt-1 font-medium">
             Gerencie suas próximas ações e acompanhe seus leads diários.
@@ -97,156 +98,140 @@ export default function Activities() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="space-y-4">
-          <h3 className="font-black text-sm uppercase tracking-wider text-red-600 flex items-center">
-            Atrasados
-            <span className="ml-2 text-[10px] px-2 py-0.5 rounded-full bg-red-100 text-red-700">
+      <div className="bg-white rounded-[10px] shadow-sm border border-slate-200 overflow-hidden">
+        <div className="p-6 border-b border-slate-100">
+          <h3 className="font-black text-lg text-red-600 flex items-center mb-4">
+            Atrasadas
+            <span className="ml-2 text-xs px-2 py-0.5 rounded-full bg-red-100 text-red-700">
               {overdue.length}
             </span>
           </h3>
-          {overdue.map((task) => (
-            <div
-              key={task.id}
-              className="p-4 rounded-xl bg-red-50/50 border border-red-100 shadow-sm group"
-            >
-              <div className="font-bold text-sm text-slate-900 mb-1">
-                {task.name}
-              </div>
-              <p className="text-xs font-medium text-slate-600 mb-3">
-                {task.text}
+          <div className="space-y-3">
+            {overdue.map((task) => (
+              <TaskRow
+                key={task.id}
+                task={task}
+                isLate
+                onComplete={handleCompleteTask}
+              />
+            ))}
+            {overdue.length === 0 && (
+              <p className="text-sm text-slate-500 font-medium">
+                Nenhuma atividade atrasada.
               </p>
-              <div className="flex items-center justify-between">
-                <span className="text-[10px] font-bold px-2 py-0.5 rounded flex items-center gap-1 bg-red-100 text-red-700">
-                  <CalendarIcon className="w-3 h-3" />
-                  {new Date(task.date).toLocaleDateString('pt-BR')}
-                </span>
-                <div className="flex gap-2">
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    className="h-7 text-[10px] font-bold border-slate-200"
-                  >
-                    Reagendar
-                  </Button>
-                  <Button
-                    size="sm"
-                    onClick={() => handleCompleteTask(task)}
-                    className="h-7 text-[10px] font-bold bg-emerald-500 text-white hover:bg-emerald-600 border-none"
-                  >
-                    Concluir
-                  </Button>
-                </div>
-              </div>
-            </div>
-          ))}
-          {overdue.length === 0 && (
-            <div className="text-xs font-medium text-slate-400 p-4 border border-dashed rounded-xl text-center">
-              Nenhum atraso.
-            </div>
-          )}
+            )}
+          </div>
         </div>
 
-        <div className="space-y-4">
-          <h3 className="font-black text-sm uppercase tracking-wider text-orange-600 flex items-center">
+        <div className="p-6 border-b border-slate-100">
+          <h3 className="font-black text-lg text-slate-900 flex items-center mb-4">
             Hoje
-            <span className="ml-2 text-[10px] px-2 py-0.5 rounded-full bg-orange-100 text-orange-700">
+            <span className="ml-2 text-xs px-2 py-0.5 rounded-full bg-slate-100 text-slate-700">
               {today.length}
             </span>
           </h3>
-          {today.map((task) => (
-            <div
-              key={task.id}
-              className="p-4 rounded-xl bg-orange-50/30 border border-orange-100 shadow-sm group"
-            >
-              <div className="font-bold text-sm text-slate-900 mb-1">
-                {task.name}
-              </div>
-              <p className="text-xs font-medium text-slate-600 mb-3">
-                {task.text}
+          <div className="space-y-3">
+            {today.map((task) => (
+              <TaskRow
+                key={task.id}
+                task={task}
+                onComplete={handleCompleteTask}
+              />
+            ))}
+            {today.length === 0 && (
+              <p className="text-sm text-slate-500 font-medium">
+                Nenhuma atividade para hoje.
               </p>
-              <div className="flex items-center justify-between">
-                <span className="text-[10px] font-bold px-2 py-0.5 rounded flex items-center gap-1 bg-orange-100 text-orange-700">
-                  <CalendarIcon className="w-3 h-3" />
-                  {new Date(task.date).toLocaleTimeString('pt-BR', {
-                    hour: '2-digit',
-                    minute: '2-digit',
-                  })}
-                </span>
-                <div className="flex gap-2">
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    className="h-7 text-[10px] font-bold border-slate-200"
-                  >
-                    Reagendar
-                  </Button>
-                  <Button
-                    size="sm"
-                    onClick={() => handleCompleteTask(task)}
-                    className="h-7 text-[10px] font-bold bg-emerald-500 text-white hover:bg-emerald-600 shadow-sm"
-                  >
-                    Concluir
-                  </Button>
-                </div>
-              </div>
-            </div>
-          ))}
-          {today.length === 0 && (
-            <div className="text-xs font-medium text-slate-400 p-4 border border-dashed rounded-xl text-center">
-              Nenhuma ação para hoje.
-            </div>
-          )}
+            )}
+          </div>
         </div>
 
-        <div className="space-y-4">
-          <h3 className="font-black text-sm uppercase tracking-wider text-slate-600 flex items-center">
-            Próximos
-            <span className="ml-2 text-[10px] px-2 py-0.5 rounded-full bg-slate-100 text-slate-700">
+        <div className="p-6">
+          <h3 className="font-black text-lg text-slate-900 flex items-center mb-4">
+            Próximas
+            <span className="ml-2 text-xs px-2 py-0.5 rounded-full bg-slate-100 text-slate-700">
               {upcoming.length}
             </span>
           </h3>
-          {upcoming.map((task) => (
-            <div
-              key={task.id}
-              className="p-4 rounded-xl bg-white border border-slate-200 shadow-sm group"
-            >
-              <div className="font-bold text-sm text-slate-900 mb-1">
-                {task.name}
-              </div>
-              <p className="text-xs font-medium text-slate-600 mb-3">
-                {task.text}
+          <div className="space-y-3">
+            {upcoming.map((task) => (
+              <TaskRow
+                key={task.id}
+                task={task}
+                onComplete={handleCompleteTask}
+              />
+            ))}
+            {upcoming.length === 0 && (
+              <p className="text-sm text-slate-500 font-medium">
+                Nenhuma atividade futura.
               </p>
-              <div className="flex items-center justify-between">
-                <span className="text-[10px] font-bold px-2 py-0.5 rounded flex items-center gap-1 bg-slate-100 text-slate-600">
-                  <CalendarIcon className="w-3 h-3" />
-                  {new Date(task.date).toLocaleDateString('pt-BR')}
-                </span>
-                <div className="flex gap-2">
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    className="h-7 text-[10px] font-bold border-slate-200"
-                  >
-                    Reagendar
-                  </Button>
-                  <Button
-                    size="sm"
-                    onClick={() => handleCompleteTask(task)}
-                    className="h-7 text-[10px] font-bold bg-emerald-500 text-white hover:bg-emerald-600 shadow-sm border-none"
-                  >
-                    Concluir
-                  </Button>
-                </div>
-              </div>
-            </div>
-          ))}
-          {upcoming.length === 0 && (
-            <div className="text-xs font-medium text-slate-400 p-4 border border-dashed rounded-xl text-center">
-              Nenhuma ação futura.
-            </div>
-          )}
+            )}
+          </div>
         </div>
+      </div>
+    </div>
+  )
+}
+
+function TaskRow({ task, isLate, onComplete }: any) {
+  return (
+    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 rounded-[10px] bg-slate-50 hover:bg-slate-100 transition-colors border border-slate-100 group">
+      <div className="flex items-start gap-4 mb-3 sm:mb-0">
+        <div
+          className={cn(
+            'p-2 rounded-lg shrink-0',
+            isLate
+              ? 'bg-red-100 text-red-600'
+              : 'bg-orange-100 text-orange-600',
+          )}
+        >
+          <Clock className="w-5 h-5" />
+        </div>
+        <div>
+          <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 mb-1">
+            <span className="font-bold text-sm text-slate-900">
+              {task.text}
+            </span>
+            <span className="hidden sm:inline text-xs font-bold text-slate-300">
+              •
+            </span>
+            <span className="text-sm font-medium text-slate-600">
+              {task.name}
+            </span>
+          </div>
+          <div className="flex items-center gap-3 text-xs font-medium text-slate-500">
+            <span
+              className={cn(
+                'flex items-center gap-1',
+                isLate && 'text-red-600 font-bold',
+              )}
+            >
+              <CalendarIcon className="w-3.5 h-3.5" />
+              {new Date(task.date).toLocaleString('pt-BR', {
+                day: '2-digit',
+                month: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit',
+              })}
+            </span>
+          </div>
+        </div>
+      </div>
+      <div className="flex gap-2 w-full sm:w-auto">
+        <Button
+          variant="outline"
+          size="sm"
+          className="flex-1 sm:flex-none font-bold text-slate-600 border-slate-200"
+        >
+          Reagendar
+        </Button>
+        <Button
+          size="sm"
+          onClick={() => onComplete(task)}
+          className="flex-1 sm:flex-none font-bold bg-[#FF6A00] hover:bg-[#e65c00] text-white"
+        >
+          Concluir
+        </Button>
       </div>
     </div>
   )

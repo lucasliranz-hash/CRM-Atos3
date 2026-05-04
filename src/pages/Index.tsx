@@ -299,56 +299,90 @@ export default function Index() {
           colorClass="bg-blue-50 text-blue-600"
         />
         <MetricCard
-          title="Contatos Feitos"
+          title="Contatos Realizados"
           value={contactsMade}
           variance={contactsMadeVar}
           icon={Phone}
-          colorClass="bg-yellow-50 text-yellow-600"
+          colorClass="bg-emerald-50 text-emerald-600"
         />
         <MetricCard
           title="Reuniões Agendadas"
           value={meetingsScheduled}
           variance={meetingsScheduledVar}
           icon={Calendar}
-          colorClass="bg-purple-50 text-purple-600"
+          colorClass="bg-yellow-50 text-yellow-600"
         />
         <MetricCard
-          title="Propostas / Vendas"
-          value={`${proposalsSent} / ${salesClosed}`}
+          title="Vendas Fechadas"
+          value={salesClosed}
           variance={salesClosedVar}
           icon={Briefcase}
-          colorClass="bg-emerald-50 text-emerald-600"
+          colorClass="bg-purple-50 text-purple-600"
         />
       </div>
 
       {/* Funnel */}
-      <div className="bg-white rounded-2xl p-6 shadow-[0_2px_12px_rgba(0,0,0,0.03)] border border-slate-100 mb-8">
-        <h2 className="text-xl font-black text-slate-900 mb-4">
-          Pipeline Resumo
+      <div className="bg-white rounded-[10px] p-6 shadow-sm border border-slate-200 mb-8">
+        <h2 className="text-xl font-black text-slate-900 mb-6">
+          Funil de Vendas
         </h2>
-        <div className="flex flex-col sm:flex-row gap-2">
+        <div className="space-y-3 max-w-2xl">
           {[
-            'Leads Mapeados',
-            'Primeiro Contato',
-            'Reunião',
-            'Proposta',
-            'Fechado Ganho',
-          ].map((stage, idx, arr) => {
-            const count = opportunities.filter((o) => o.stage === stage).length
+            {
+              label: 'Leads Mapeados',
+              count: mappedLeads,
+              color: 'bg-blue-500',
+            },
+            {
+              label: 'Conexão Enviada',
+              count: opportunities.filter((o) => o.stage === 'Conexão Enviada')
+                .length,
+              color: 'bg-blue-400',
+            },
+            {
+              label: 'Primeiro Contato',
+              count: opportunities.filter((o) => o.stage === 'Primeiro Contato')
+                .length,
+              color: 'bg-emerald-400',
+            },
+            {
+              label: 'Follow-up',
+              count: opportunities.filter((o) => o.stage === 'Follow-up')
+                .length,
+              color: 'bg-yellow-400',
+            },
+            {
+              label: 'Em Conversa',
+              count: opportunities.filter((o) => o.stage === 'Em Conversa')
+                .length,
+              color: 'bg-orange-400',
+            },
+            {
+              label: 'Reunião',
+              count: opportunities.filter((o) => o.stage === 'Reunião').length,
+              color: 'bg-purple-500',
+            },
+            { label: 'Proposta', count: proposalsSent, color: 'bg-red-500' },
+          ].map((stage) => {
+            const maxCount = Math.max(mappedLeads, 1)
+            const width = Math.max((stage.count / maxCount) * 100, 5)
             return (
-              <div
-                key={stage}
-                className="flex-1 bg-slate-50 border border-slate-100 rounded-xl p-4 flex flex-col items-center justify-center relative"
-              >
-                <span className="text-[10px] font-black uppercase text-slate-500 tracking-wider text-center">
-                  {stage}
-                </span>
-                <span className="text-2xl font-black text-slate-900 mt-1">
-                  {count}
-                </span>
-                {idx < arr.length - 1 && (
-                  <div className="hidden sm:block absolute right-0 top-1/2 -translate-y-1/2 translate-x-1/2 w-4 h-4 bg-slate-200 rotate-45 z-10 border-t border-r border-white"></div>
-                )}
+              <div key={stage.label} className="flex items-center gap-4">
+                <div className="w-32 text-xs font-bold text-slate-600 text-right">
+                  {stage.label}
+                </div>
+                <div className="flex-1 flex items-center gap-3">
+                  <div
+                    className={cn(
+                      'h-6 rounded-r-md transition-all duration-1000 ease-out',
+                      stage.color,
+                    )}
+                    style={{ width: `${width}%` }}
+                  ></div>
+                  <span className="text-sm font-black text-slate-900">
+                    {stage.count}
+                  </span>
+                </div>
               </div>
             )
           })}
