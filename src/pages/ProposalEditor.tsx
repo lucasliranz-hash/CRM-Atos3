@@ -16,6 +16,7 @@ import {
   Upload,
 } from 'lucide-react'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { Switch } from '@/components/ui/switch'
 import {
   Select,
   SelectContent,
@@ -45,6 +46,17 @@ const defaultTerms: ProposalTerms = {
   installationDeadline: '10 dias úteis após aprovação',
   warranty: '12 meses contra defeitos de fabricação',
   notes: '',
+}
+
+const defaultTravelFee = {
+  enabled: false,
+  pricePerKm: 1.8,
+  totalKm: 0,
+  tolls: 0,
+  otherExpenses: 0,
+  notes:
+    'Deslocamento cobrado conforme quilometragem rodada, acrescido de pedágios quando aplicável.',
+  total: 0,
 }
 
 const TEMPLATES = {
@@ -220,6 +232,7 @@ export default function ProposalEditor() {
             cover: { ...defaultCover },
             items: [],
             terms: { ...defaultTerms },
+            travelFee: { ...defaultTravelFee },
             totalSetup: 0,
             totalMonthly: 0,
             totalEquipment: 0,
@@ -236,16 +249,25 @@ export default function ProposalEditor() {
           cover: existing.cover || { ...defaultCover },
           items: existing.items || [],
           terms: existing.terms || { ...defaultTerms },
+          travelFee: existing.travelFee || { ...defaultTravelFee },
         })
       }
     }
   }, [id, searchParams, accounts, proposals])
 
   const calculatedTotals = useMemo(() => {
-    if (!propData) return { setup: 0, monthly: 0, equipment: 0 }
+    if (!propData) return { setup: 0, monthly: 0, equipment: 0, travel: 0 }
     let setup = 0
     let monthly = 0
     let equipment = 0
+    let travel = 0
+
+    if (propData.travelFee?.enabled) {
+      travel =
+        propData.travelFee.pricePerKm * propData.travelFee.totalKm +
+        (propData.travelFee.tolls || 0) +
+        (propData.travelFee.otherExpenses || 0)
+    }
 
     propData.items.forEach((item) => {
       const totalItem = item.unitPrice * item.quantity
@@ -261,16 +283,22 @@ export default function ProposalEditor() {
         monthly += totalItem / 12
       }
     })
-    return { setup, monthly, equipment }
-  }, [propData?.items])
+    return { setup, monthly, equipment, travel }
+  }, [propData?.items, propData?.travelFee])
 
   const handleSave = () => {
     if (!propData) return
     const finalProp = {
       ...propData,
-      totalSetup: calculatedTotals.setup,
+      totalSetup: calculatedTotals.setup + calculatedTotals.travel,
       totalMonthly: calculatedTotals.monthly,
       totalEquipment: calculatedTotals.equipment,
+      travelFee: propData.travelFee
+        ? {
+            ...propData.travelFee,
+            total: calculatedTotals.travel,
+          }
+        : undefined,
     }
 
     if (id === 'new') {
@@ -311,6 +339,16 @@ export default function ProposalEditor() {
       category: 'Outros',
     }
     setPropData((prev) => ({ ...prev!, items: [...prev!.items, newItem] }))
+  }
+
+  const updateTravelFee = (field: string, value: any) => {
+    setPropData((prev) => {
+      if (!prev || !prev.travelFee) return prev
+      return {
+        ...prev,
+        travelFee: { ...prev.travelFee, [field]: value },
+      }
+    })
   }
 
   const updateItem = (itemId: string, field: string, value: any) => {
@@ -825,6 +863,26 @@ export default function ProposalEditor() {
                     {formatCurrency(calculatedTotals.setup)}
                   </span>
                 </div>
+                {propData.travelFee?.enabled && (
+                  <div className="flex justify-between text-sm text-slate-500">
+                    <span className="font-medium">Deslocamento:</span>
+                    <span className="font-bold">
+                      {formatCurrency(calculatedTotals.travel)}
+                    </span>
+                  </div>
+                )}
+                <div className="border-t border-slate-200 pt-3 flex justify-between items-center">
+                  <span className="text-slate-900 font-black">
+                    Total Implantação:
+                  </span>
+                  <span className="font-black text-slate-900">
+                    {formatCurrency(
+                      calculatedTotals.equipment +
+                        calculatedTotals.setup +
+                        calculatedTotals.travel,
+                    )}
+                  </span>
+                </div>
                 <div className="border-t border-slate-200 pt-3 flex justify-between">
                   <span className="text-slate-900 font-black">
                     Recorrente Mensal (MRR):
@@ -835,6 +893,93 @@ export default function ProposalEditor() {
                 </div>
               </div>
             </div>
+          </div>
+
+          <div className="mt-8 bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-6">
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-black text-slate-900">
+                Deslocamento e custos de viagem
+              </h3>
+              <div className="flex items-center gap-2">
+                <Switch
+                  checked={propData.travelFee?.enabled || false}
+                  onCheckedChange={(c) => updateTravelFee('enabled', c)}
+                  id="travel-fee-toggle"
+                />
+                <label
+                  htmlFor="travel-fee-toggle"
+                  className="text-sm font-bold text-slate-700 cursor-pointer"
+                >
+                  Cobrar deslocamento?
+                </label>
+              </div>
+            </div>
+
+            {propData.travelFee?.enabled && (
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 pt-4 border-t border-slate-100">
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-slate-500 uppercase">
+                    Valor por km rodado
+                  </label>
+                  <Input
+                    type="number"
+                    step="0.01"
+                    value={propData.travelFee.pricePerKm}
+                    onChange={(e) =>
+                      updateTravelFee('pricePerKm', Number(e.target.value))
+                    }
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-slate-500 uppercase">
+                    Quantidade de km
+                  </label>
+                  <Input
+                    type="number"
+                    value={propData.travelFee.totalKm}
+                    onChange={(e) =>
+                      updateTravelFee('totalKm', Number(e.target.value))
+                    }
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-slate-500 uppercase">
+                    Valor total de pedágio
+                  </label>
+                  <Input
+                    type="number"
+                    step="0.01"
+                    value={propData.travelFee.tolls}
+                    onChange={(e) =>
+                      updateTravelFee('tolls', Number(e.target.value))
+                    }
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-slate-500 uppercase">
+                    Outras despesas
+                  </label>
+                  <Input
+                    type="number"
+                    step="0.01"
+                    value={propData.travelFee.otherExpenses}
+                    onChange={(e) =>
+                      updateTravelFee('otherExpenses', Number(e.target.value))
+                    }
+                  />
+                </div>
+                <div className="space-y-1.5 md:col-span-4">
+                  <label className="text-xs font-bold text-slate-500 uppercase">
+                    Observação do deslocamento
+                  </label>
+                  <Textarea
+                    value={propData.travelFee.notes}
+                    onChange={(e) => updateTravelFee('notes', e.target.value)}
+                    className="h-20 resize-none"
+                  />
+                </div>
+              </div>
+            )}
           </div>
         </TabsContent>
 
@@ -1094,6 +1239,63 @@ export default function ProposalEditor() {
               </div>
             </div>
 
+            {propData.travelFee?.enabled && (
+              <div className="mb-12">
+                <h4 className="text-sm font-black uppercase tracking-widest text-slate-400 mb-4">
+                  Deslocamento e Custos de Viagem
+                </h4>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 bg-slate-50 p-6 rounded-xl border border-slate-100 mb-4">
+                  <div>
+                    <p className="text-[10px] font-black uppercase text-slate-500 tracking-wider mb-1">
+                      Valor por km rodado
+                    </p>
+                    <p className="text-sm font-bold text-slate-900">
+                      {formatCurrency(propData.travelFee.pricePerKm)}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-[10px] font-black uppercase text-slate-500 tracking-wider mb-1">
+                      KM estimado
+                    </p>
+                    <p className="text-sm font-bold text-slate-900">
+                      {propData.travelFee.totalKm} km
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-[10px] font-black uppercase text-slate-500 tracking-wider mb-1">
+                      Pedágio
+                    </p>
+                    <p className="text-sm font-bold text-slate-900">
+                      {formatCurrency(propData.travelFee.tolls)}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-[10px] font-black uppercase text-slate-500 tracking-wider mb-1">
+                      Outras despesas
+                    </p>
+                    <p className="text-sm font-bold text-slate-900">
+                      {formatCurrency(propData.travelFee.otherExpenses)}
+                    </p>
+                  </div>
+                </div>
+                {propData.travelFee.notes && (
+                  <p className="text-sm text-slate-500 italic mb-4">
+                    {propData.travelFee.notes}
+                  </p>
+                )}
+                <div className="flex justify-end">
+                  <div className="bg-slate-100 px-4 py-3 rounded-lg flex items-center gap-4">
+                    <span className="text-sm font-bold text-slate-600">
+                      Total de deslocamento:
+                    </span>
+                    <span className="text-lg font-black text-slate-900">
+                      {formatCurrency(calculatedTotals.travel)}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            )}
+
             <div className="flex justify-end mb-16">
               <div className="w-80 space-y-4 bg-slate-900 p-6 rounded-2xl shadow-xl text-white">
                 <div className="flex justify-between text-sm">
@@ -1110,6 +1312,26 @@ export default function ProposalEditor() {
                   </span>
                   <span className="font-bold">
                     {formatCurrency(calculatedTotals.setup)}
+                  </span>
+                </div>
+                {propData.travelFee?.enabled && (
+                  <div className="flex justify-between text-sm">
+                    <span className="text-slate-400 font-medium">
+                      Deslocamento:
+                    </span>
+                    <span className="font-bold">
+                      {formatCurrency(calculatedTotals.travel)}
+                    </span>
+                  </div>
+                )}
+                <div className="border-t border-slate-700 pt-3 flex justify-between text-sm mb-4">
+                  <span className="font-medium">Total Implantação:</span>
+                  <span className="font-bold text-white">
+                    {formatCurrency(
+                      calculatedTotals.equipment +
+                        calculatedTotals.setup +
+                        calculatedTotals.travel,
+                    )}
                   </span>
                 </div>
                 <div className="border-t border-slate-700 pt-4 flex justify-between items-center">

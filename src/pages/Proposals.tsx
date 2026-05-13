@@ -65,6 +65,7 @@ export default function Proposals() {
       status: 'Rascunho',
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
+      travelFee: prop.travelFee ? { ...prop.travelFee } : undefined,
     }
     addProposalToLead(dup)
     toast({ title: 'Proposta duplicada com sucesso!' })

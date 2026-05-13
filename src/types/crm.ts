@@ -202,6 +202,16 @@ export interface ProposalCover {
   coverImage?: string
 }
 
+export interface ProposalTravelFee {
+  enabled: boolean
+  pricePerKm: number
+  totalKm: number
+  tolls: number
+  otherExpenses: number
+  notes: string
+  total: number
+}
+
 export interface Proposal {
   id: string
   accountId: string
@@ -218,6 +228,7 @@ export interface Proposal {
   totalSetup: number
   totalMonthly: number
   totalEquipment: number
+  travelFee?: ProposalTravelFee
   createdAt: string
   updatedAt: string
 
