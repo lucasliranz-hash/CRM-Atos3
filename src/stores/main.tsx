@@ -15,6 +15,7 @@ interface MainStore {
   contacts: Contact[]
   activities: Activity[]
   opportunities: Opportunity[]
+  proposals: Proposal[]
   logoUrl: string | null
   setLogoUrl: (url: string | null) => void
   addAccount: (
@@ -25,16 +26,17 @@ interface MainStore {
   addLead: (lead: any) => Promise<void>
   updateLead: (id: string, lead: any) => void
   deleteLead: (id: string) => void
+  deleteLeadCascade: (id: string) => Promise<void>
   moveLeadToStage: (id: string, stage: string) => void
   getLeadById: (id: string) => Account | undefined
   getLeadsByPipelineStage: (stage: string) => Account[]
   addProposalToLead: (proposal: any) => void
-  proposals: Proposal[]
   addActivity: (act: Omit<Activity, 'id' | 'createdAt'>) => Promise<void>
   completeActivity: (id: string) => Promise<void>
   addContact: (
     contact: Omit<Contact, 'id' | 'createdAt' | 'updatedAt'>,
   ) => Promise<void>
+  updateContact: (id: string, contact: Partial<Contact>) => Promise<void>
   addOpportunity: (opp: Omit<Opportunity, 'id' | 'createdAt'>) => Promise<void>
   updateOpportunity: (id: string, opp: Partial<Opportunity>) => Promise<void>
   dateFilter: 'all' | 'today' | 'week' | 'month' | 'year'
@@ -115,21 +117,27 @@ export function MainProvider({ children }: { children: ReactNode }) {
 
   // Load from LocalStorage
   useEffect(() => {
-    const localAccounts = localStorage.getItem('crm_accounts')
-    if (localAccounts) {
-      try {
+    try {
+      const localAccounts =
+        localStorage.getItem('leads') || localStorage.getItem('crm_accounts')
+      if (localAccounts)
         setAccounts(migrateExistingLeadsToPipeline(JSON.parse(localAccounts)))
-      } catch {
-        /* intentionally ignored */
-      }
-    }
-    const localProposals = localStorage.getItem('crm_proposals')
-    if (localProposals) {
-      try {
-        setProposals(JSON.parse(localProposals))
-      } catch {
-        /* intentionally ignored */
-      }
+
+      const localContacts =
+        localStorage.getItem('contacts') || localStorage.getItem('crm_contacts')
+      if (localContacts) setContacts(JSON.parse(localContacts))
+
+      const localActivities =
+        localStorage.getItem('activities') ||
+        localStorage.getItem('crm_activities')
+      if (localActivities) setActivities(JSON.parse(localActivities))
+
+      const localProposals =
+        localStorage.getItem('proposals') ||
+        localStorage.getItem('crm_proposals')
+      if (localProposals) setProposals(JSON.parse(localProposals))
+    } catch {
+      // intentionally ignored
     }
     setTimeout(() => setIsInitialized(true), 100)
   }, [])
@@ -137,183 +145,79 @@ export function MainProvider({ children }: { children: ReactNode }) {
   // Save to LocalStorage on change
   useEffect(() => {
     if (isInitialized) {
-      localStorage.setItem('crm_accounts', JSON.stringify(accounts))
-    }
-  }, [accounts, isInitialized])
+      localStorage.setItem('leads', JSON.stringify(accounts))
+      localStorage.setItem('contacts', JSON.stringify(contacts))
+      localStorage.setItem('activities', JSON.stringify(activities))
+      localStorage.setItem('proposals', JSON.stringify(proposals))
 
-  useEffect(() => {
-    if (isInitialized) {
+      // Backward compatibility
+      localStorage.setItem('crm_accounts', JSON.stringify(accounts))
       localStorage.setItem('crm_proposals', JSON.stringify(proposals))
     }
-  }, [proposals, isInitialized])
+  }, [accounts, contacts, activities, proposals, isInitialized])
 
-  useEffect(() => {
-    let mounted = true
-    let channel: any
-
-    if (user && profile) {
-      Promise.all([
-        supabase
-          .from('accounts')
-          .select('*')
-          .order('createdAt', { ascending: false }),
-        supabase
-          .from('contacts')
-          .select('*')
-          .order('createdAt', { ascending: false }),
-        supabase
-          .from('activities')
-          .select('*')
-          .order('date', { ascending: false }),
-        supabase
-          .from('opportunities')
-          .select('*')
-          .order('createdAt', { ascending: false }),
-      ]).then(([accs, conts, acts, opps]) => {
-        if (!mounted) return
-        if (accs.data) {
-          setAccounts((prev) => {
-            const dbData = accs.data as Account[]
-            if (prev.length === 0) return migrateExistingLeadsToPipeline(dbData)
-            const dbIds = new Set(dbData.map((a) => a.id))
-            const onlyLocal = prev.filter((a) => !dbIds.has(a.id))
-            return migrateExistingLeadsToPipeline([...dbData, ...onlyLocal])
-          })
+  // Sync Logic
+  const syncLeadToContact = (lead: Account) => {
+    if (!lead.contactName && !lead.name) return
+    setContacts((prev) => {
+      const existing = prev.find(
+        (c) => c.accountId === lead.id && c.isDecisionMaker,
+      )
+      if (existing) {
+        return prev.map((c) =>
+          c.id === existing.id
+            ? {
+                ...c,
+                name: lead.contactName || lead.name || c.name,
+                email: lead.email || c.email,
+                whatsapp: lead.phone || c.whatsapp,
+                companyName: lead.companyName || lead.name || c.companyName,
+                city: lead.city || c.city,
+                state: lead.state || c.state,
+                updatedAt: new Date().toISOString(),
+              }
+            : c,
+        )
+      } else {
+        const newContact: Contact = {
+          id: crypto.randomUUID(),
+          accountId: lead.id,
+          name: lead.contactName || lead.name || '',
+          companyName: lead.companyName || lead.name || '',
+          email: lead.email,
+          whatsapp: lead.phone,
+          city: lead.city,
+          state: lead.state,
+          role: 'Contato Principal',
+          processRole: 'Decisor',
+          isDecisionMaker: true,
+          isInfluencer: false,
+          isChampion: false,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
         }
-        if (conts.data) setContacts(conts.data as Contact[])
-        if (acts.data) setActivities(acts.data as Activity[])
-        if (opps.data) setOpportunities(opps.data as Opportunity[])
-      })
-
-      if (profile.loja_id) {
-        supabase
-          .from('company_settings' as any)
-          .select('logo_url')
-          .eq('loja_id', profile.loja_id)
-          .maybeSingle()
-          .then(({ data }) => {
-            if (mounted && data?.logo_url) setLogoUrl(data.logo_url)
-          })
+        return [newContact, ...prev]
       }
+    })
+  }
 
-      channel = supabase
-        .channel('public-db-changes')
-        .on(
-          'postgres_changes',
-          { event: '*', schema: 'public', table: 'accounts' },
-          (payload) => {
-            if (payload.eventType === 'INSERT') {
-              setAccounts((prev) =>
-                prev.some((a) => a.id === payload.new.id)
-                  ? prev
-                  : migrateExistingLeadsToPipeline([
-                      payload.new as Account,
-                      ...prev,
-                    ]),
-              )
-            } else if (payload.eventType === 'UPDATE') {
-              setAccounts((prev) =>
-                prev.map((a) =>
-                  a.id === payload.new.id
-                    ? migrateExistingLeadsToPipeline([
-                        { ...a, ...payload.new },
-                      ])[0]
-                    : a,
-                ),
-              )
-            } else if (payload.eventType === 'DELETE') {
-              setAccounts((prev) => prev.filter((a) => a.id !== payload.old.id))
-            }
-          },
-        )
-        .on(
-          'postgres_changes',
-          { event: '*', schema: 'public', table: 'contacts' },
-          (payload) => {
-            if (payload.eventType === 'INSERT') {
-              setContacts((prev) =>
-                prev.some((c) => c.id === payload.new.id)
-                  ? prev
-                  : [payload.new as Contact, ...prev],
-              )
-            } else if (payload.eventType === 'UPDATE') {
-              setContacts((prev) =>
-                prev.map((c) =>
-                  c.id === payload.new.id ? { ...c, ...payload.new } : c,
-                ),
-              )
-            } else if (payload.eventType === 'DELETE') {
-              setContacts((prev) => prev.filter((c) => c.id !== payload.old.id))
-            }
-          },
-        )
-        .on(
-          'postgres_changes',
-          { event: '*', schema: 'public', table: 'activities' },
-          (payload) => {
-            if (payload.eventType === 'INSERT') {
-              setActivities((prev) =>
-                prev.some((a) => a.id === payload.new.id)
-                  ? prev
-                  : [payload.new as Activity, ...prev].sort(
-                      (a, b) =>
-                        new Date(b.date).getTime() - new Date(a.date).getTime(),
-                    ),
-              )
-            } else if (payload.eventType === 'UPDATE') {
-              setActivities((prev) =>
-                prev
-                  .map((a) =>
-                    a.id === payload.new.id ? { ...a, ...payload.new } : a,
-                  )
-                  .sort(
-                    (a, b) =>
-                      new Date(b.date).getTime() - new Date(a.date).getTime(),
-                  ),
-              )
-            } else if (payload.eventType === 'DELETE') {
-              setActivities((prev) =>
-                prev.filter((a) => a.id !== payload.old.id),
-              )
-            }
-          },
-        )
-        .on(
-          'postgres_changes',
-          { event: '*', schema: 'public', table: 'opportunities' },
-          (payload) => {
-            if (payload.eventType === 'INSERT') {
-              setOpportunities((prev) =>
-                prev.some((o) => o.id === payload.new.id)
-                  ? prev
-                  : [payload.new as Opportunity, ...prev],
-              )
-            } else if (payload.eventType === 'UPDATE') {
-              setOpportunities((prev) =>
-                prev.map((o) =>
-                  o.id === payload.new.id ? { ...o, ...payload.new } : o,
-                ),
-              )
-            } else if (payload.eventType === 'DELETE') {
-              setOpportunities((prev) =>
-                prev.filter((o) => o.id !== payload.old.id),
-              )
-            }
-          },
-        )
-        .subscribe()
-    } else {
-      setContacts([])
-      setActivities([])
-      setOpportunities([])
-      setLogoUrl(null)
-    }
+  // Deletion logic
+  const deleteLeadCascade = async (id: string) => {
+    setAccounts((prev) => prev.filter((a) => a.id !== id))
+    setContacts((prev) => prev.filter((c) => c.accountId !== id))
+    setActivities((prev) => prev.filter((a) => a.accountId !== id))
+    setOpportunities((prev) => prev.filter((o) => o.accountId !== id))
+    setProposals((prev) => prev.filter((p) => p.accountId !== id))
 
-    return () => {
-      mounted = false
-      if (channel) supabase.removeChannel(channel)
+    if (profile?.loja_id) {
+      Promise.allSettled([
+        supabase.from('accounts').delete().eq('id', id),
+        supabase.from('contacts').delete().eq('accountId', id),
+        supabase.from('activities').delete().eq('accountId', id),
+        supabase.from('opportunities').delete().eq('accountId', id),
+      ])
     }
-  }, [user, profile])
+  }
 
   const addLead = async (leadData: any) => {
     const newLead: Account = {
@@ -338,43 +242,37 @@ export function MainProvider({ children }: { children: ReactNode }) {
     }
 
     setAccounts((prev) => {
-      const exists = prev.some(
-        (a) =>
-          a.id === newLead.id ||
-          (a.companyName === newLead.companyName && a.companyName),
-      )
-      if (exists) return prev
+      if (prev.some((a) => a.id === newLead.id)) return prev
       return [newLead, ...prev]
     })
+
+    syncLeadToContact(newLead)
 
     if (profile?.loja_id) {
       await supabase
         .from('accounts')
-        .insert({
-          ...newLead,
-          loja_id: profile.loja_id,
-        })
+        .insert({ ...newLead, loja_id: profile.loja_id })
         .catch(() => {})
     }
   }
 
   const updateLead = (id: string, leadData: any) => {
     setAccounts((prev) =>
-      prev.map((a) =>
-        a.id === id
-          ? { ...a, ...leadData, updatedAt: new Date().toISOString() }
-          : a,
-      ),
+      prev.map((a) => {
+        if (a.id === id) {
+          const updated = {
+            ...a,
+            ...leadData,
+            updatedAt: new Date().toISOString(),
+          }
+          syncLeadToContact(updated)
+          return updated
+        }
+        return a
+      }),
     )
     if (profile?.loja_id) {
       supabase.from('accounts').update(leadData).eq('id', id).then()
-    }
-  }
-
-  const deleteLead = (id: string) => {
-    setAccounts((prev) => prev.filter((a) => a.id !== id))
-    if (profile?.loja_id) {
-      supabase.from('accounts').delete().eq('id', id).then()
     }
   }
 
@@ -382,13 +280,9 @@ export function MainProvider({ children }: { children: ReactNode }) {
     updateLead(id, { pipelineStage: stage })
   }
 
-  const getLeadById = (id: string) => {
-    return accounts.find((a) => a.id === id)
-  }
-
-  const getLeadsByPipelineStage = (stage: string) => {
-    return accounts.filter((a) => a.pipelineStage === stage)
-  }
+  const getLeadById = (id: string) => accounts.find((a) => a.id === id)
+  const getLeadsByPipelineStage = (stage: string) =>
+    accounts.filter((a) => a.pipelineStage === stage)
 
   const addProposalToLead = (proposal: any) => {
     const newProposal: Proposal = {
@@ -400,20 +294,18 @@ export function MainProvider({ children }: { children: ReactNode }) {
   }
 
   const updateAccount = async (id: string, acc: Partial<Account>) => {
-    await supabase.from('accounts').update(acc).eq('id', id)
     setAccounts((prev) =>
-      prev.map((a) =>
-        a.id === id ? { ...a, ...acc, updatedAt: new Date().toISOString() } : a,
-      ),
+      prev.map((a) => {
+        if (a.id === id) {
+          const updated = { ...a, ...acc, updatedAt: new Date().toISOString() }
+          syncLeadToContact(updated)
+          return updated
+        }
+        return a
+      }),
     )
-  }
-
-  const deleteAccount = async (id: string) => {
-    await supabase.from('accounts').delete().eq('id', id)
-    setAccounts((prev) => prev.filter((a) => a.id !== id))
-    setOpportunities((prev) => prev.filter((o) => o.accountId !== id))
-    setContacts((prev) => prev.filter((c) => c.accountId !== id))
-    setActivities((prev) => prev.filter((a) => a.accountId !== id))
+    if (profile?.loja_id)
+      await supabase.from('accounts').update(acc).eq('id', id)
   }
 
   const addAccount = async (
@@ -427,50 +319,49 @@ export function MainProvider({ children }: { children: ReactNode }) {
       status:
         acc.status === 'Novo Lead' ? 'Novo Lead' : acc.status || 'Novo Lead',
     }
-    const { data, error } = await supabase
-      .from('accounts')
-      .insert(toInsert)
-      .select()
-      .single()
-    if (data && !error) {
-      setAccounts((prev) =>
-        prev.some((a) => a.id === data.id)
-          ? prev
-          : migrateExistingLeadsToPipeline([data as Account, ...prev]),
-      )
-      return data as Account
-    }
 
-    const fallbackAcc: Account = {
+    let fallbackAcc: Account = {
       ...toInsert,
       id: crypto.randomUUID(),
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     } as Account
+
+    if (profile?.loja_id) {
+      const { data, error } = await supabase
+        .from('accounts')
+        .insert(toInsert)
+        .select()
+        .single()
+      if (data && !error) fallbackAcc = data as Account
+    }
+
     setAccounts((prev) => [fallbackAcc, ...prev])
+    syncLeadToContact(fallbackAcc)
     return fallbackAcc
   }
 
   const addActivity = async (act: Omit<Activity, 'id' | 'createdAt'>) => {
-    const toInsert = { ...act, loja_id: profile?.loja_id }
-    const { data, error } = await supabase
-      .from('activities')
-      .insert(toInsert)
-      .select()
-      .single()
-
-    if (data && !error) {
-      setActivities((prev) =>
-        prev.some((a) => a.id === data.id) ? prev : [data as Activity, ...prev],
-      )
-    } else {
-      const fallbackAct: Activity = {
-        ...act,
-        id: crypto.randomUUID(),
-        createdAt: new Date().toISOString(),
-      }
-      setActivities((prev) => [fallbackAct, ...prev])
+    let fallbackAct: Activity = {
+      ...act,
+      id: crypto.randomUUID(),
+      createdAt: new Date().toISOString(),
     }
+
+    if (profile?.loja_id) {
+      const { data, error } = await supabase
+        .from('activities')
+        .insert({ ...act, loja_id: profile.loja_id })
+        .select()
+        .single()
+      if (data && !error) fallbackAct = data as Activity
+    }
+
+    setActivities((prev) =>
+      [fallbackAct, ...prev].sort(
+        (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime(),
+      ),
+    )
 
     await updateAccount(act.accountId, {
       lastTouchDate: new Date().toISOString(),
@@ -479,106 +370,104 @@ export function MainProvider({ children }: { children: ReactNode }) {
         nextActionDate: act.nextActionDate,
       }),
     })
-
-    if (act.nextAction) {
-      const linkedOpps = oppsRef.current.filter(
-        (o) =>
-          o.accountId === act.accountId &&
-          o.stage !== 'Fechado Ganho' &&
-          o.stage !== 'Fechado Perdido',
-      )
-      for (const opp of linkedOpps) {
-        await updateOpportunity(opp.id, {
-          nextAction: act.nextAction,
-          nextActionDate: act.nextActionDate,
-        })
-      }
-    }
   }
 
   const completeActivity = async (id: string) => {
-    await supabase.from('activities').update({ completed: true }).eq('id', id)
     setActivities((prev) =>
       prev.map((a) => (a.id === id ? { ...a, completed: true } : a)),
     )
+    if (profile?.loja_id)
+      await supabase.from('activities').update({ completed: true }).eq('id', id)
   }
 
   const addContact = async (
     contact: Omit<Contact, 'id' | 'createdAt' | 'updatedAt'>,
   ) => {
-    const toInsert = { ...contact, loja_id: profile?.loja_id }
-    const { data, error } = await supabase
-      .from('contacts')
-      .insert(toInsert)
-      .select()
-      .single()
-    if (data && !error) {
-      setContacts((prev) =>
-        prev.some((c) => c.id === data.id) ? prev : [data as Contact, ...prev],
-      )
-    } else {
-      const fallbackContact: Contact = {
-        ...contact,
-        id: crypto.randomUUID(),
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      }
-      setContacts((prev) => [fallbackContact, ...prev])
+    let fallbackContact: Contact = {
+      ...contact,
+      id: crypto.randomUUID(),
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
     }
+    if (profile?.loja_id) {
+      const { data, error } = await supabase
+        .from('contacts')
+        .insert({ ...contact, loja_id: profile.loja_id })
+        .select()
+        .single()
+      if (data && !error) fallbackContact = data as Contact
+    }
+    setContacts((prev) => [fallbackContact, ...prev])
+  }
+
+  const updateContact = async (id: string, payload: Partial<Contact>) => {
+    setContacts((prev) => {
+      const existing = prev.find((c) => c.id === id)
+      const isMain = existing?.isDecisionMaker || payload.isDecisionMaker
+      if (isMain && existing?.accountId) {
+        setAccounts((accs) =>
+          accs.map((a) => {
+            if (a.id === existing.accountId) {
+              return {
+                ...a,
+                contactName:
+                  payload.name !== undefined ? payload.name : a.contactName,
+                email: payload.email !== undefined ? payload.email : a.email,
+                phone:
+                  payload.whatsapp !== undefined ? payload.whatsapp : a.phone,
+                city: payload.city !== undefined ? payload.city : a.city,
+                state: payload.state !== undefined ? payload.state : a.state,
+                updatedAt: new Date().toISOString(),
+              }
+            }
+            return a
+          }),
+        )
+      }
+      return prev.map((c) =>
+        c.id === id
+          ? { ...c, ...payload, updatedAt: new Date().toISOString() }
+          : c,
+      )
+    })
+    if (profile?.loja_id)
+      await supabase.from('contacts').update(payload).eq('id', id)
   }
 
   const addOpportunity = async (opp: Omit<Opportunity, 'id' | 'createdAt'>) => {
-    const toInsert = { ...opp, loja_id: profile?.loja_id }
-    const { data, error } = await supabase
-      .from('opportunities')
-      .insert(toInsert)
-      .select()
-      .single()
-    if (data && !error) {
-      setOpportunities((prev) =>
-        prev.some((o) => o.id === data.id)
-          ? prev
-          : [data as Opportunity, ...prev],
-      )
-    } else {
-      const fallbackOpp: Opportunity = {
-        ...opp,
-        id: crypto.randomUUID(),
-        createdAt: new Date().toISOString(),
-      }
-      setOpportunities((prev) => [fallbackOpp, ...prev])
+    let fallbackOpp: Opportunity = {
+      ...opp,
+      id: crypto.randomUUID(),
+      createdAt: new Date().toISOString(),
     }
-
-    if (opp.nextAction && opp.accountId) {
-      await updateAccount(opp.accountId, {
-        nextAction: opp.nextAction,
-        nextActionDate: opp.nextActionDate,
-      })
+    if (profile?.loja_id) {
+      const { data, error } = await supabase
+        .from('opportunities')
+        .insert({ ...opp, loja_id: profile.loja_id })
+        .select()
+        .single()
+      if (data && !error) fallbackOpp = data as Opportunity
     }
+    setOpportunities((prev) => [fallbackOpp, ...prev])
   }
 
   const updateOpportunity = async (id: string, opp: Partial<Opportunity>) => {
-    if (opp.stage === 'Fechado Ganho') {
-      opp.probability = 100
-    } else if (opp.stage === 'Fechado Perdido') {
-      opp.probability = 0
-    }
-
-    await supabase.from('opportunities').update(opp).eq('id', id)
+    if (opp.stage === 'Fechado Ganho') opp.probability = 100
+    else if (opp.stage === 'Fechado Perdido') opp.probability = 0
 
     setOpportunities((prev) =>
       prev.map((o) => (o.id === id ? { ...o, ...opp } : o)),
     )
+    if (profile?.loja_id)
+      await supabase.from('opportunities').update(opp).eq('id', id)
 
     const existingOpp = oppsRef.current.find((o) => o.id === id)
     if (existingOpp?.accountId) {
       let accountUpdates: Partial<Account> = {}
-
       if (opp.nextAction !== undefined) {
         accountUpdates.nextAction = opp.nextAction
         accountUpdates.nextActionDate = opp.nextActionDate
       }
-
       if (opp.stage === 'Fechado Ganho') {
         accountUpdates.pipelineStage = 'Fechado'
         accountUpdates.status = 'Cliente'
@@ -586,10 +475,8 @@ export function MainProvider({ children }: { children: ReactNode }) {
         accountUpdates.pipelineStage = 'Perdido'
         accountUpdates.status = 'Perdido'
       }
-
-      if (Object.keys(accountUpdates).length > 0) {
-        await updateAccount(existingOpp.accountId, accountUpdates)
-      }
+      if (Object.keys(accountUpdates).length > 0)
+        updateAccount(existingOpp.accountId, accountUpdates)
     }
   }
 
@@ -607,7 +494,9 @@ export function MainProvider({ children }: { children: ReactNode }) {
         updateAccount,
         addLead,
         updateLead,
-        deleteLead,
+        deleteLead: deleteLeadCascade,
+        deleteLeadCascade,
+        deleteAccount: deleteLeadCascade,
         moveLeadToStage,
         getLeadById,
         getLeadsByPipelineStage,
@@ -615,9 +504,9 @@ export function MainProvider({ children }: { children: ReactNode }) {
         addActivity,
         completeActivity,
         addContact,
+        updateContact,
         addOpportunity,
         updateOpportunity,
-        deleteAccount,
         dateFilter,
         setDateFilter,
         kpiFilter,

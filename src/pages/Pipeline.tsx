@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react'
 import useMainStore from '@/stores/main'
-import { Search, Phone } from 'lucide-react'
+import { Search, Phone, Trash2 } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { cn } from '@/lib/utils'
 import { useNavigate } from 'react-router-dom'
@@ -58,7 +58,7 @@ const COLUMNS_CONFIG = [
 ]
 
 export default function Pipeline() {
-  const { accounts, moveLeadToStage } = useMainStore()
+  const { accounts, moveLeadToStage, deleteLeadCascade } = useMainStore()
   const navigate = useNavigate()
 
   const [search, setSearch] = useState('')
@@ -77,15 +77,10 @@ export default function Pipeline() {
 
   const filteredLeads = useMemo(() => {
     let leads = accounts
-
-    if (segmentFilter !== 'all') {
+    if (segmentFilter !== 'all')
       leads = leads.filter((a: any) => a.segment === segmentFilter)
-    }
-
-    if (cityFilter !== 'all') {
+    if (cityFilter !== 'all')
       leads = leads.filter((a: any) => a.city === cityFilter)
-    }
-
     if (search) {
       const q = search.toLowerCase()
       leads = leads.filter(
@@ -96,13 +91,11 @@ export default function Pipeline() {
           a.phone?.toLowerCase().includes(q),
       )
     }
-
     return leads
   }, [accounts, search, segmentFilter, cityFilter])
 
   const onDragStart = (e: React.DragEvent, leadId: string) =>
     e.dataTransfer.setData('leadId', leadId)
-
   const onDrop = (e: React.DragEvent, stage: string) => {
     e.preventDefault()
     const leadId = e.dataTransfer.getData('leadId')
@@ -198,6 +191,14 @@ export default function Pipeline() {
                     lead={lead}
                     onClick={() => navigate(`/leads/${lead.id}`)}
                     onDragStart={onDragStart}
+                    onDelete={() => {
+                      if (
+                        window.confirm(
+                          'Tem certeza que deseja excluir este lead?',
+                        )
+                      )
+                        deleteLeadCascade(lead.id)
+                    }}
                   />
                 ))}
               </div>
@@ -209,7 +210,7 @@ export default function Pipeline() {
   )
 }
 
-function KanbanCard({ lead, onClick, onDragStart }: any) {
+function KanbanCard({ lead, onClick, onDragStart, onDelete }: any) {
   const dateStr = lead.updatedAt || lead.createdAt
   const dateObj = new Date(dateStr)
   const timeText = dateObj.toLocaleTimeString('pt-BR', {
@@ -233,7 +234,6 @@ function KanbanCard({ lead, onClick, onDragStart }: any) {
           {lead.contactName || 'Sem contato'}
         </p>
       </div>
-
       <div className="flex items-center justify-between mt-1 text-[12px] text-slate-500">
         <div className="flex items-center gap-1">
           <Phone className="w-3.5 h-3.5" /> {lead.phone || '-'}
@@ -242,13 +242,24 @@ function KanbanCard({ lead, onClick, onDragStart }: any) {
           Frota: {lead.vehicleCount ?? lead.fleetEstimate ?? 0}
         </div>
       </div>
-
       <div className="pt-2 mt-1 border-t border-slate-100 flex justify-between items-center gap-2">
         <span className="text-[10px] font-bold px-1.5 py-0.5 bg-slate-100 text-slate-600 rounded whitespace-nowrap overflow-hidden text-ellipsis">
           {lead.pipelineStage || 'Prospecção'}
         </span>
-        <div className="text-[10px] text-slate-400 font-medium whitespace-nowrap">
-          {dateText} {timeText}
+        <div className="flex items-center gap-2">
+          <div className="text-[10px] text-slate-400 font-medium whitespace-nowrap">
+            {dateText} {timeText}
+          </div>
+          <button
+            onClick={(e) => {
+              e.stopPropagation()
+              onDelete()
+            }}
+            className="text-red-400 hover:text-red-600 p-1 rounded-md hover:bg-red-50"
+            title="Excluir Lead"
+          >
+            <Trash2 className="w-3.5 h-3.5" />
+          </button>
         </div>
       </div>
     </div>

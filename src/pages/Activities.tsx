@@ -6,24 +6,28 @@ import { useToast } from '@/hooks/use-toast'
 import { cn } from '@/lib/utils'
 
 export default function Activities() {
-  const { opportunities, accounts, addActivity } = useMainStore()
+  const { activities, accounts, addActivity, updateAccount, completeActivity } =
+    useMainStore()
   const { toast } = useToast()
 
   const tasks = React.useMemo(() => {
     const t: any[] = []
-    opportunities.forEach((o) => {
-      if (o.nextAction && o.nextActionDate && !o.stage.includes('Fechado')) {
-        const acc = accounts.find((a) => a.id === o.accountId)
+
+    activities.forEach((act) => {
+      if (!act.completed) {
+        const acc = accounts.find((a) => a.id === act.accountId)
         t.push({
-          id: `opp-${o.id}`,
-          text: o.nextAction,
-          date: o.nextActionDate,
-          name: acc?.name || o.name,
-          accountId: o.accountId,
-          item: o,
+          id: `act-${act.id}`,
+          text: act.title || act.type || 'Ação Pendente',
+          date: act.date || act.dueDate || new Date().toISOString(),
+          name: acc?.name || 'Lead',
+          accountId: act.accountId,
+          type: 'activity',
+          item: act,
         })
       }
     })
+
     accounts.forEach((a) => {
       if (a.nextAction && a.nextActionDate) {
         if (
@@ -35,8 +39,9 @@ export default function Activities() {
             id: `acc-${a.id}`,
             text: a.nextAction,
             date: a.nextActionDate,
-            name: a.name,
+            name: a.name || a.companyName,
             accountId: a.id,
+            type: 'account_action',
             item: a,
           })
         }
@@ -45,7 +50,7 @@ export default function Activities() {
     return t.sort(
       (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime(),
     )
-  }, [opportunities, accounts])
+  }, [activities, accounts])
 
   const overdue = tasks.filter(
     (t) => new Date(t.date).getTime() < new Date().setHours(0, 0, 0, 0),
@@ -57,31 +62,24 @@ export default function Activities() {
     (t) => new Date(t.date).getTime() > new Date().setHours(23, 59, 59, 999),
   )
 
-  const { updateAccount, updateOpportunity } = useMainStore()
-
   const handleCompleteTask = async (task: any) => {
-    await addActivity({
-      accountId: task.accountId,
-      type: 'Mensagem',
-      channel: 'WhatsApp',
-      date: new Date().toISOString(),
-      result: `Concluído: ${task.text}`,
-      completed: true,
-    } as any)
+    if (task.type === 'activity') {
+      await completeActivity(task.item.id)
+    } else {
+      await addActivity({
+        accountId: task.accountId,
+        type: 'Mensagem',
+        channel: 'WhatsApp',
+        date: new Date().toISOString(),
+        result: `Concluído: ${task.text}`,
+        completed: true,
+      } as any)
 
-    await updateAccount(task.accountId, {
-      nextAction: null as any,
-      nextActionDate: null as any,
-    })
-
-    if (task.id.startsWith('opp-')) {
-      const oppId = task.id.replace('opp-', '')
-      await updateOpportunity(oppId, {
+      await updateAccount(task.accountId, {
         nextAction: null as any,
         nextActionDate: null as any,
       })
     }
-
     toast({ title: 'Tarefa concluída!' })
   }
 
@@ -218,13 +216,6 @@ function TaskRow({ task, isLate, onComplete }: any) {
         </div>
       </div>
       <div className="flex gap-2 w-full sm:w-auto">
-        <Button
-          variant="outline"
-          size="sm"
-          className="flex-1 sm:flex-none font-bold text-slate-600 border-slate-200"
-        >
-          Reagendar
-        </Button>
         <Button
           size="sm"
           onClick={() => onComplete(task)}

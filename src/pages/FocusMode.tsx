@@ -15,35 +15,45 @@ import { Card, CardContent } from '@/components/ui/card'
 import { useToast } from '@/hooks/use-toast'
 
 export default function FocusMode() {
-  const {
-    accounts,
-    opportunities,
-    addActivity,
-    updateAccount,
-    updateOpportunity,
-  } = useMainStore()
+  const { accounts, activities, completeActivity, updateAccount, addActivity } =
+    useMainStore()
   const { toast } = useToast()
 
   const focusTasks = useMemo(() => {
     const t: any[] = []
-    opportunities.forEach((o) => {
-      if (o.nextAction && o.nextActionDate && !o.stage.includes('Fechado')) {
-        const acc = accounts.find((a) => a.id === o.accountId)
-        if (isToday(o.nextActionDate) || isOverdue(o.nextActionDate)) {
-          t.push({
-            id: `opp-${o.id}`,
-            text: o.nextAction,
-            date: o.nextActionDate,
-            name: acc?.name || o.name,
-            accountId: o.accountId,
-            type: 'opportunity',
-            item: o,
-          })
-        }
+
+    activities.forEach((act) => {
+      if (!act.completed && (isToday(act.date) || isOverdue(act.date))) {
+        const acc = accounts.find((a) => a.id === act.accountId)
+        t.push({
+          id: `act-${act.id}`,
+          text: `${act.type} - ${act.title || act.result || ''}`,
+          date: act.date,
+          name: acc?.name || 'Lead',
+          accountId: act.accountId,
+          type: 'activity',
+          item: act,
+        })
       }
     })
+
     accounts.forEach((a) => {
-      if (a.nextAction && a.nextActionDate) {
+      if (
+        !a.nextActionDate &&
+        !['Fechado', 'Perdido'].includes(a.pipelineStage)
+      ) {
+        if (!t.find((task) => task.accountId === a.id)) {
+          t.push({
+            id: `acc-nofollow-${a.id}`,
+            text: 'Nenhuma próxima ação agendada',
+            date: new Date().toISOString(),
+            name: a.companyName || a.name,
+            accountId: a.id,
+            type: 'account_no_action',
+            item: a,
+          })
+        }
+      } else if (a.nextAction && a.nextActionDate) {
         if (isToday(a.nextActionDate) || isOverdue(a.nextActionDate)) {
           if (
             !t.find(
@@ -54,7 +64,7 @@ export default function FocusMode() {
               id: `acc-${a.id}`,
               text: a.nextAction,
               date: a.nextActionDate,
-              name: a.name,
+              name: a.companyName || a.name,
               accountId: a.id,
               type: 'account',
               item: a,
@@ -62,36 +72,48 @@ export default function FocusMode() {
           }
         }
       }
+
+      const lastUpdate = new Date(a.updatedAt || a.createdAt).getTime()
+      const daysStuck = (new Date().getTime() - lastUpdate) / (1000 * 3600 * 24)
+      if (daysStuck > 7 && !['Fechado', 'Perdido'].includes(a.pipelineStage)) {
+        if (!t.find((task) => task.accountId === a.id)) {
+          t.push({
+            id: `acc-stuck-${a.id}`,
+            text: `Estagnado há ${Math.floor(daysStuck)} dias na fase ${a.pipelineStage}`,
+            date: new Date().toISOString(),
+            name: a.companyName || a.name,
+            accountId: a.id,
+            type: 'account_stuck',
+            item: a,
+          })
+        }
+      }
     })
     return t.sort(
       (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime(),
     )
-  }, [opportunities, accounts])
+  }, [activities, accounts])
 
   const handleComplete = async (task: any) => {
-    await addActivity({
-      accountId: task.accountId,
-      type: 'Mensagem',
-      channel: 'WhatsApp',
-      date: new Date().toISOString(),
-      result: `Ação concluída via Focus Mode: ${task.text}`,
-      completed: true,
-    } as any)
+    if (task.type === 'activity') {
+      await completeActivity(task.item.id)
+    } else {
+      await addActivity({
+        accountId: task.accountId,
+        type: 'Follow-up',
+        channel: 'WhatsApp',
+        date: new Date().toISOString(),
+        result: `Ação concluída via Focus Mode: ${task.text}`,
+        completed: true,
+      } as any)
 
-    await updateAccount(task.accountId, {
-      nextAction: null as any,
-      nextActionDate: null as any,
-    })
-
-    if (task.id.startsWith('opp-')) {
-      const oppId = task.id.replace('opp-', '')
-      await updateOpportunity(oppId, {
+      await updateAccount(task.accountId, {
         nextAction: null as any,
         nextActionDate: null as any,
+        updatedAt: new Date().toISOString(),
       })
     }
-
-    toast({ title: 'Ação concluída com sucesso!' })
+    toast({ title: 'Ação resolvida com sucesso!' })
   }
 
   return (
@@ -104,8 +126,8 @@ export default function FocusMode() {
           Focus Mode
         </h1>
         <p className="text-slate-500 mt-2 font-medium max-w-lg">
-          Zero distrações. Apenas os leads que precisam da sua atenção hoje ou
-          que estão atrasados.
+          Zero distrações. Apenas os leads que precisam da sua atenção hoje,
+          estão atrasados ou estagnados.
         </p>
       </div>
 
@@ -115,14 +137,14 @@ export default function FocusMode() {
             <CheckCircle2 className="w-12 h-12 text-emerald-400 mb-4" />
             <h2 className="text-xl font-bold text-slate-700">Tudo limpo!</h2>
             <p className="text-slate-500">
-              Você não tem ações pendentes para hoje.
+              Você não tem ações pendentes na sua fila de foco.
             </p>
           </CardContent>
         </Card>
       ) : (
         <div className="grid gap-4">
           {focusTasks.map((task) => {
-            const overdue = isOverdue(task.date)
+            const overdue = isOverdue(task.date) || task.type.includes('stuck')
             return (
               <Card
                 key={task.id}
@@ -140,7 +162,8 @@ export default function FocusMode() {
                         </h3>
                         {overdue && (
                           <span className="flex items-center text-[10px] font-bold text-red-600 bg-red-50 px-2 py-0.5 rounded-full border border-red-100">
-                            <AlertCircle className="w-3 h-3 mr-1" /> Atrasado
+                            <AlertCircle className="w-3 h-3 mr-1" /> Requer
+                            Atenção
                           </span>
                         )}
                       </div>
@@ -183,7 +206,7 @@ export default function FocusMode() {
                         onClick={() => handleComplete(task)}
                         className="flex-1 sm:flex-none bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-full px-6"
                       >
-                        <CheckCircle2 className="w-4 h-4 mr-2" /> Concluir
+                        <CheckCircle2 className="w-4 h-4 mr-2" /> Resolver
                       </Button>
                     </div>
                   </div>

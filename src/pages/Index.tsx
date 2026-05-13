@@ -14,7 +14,6 @@ import {
   CheckCircle2,
 } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
-import { useAuth } from '@/hooks/use-auth'
 import { cn } from '@/lib/utils'
 import {
   Select,
@@ -37,142 +36,140 @@ import {
 import { ChartContainer, ChartTooltipContent } from '@/components/ui/chart'
 import LeadHistorySheet from '@/components/LeadHistorySheet'
 
-const getVariance = (items: any[], dateField = 'createdAt') => {
-  const now = new Date()
-  const thisWeekStart = new Date(now)
-  thisWeekStart.setDate(thisWeekStart.getDate() - 7)
-  const lastWeekStart = new Date(thisWeekStart)
-  lastWeekStart.setDate(lastWeekStart.getDate() - 7)
-
-  const thisWeek = items.filter(
-    (i: any) => new Date(i[dateField]) >= thisWeekStart,
-  ).length
-  const lastWeek = items.filter((i: any) => {
-    const d = new Date(i[dateField])
-    return d >= lastWeekStart && d < thisWeekStart
-  }).length
-
-  const diff = thisWeek - lastWeek
-  return diff >= 0 ? `+${diff}` : `${diff}`
-}
-
-function isWithinFilter(dateStr: string | undefined, filter: string) {
-  if (filter === 'all' || !dateStr) return true
-  const d = new Date(dateStr)
-  const now = new Date()
-  if (filter === 'today') return d.toDateString() === now.toDateString()
-  if (filter === 'week') {
-    const w = new Date(now)
-    w.setDate(now.getDate() - now.getDay())
-    return d >= w
-  }
-  if (filter === 'month')
-    return (
-      d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear()
-    )
-  if (filter === 'year') return d.getFullYear() === now.getFullYear()
-  return true
-}
-
 export default function Index() {
   const navigate = useNavigate()
   const {
     activities,
     accounts,
     opportunities,
+    proposals,
     dateFilter,
     setDateFilter,
     setKpiFilter,
   } = useMainStore()
-  const { profile } = useAuth()
 
   const [detailsAccountId, setDetailsAccountId] = useState<string | null>(null)
 
-  // Filtered Data
-  const fAccounts = useMemo(
-    () => accounts.filter((a) => isWithinFilter(a.createdAt, dateFilter)),
-    [accounts, dateFilter],
-  )
-  const fOpps = useMemo(
-    () => opportunities.filter((o) => isWithinFilter(o.createdAt, dateFilter)),
-    [opportunities, dateFilter],
-  )
-  const fActivities = useMemo(
-    () => activities.filter((a) => isWithinFilter(a.date, dateFilter)),
-    [activities, dateFilter],
+  const getDashboardMetrics = () => {
+    const totalLeads = accounts.length
+    const newLeadsThisMonth = accounts.filter((a) => {
+      const d = new Date(a.createdAt)
+      const now = new Date()
+      return (
+        d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear()
+      )
+    }).length
+
+    const sentProposalsCount = proposals.length
+    const pendingActivitiesCount = activities.filter((a) => !a.completed).length
+    const scheduledMeetingsCount = activities.filter(
+      (a) => a.type.includes('Reunião') && !a.completed,
+    ).length
+
+    const closedWon = accounts.filter(
+      (a) => a.pipelineStage === 'Fechado',
+    ).length
+    const closedLost = accounts.filter(
+      (a) => a.pipelineStage === 'Perdido',
+    ).length
+    const conversionRate =
+      totalLeads > 0 ? ((closedWon / totalLeads) * 100).toFixed(1) : '0.0'
+
+    const closedWonTotal = proposals
+      .filter((p) => {
+        const a = accounts.find((acc) => acc.id === p.accountId)
+        return a?.pipelineStage === 'Fechado'
+      })
+      .reduce((s, p) => s + p.value, 0)
+
+    return {
+      totalLeads,
+      newLeadsThisMonth,
+      sentProposalsCount,
+      pendingActivitiesCount,
+      scheduledMeetingsCount,
+      closedWon,
+      closedLost,
+      conversionRate,
+      closedWonTotal,
+    }
+  }
+
+  const metrics = useMemo(
+    () => getDashboardMetrics(),
+    [accounts, activities, proposals],
   )
 
-  // Top Metrics
-  const closedWonTotal = useMemo(
-    () =>
-      fOpps
-        .filter((o) => o.stage === 'Fechado Ganho')
-        .reduce((s, o) => s + o.total, 0),
-    [fOpps],
-  )
+  const chartData = useMemo(() => {
+    const days = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb']
+    const now = new Date()
+    const start = new Date(now)
+    start.setDate(now.getDate() - now.getDay())
+    start.setHours(0, 0, 0, 0)
 
-  const mappedLeads = fAccounts.length
-  const mappedLeadsVar = getVariance(accounts)
+    return days.map((day, i) => {
+      const d = new Date(start)
+      d.setDate(start.getDate() + i)
+      const isDay = (dateStr: string) => {
+        const d2 = new Date(dateStr)
+        return d2.getDate() === d.getDate() && d2.getMonth() === d.getMonth()
+      }
+      const acts = activities.filter((a) => isDay(a.date))
+      return {
+        name: day,
+        Contatos: acts.filter((a) =>
+          ['Ligação', 'Mensagem', 'E-mail', 'Follow-up'].includes(a.type),
+        ).length,
+        Reuniões: acts.filter((a) => a.type.includes('Reunião')).length,
+        Propostas: acts.filter((a) => a.type === 'Proposta enviada').length,
+      }
+    })
+  }, [activities])
 
-  const contactsMade = fActivities.filter(
-    (a) =>
-      a.completed &&
-      ['Ligação', 'Mensagem', 'E-mail', 'Follow-up'].includes(a.type),
-  ).length
-  const contactsMadeVar = getVariance(
-    activities.filter(
-      (a) =>
-        a.completed &&
-        ['Ligação', 'Mensagem', 'E-mail', 'Follow-up'].includes(a.type),
-    ),
-    'date',
-  )
+  const conversionData = useMemo(() => {
+    return [
+      { name: 'Leads', value: accounts.length || 1, fill: '#3b82f6' },
+      {
+        name: 'Em Conversa',
+        value: accounts.filter((a) =>
+          ['Contato realizado', 'Em Conversa', 'Negociação'].includes(
+            a.pipelineStage,
+          ),
+        ).length,
+        fill: '#8b5cf6',
+      },
+      { name: 'Propostas', value: metrics.sentProposalsCount, fill: '#f59e0b' },
+      { name: 'Fechados', value: metrics.closedWon, fill: '#10b981' },
+    ]
+  }, [accounts, metrics])
 
-  const meetingsScheduled = fActivities.filter(
-    (a) => a.type === 'Reunião agendada',
-  ).length
-  const meetingsScheduledVar = getVariance(
-    activities.filter((a) => a.type === 'Reunião agendada'),
-    'date',
-  )
-
-  const proposalsSent = fOpps.filter((o) => o.stage === 'Proposta').length
-  const salesClosed = fOpps.filter((o) => o.stage === 'Fechado Ganho').length
-  const salesClosedVar = getVariance(
-    opportunities.filter((o) => o.stage === 'Fechado Ganho'),
-  )
-
-  // Tasks Dashboard System
   const tasks = useMemo(() => {
     const t: any[] = []
-    opportunities.forEach((o) => {
-      if (o.nextAction && o.nextActionDate && !o.stage.includes('Fechado')) {
-        const acc = accounts.find((a) => a.id === o.accountId)
+    activities.forEach((act) => {
+      if (!act.completed && (isToday(act.date) || isOverdue(act.date))) {
+        const acc = accounts.find((a) => a.id === act.accountId)
         t.push({
-          id: `opp-${o.id}`,
-          text: o.nextAction,
-          date: o.nextActionDate,
-          name: acc?.name || o.name,
-          accountId: o.accountId,
-          item: o,
+          id: `act-${act.id}`,
+          text: `${act.type} - ${act.title || act.result || ''}`,
+          date: act.date,
+          name: acc?.name || 'Lead',
+          accountId: act.accountId,
+          item: act,
         })
       }
     })
     accounts.forEach((a) => {
-      if (a.nextAction && a.nextActionDate) {
-        if (
-          !t.find(
-            (task) =>
-              task.text === a.nextAction &&
-              task.date === a.nextActionDate &&
-              task.name === a.name,
-          )
-        ) {
+      if (
+        a.nextAction &&
+        a.nextActionDate &&
+        (isToday(a.nextActionDate) || isOverdue(a.nextActionDate))
+      ) {
+        if (!t.find((task) => task.accountId === a.id)) {
           t.push({
             id: `acc-${a.id}`,
             text: a.nextAction,
             date: a.nextActionDate,
-            name: a.name,
+            name: a.name || a.companyName,
             accountId: a.id,
             item: a,
           })
@@ -182,11 +179,10 @@ export default function Index() {
     return t.sort(
       (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime(),
     )
-  }, [opportunities, accounts])
+  }, [activities, accounts])
 
   const overdue = tasks.filter((t) => isOverdue(t.date))
   const today = tasks.filter((t) => isToday(t.date))
-  const upcoming = tasks.filter((t) => !isOverdue(t.date) && !isToday(t.date))
 
   const handleKpiClick = (filterName: string) => {
     setKpiFilter(filterName)
@@ -211,7 +207,7 @@ export default function Index() {
             <Icon className="w-5 h-5" />
           </div>
           <span className="text-[11px] font-bold text-emerald-600 bg-emerald-50 px-2 py-1 rounded-md border border-emerald-100">
-            {variance} sem
+            {variance}
           </span>
         </div>
         <p className="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1">
@@ -224,24 +220,8 @@ export default function Index() {
     </Card>
   )
 
-  const chartData = [
-    { name: 'Seg', Contatos: 12, Reuniões: 3, Propostas: 1 },
-    { name: 'Ter', Contatos: 19, Reuniões: 5, Propostas: 2 },
-    { name: 'Qua', Contatos: 15, Reuniões: 4, Propostas: 1 },
-    { name: 'Qui', Contatos: 22, Reuniões: 6, Propostas: 3 },
-    { name: 'Sex', Contatos: 10, Reuniões: 2, Propostas: 0 },
-  ]
-
-  const conversionData = [
-    { name: 'Leads', value: mappedLeads, fill: '#3b82f6' },
-    { name: 'Reuniões', value: meetingsScheduled, fill: '#8b5cf6' },
-    { name: 'Propostas', value: proposalsSent, fill: '#f59e0b' },
-    { name: 'Vendas', value: salesClosed, fill: '#10b981' },
-  ]
-
   return (
     <div className="flex flex-col lg:flex-row gap-6 pb-10 animate-in fade-in duration-500 min-h-[calc(100vh-6rem)]">
-      {/* Main Content Area */}
       <div className="flex-1 space-y-6">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4">
           <div>
@@ -259,8 +239,6 @@ export default function Index() {
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="today">Hoje</SelectItem>
-                <SelectItem value="week">Esta Semana</SelectItem>
                 <SelectItem value="month">Este Mês</SelectItem>
                 <SelectItem value="year">Este Ano</SelectItem>
                 <SelectItem value="all">Todo Período</SelectItem>
@@ -278,32 +256,32 @@ export default function Index() {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <MetricCard
             title="Leads Mapeados"
-            value={mappedLeads}
-            variance={mappedLeadsVar}
+            value={metrics.totalLeads}
+            variance={`+${metrics.newLeadsThisMonth} mês`}
             icon={Users}
             colorClass="bg-blue-50 text-blue-600 group-hover:bg-[#FF6A00]/10 group-hover:text-[#FF6A00]"
             kpiName="leads"
           />
           <MetricCard
-            title="Contatos Realizados"
-            value={contactsMade}
-            variance={contactsMadeVar}
+            title="Ações Pendentes"
+            value={metrics.pendingActivitiesCount}
+            variance="Em Aberto"
             icon={Phone}
             colorClass="bg-indigo-50 text-indigo-600 group-hover:bg-[#FF6A00]/10 group-hover:text-[#FF6A00]"
             kpiName="contatos"
           />
           <MetricCard
             title="Reuniões Agendadas"
-            value={meetingsScheduled}
-            variance={meetingsScheduledVar}
+            value={metrics.scheduledMeetingsCount}
+            variance="Em Aberto"
             icon={Calendar}
             colorClass="bg-purple-50 text-purple-600 group-hover:bg-[#FF6A00]/10 group-hover:text-[#FF6A00]"
             kpiName="reunioes"
           />
           <MetricCard
-            title="Vendas Fechadas"
-            value={salesClosed}
-            variance={salesClosedVar}
+            title="Taxa de Conversão"
+            value={`${metrics.conversionRate}%`}
+            variance={`${metrics.closedWon} Vendas`}
             icon={Briefcase}
             colorClass="bg-emerald-50 text-emerald-600 group-hover:bg-[#FF6A00]/10 group-hover:text-[#FF6A00]"
             kpiName="vendas"
@@ -413,56 +391,59 @@ export default function Index() {
           </Card>
         </div>
 
-        {/* Funnel */}
         <Card className="rounded-[10px] shadow-sm border-slate-100 bg-white overflow-hidden">
           <CardContent className="p-6">
             <h3 className="font-black text-slate-900 mb-6 flex justify-between items-center">
               Funil de Vendas
               <span className="text-xs font-bold text-emerald-600 bg-emerald-50 px-2.5 py-1.5 rounded-md border border-emerald-100">
-                Receita Total: {formatCurrency(closedWonTotal)}
+                Receita Estimada: {formatCurrency(metrics.closedWonTotal)}
               </span>
             </h3>
             <div className="space-y-3">
               {[
                 {
-                  label: 'Leads Mapeados',
-                  count: fAccounts.length,
+                  label: 'Prospecção',
+                  count: accounts.filter(
+                    (a) => a.pipelineStage === 'Prospecção',
+                  ).length,
                   color: 'bg-blue-500',
                 },
                 {
-                  label: 'Conexão Enviada',
-                  count: fOpps.filter((o) => o.stage === 'Conexão Enviada')
-                    .length,
+                  label: 'Contato realizado',
+                  count: accounts.filter(
+                    (a) => a.pipelineStage === 'Contato realizado',
+                  ).length,
                   color: 'bg-indigo-400',
                 },
                 {
-                  label: 'Primeiro Contato',
-                  count: fOpps.filter((o) => o.stage === 'Primeiro Contato')
-                    .length,
+                  label: 'Reunião agendada',
+                  count: accounts.filter(
+                    (a) => a.pipelineStage === 'Reunião agendada',
+                  ).length,
                   color: 'bg-purple-400',
                 },
                 {
-                  label: 'Follow-up',
-                  count: fOpps.filter((o) => o.stage === 'Follow-up').length,
-                  color: 'bg-fuchsia-400',
+                  label: 'Proposta enviada',
+                  count: accounts.filter(
+                    (a) => a.pipelineStage === 'Proposta enviada',
+                  ).length,
+                  color: 'bg-orange-500',
                 },
                 {
-                  label: 'Em Conversa',
-                  count: fOpps.filter((o) => o.stage === 'Em Conversa').length,
+                  label: 'Negociação',
+                  count: accounts.filter(
+                    (a) => a.pipelineStage === 'Negociação',
+                  ).length,
                   color: 'bg-pink-400',
                 },
                 {
-                  label: 'Reunião',
-                  count: fOpps.filter((o) => o.stage === 'Reunião').length,
-                  color: 'bg-rose-400',
-                },
-                {
-                  label: 'Proposta',
-                  count: proposalsSent,
-                  color: 'bg-orange-500',
+                  label: 'Fechado',
+                  count: accounts.filter((a) => a.pipelineStage === 'Fechado')
+                    .length,
+                  color: 'bg-emerald-500',
                 },
               ].map((stage) => {
-                const maxCount = Math.max(fAccounts.length, 1)
+                const maxCount = Math.max(accounts.length, 1)
                 const width = Math.max((stage.count / maxCount) * 100, 4)
                 return (
                   <div
@@ -492,7 +473,6 @@ export default function Index() {
         </Card>
       </div>
 
-      {/* Sidebar Tasks */}
       <div className="w-full lg:w-[340px] shrink-0">
         <Card className="rounded-[10px] shadow-sm border-slate-100 bg-white sticky top-24 h-[calc(100vh-7rem)] flex flex-col">
           <div className="p-5 border-b border-slate-100 shrink-0">
@@ -546,24 +526,6 @@ export default function Index() {
                 ))
               )}
             </div>
-
-            {upcoming.length > 0 && (
-              <div className="space-y-3">
-                <h4 className="text-xs font-black text-slate-800 uppercase tracking-wider flex items-center gap-2">
-                  Próximas{' '}
-                  <span className="bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded-md">
-                    {upcoming.length}
-                  </span>
-                </h4>
-                {upcoming.slice(0, 5).map((t) => (
-                  <TaskItem
-                    key={t.id}
-                    task={t}
-                    onClick={() => setDetailsAccountId(t.accountId)}
-                  />
-                ))}
-              </div>
-            )}
           </div>
 
           <div className="p-4 border-t border-slate-100 shrink-0">

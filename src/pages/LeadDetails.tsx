@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { useToast } from '@/hooks/use-toast'
-import { ArrowLeft, Edit2, Save, FileText, Plus } from 'lucide-react'
+import { ArrowLeft, Edit2, Save, FileText, Plus, Trash2 } from 'lucide-react'
 import {
   Dialog,
   DialogContent,
@@ -18,8 +18,13 @@ import { formatCurrency } from '@/lib/crm-utils'
 export default function LeadDetails() {
   const { id } = useParams()
   const navigate = useNavigate()
-  const { getLeadById, updateLead, addProposalToLead, proposals } =
-    useMainStore()
+  const {
+    getLeadById,
+    updateLead,
+    deleteLeadCascade,
+    addProposalToLead,
+    proposals,
+  } = useMainStore()
   const { toast } = useToast()
 
   const [isEditing, setIsEditing] = useState(false)
@@ -29,9 +34,7 @@ export default function LeadDetails() {
   useEffect(() => {
     if (id) {
       const lead = getLeadById(id)
-      if (lead) {
-        setLeadData(lead)
-      }
+      if (lead) setLeadData(lead)
     }
   }, [id, getLeadById])
 
@@ -49,6 +52,18 @@ export default function LeadDetails() {
     toast({ title: 'Lead atualizado com sucesso!' })
   }
 
+  const handleDelete = () => {
+    if (
+      window.confirm(
+        'Tem certeza que deseja excluir este lead? Essa ação removerá também atividades, propostas e contatos vinculados.',
+      )
+    ) {
+      deleteLeadCascade(leadData.id)
+      toast({ title: 'Lead excluído com sucesso!' })
+      navigate('/pipeline')
+    }
+  }
+
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
   ) => {
@@ -59,7 +74,6 @@ export default function LeadDetails() {
   const handleCreateProposal = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     const fd = new FormData(e.currentTarget)
-
     addProposalToLead({
       accountId: leadData.id,
       companyName: leadData.name,
@@ -70,7 +84,6 @@ export default function LeadDetails() {
       value: Number(fd.get('value')),
       details: fd.get('details'),
     })
-
     setIsProposalOpen(false)
     toast({ title: 'Proposta criada com sucesso!' })
   }
@@ -98,13 +111,22 @@ export default function LeadDetails() {
               <Save className="w-4 h-4 mr-2" /> Salvar
             </Button>
           ) : (
-            <Button
-              onClick={() => setIsEditing(true)}
-              variant="outline"
-              className="font-bold"
-            >
-              <Edit2 className="w-4 h-4 mr-2" /> Editar Lead
-            </Button>
+            <>
+              <Button
+                onClick={() => setIsEditing(true)}
+                variant="outline"
+                className="font-bold"
+              >
+                <Edit2 className="w-4 h-4 mr-2" /> Editar Lead
+              </Button>
+              <Button
+                onClick={handleDelete}
+                variant="destructive"
+                className="font-bold"
+              >
+                <Trash2 className="w-4 h-4 mr-2" /> Excluir
+              </Button>
+            </>
           )}
         </div>
       </div>
@@ -182,7 +204,7 @@ export default function LeadDetails() {
               </div>
               <div className="space-y-1.5">
                 <label className="text-xs font-bold text-slate-500 uppercase">
-                  Cidade/Estado
+                  Cidade
                 </label>
                 {isEditing ? (
                   <Input
@@ -198,17 +220,17 @@ export default function LeadDetails() {
               </div>
               <div className="space-y-1.5">
                 <label className="text-xs font-bold text-slate-500 uppercase">
-                  Segmento
+                  Estado
                 </label>
                 {isEditing ? (
                   <Input
-                    name="segment"
-                    value={leadData.segment || ''}
+                    name="state"
+                    value={leadData.state || ''}
                     onChange={handleChange}
                   />
                 ) : (
                   <div className="font-semibold text-slate-900">
-                    {leadData.segment || '-'}
+                    {leadData.state || '-'}
                   </div>
                 )}
               </div>
@@ -218,18 +240,17 @@ export default function LeadDetails() {
                 </label>
                 {isEditing ? (
                   <Input
-                    name="status"
-                    value={leadData.status || ''}
+                    name="pipelineStage"
+                    value={leadData.pipelineStage || ''}
                     onChange={handleChange}
                   />
                 ) : (
                   <span className="px-2.5 py-1 rounded-md text-xs font-bold bg-blue-50 text-blue-700 border border-blue-100">
-                    {leadData.status || 'Prospecção'}
+                    {leadData.pipelineStage || 'Prospecção'}
                   </span>
                 )}
               </div>
             </div>
-
             <div className="mt-6 space-y-1.5">
               <label className="text-xs font-bold text-slate-500 uppercase">
                 Observações
@@ -261,7 +282,6 @@ export default function LeadDetails() {
             <p className="text-sm text-slate-500 mb-6 font-medium">
               Gere e acompanhe as propostas deste lead.
             </p>
-
             <Dialog open={isProposalOpen} onOpenChange={setIsProposalOpen}>
               <DialogTrigger asChild>
                 <Button className="w-full bg-[#FF6A00] hover:bg-[#e65c00] text-white font-bold h-11 shadow-sm">

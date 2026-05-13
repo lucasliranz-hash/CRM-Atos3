@@ -66,6 +66,9 @@ export interface Contact {
   linkedin?: string
   email?: string
   whatsapp?: string
+  companyName?: string
+  city?: string
+  state?: string
   preferredChannel?: string
   isDecisionMaker: boolean
   isInfluencer: boolean
@@ -116,11 +119,16 @@ export interface Activity {
   channel: ActivityChannel
   type: ActivityType
   result?: ActivityResult
+  title?: string
+  description?: string
+  dueDate?: string
+  status?: string
   nextAction?: string
   nextActionDate?: string
   completed: boolean
   loja_id?: string
   createdAt: string
+  updatedAt?: string
 }
 
 export type OpportunityStage =

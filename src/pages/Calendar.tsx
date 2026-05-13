@@ -20,7 +20,7 @@ import { ptBR } from 'date-fns/locale'
 import LeadHistorySheet from '@/components/LeadHistorySheet'
 
 export default function CalendarView() {
-  const { activities, opportunities, accounts } = useMainStore()
+  const { activities, accounts } = useMainStore()
   const [currentDate, setCurrentDate] = useState(new Date())
   const [detailsAccountId, setDetailsAccountId] = useState<string | null>(null)
 
@@ -28,44 +28,36 @@ export default function CalendarView() {
     const events: any[] = []
 
     activities.forEach((act) => {
-      if (act.type.includes('Reunião') && act.date) {
+      if (act.date && !act.completed) {
         const acc = accounts.find((a) => a.id === act.accountId)
         events.push({
-          id: act.id,
-          title: `Reunião: ${acc?.name || 'Lead'}`,
+          id: `act-${act.id}`,
+          title: `${act.type}: ${acc?.name || 'Lead'}`,
           date: new Date(act.date),
-          type: 'meeting',
-          color: 'bg-purple-100 text-purple-700 border-purple-200',
+          type: 'activity',
+          color: act.type.includes('Reunião')
+            ? 'bg-purple-100 text-purple-700 border-purple-200'
+            : 'bg-blue-100 text-blue-700 border-blue-200',
           acc,
         })
       }
     })
 
-    opportunities.forEach((opp) => {
-      if (opp.nextActionDate) {
-        const acc = accounts.find((a) => a.id === opp.accountId)
-        const text = opp.nextAction?.toLowerCase() || ''
-        let color = 'bg-orange-100 text-orange-700 border-orange-200'
-        if (text.includes('reunião'))
-          color = 'bg-purple-100 text-purple-700 border-purple-200'
-        else if (text.includes('ligação') || text.includes('ligar'))
-          color = 'bg-blue-100 text-blue-700 border-blue-200'
-        else if (text.includes('follow'))
-          color = 'bg-yellow-100 text-yellow-700 border-yellow-200'
-
+    accounts.forEach((acc) => {
+      if (acc.nextActionDate) {
         events.push({
-          id: `opp-meet-${opp.id}`,
-          title: opp.nextAction,
-          date: new Date(opp.nextActionDate),
+          id: `acc-next-${acc.id}`,
+          title: acc.nextAction || 'Follow-up',
+          date: new Date(acc.nextActionDate),
           type: 'task',
-          color,
+          color: 'bg-orange-100 text-orange-700 border-orange-200',
           acc,
         })
       }
     })
 
     return events.sort((a, b) => a.date.getTime() - b.date.getTime())
-  }, [activities, opportunities, accounts])
+  }, [activities, accounts])
 
   const monthStart = startOfMonth(currentDate)
   const monthEnd = endOfMonth(monthStart)
@@ -125,7 +117,7 @@ export default function CalendarView() {
           ))}
         </div>
         <div className="grid grid-cols-7 auto-rows-fr">
-          {calendarDays.map((day, i) => {
+          {calendarDays.map((day) => {
             const dayEvents = scheduledEvents.filter((e) =>
               isSameDay(e.date, day),
             )
