@@ -13,6 +13,7 @@ import { Button } from '@/components/ui/button'
 import { useToast } from '@/hooks/use-toast'
 import { Upload, Image as ImageIcon, Loader2 } from 'lucide-react'
 import { BackupManager } from '@/components/BackupManager'
+import { DatabaseDiagnostic } from '@/components/DatabaseDiagnostic'
 
 export default function Settings() {
   const { profile } = useAuth()
@@ -88,6 +89,8 @@ export default function Settings() {
           Personalize a experiência, identidade e integrações do seu CRM.
         </p>
       </div>
+
+      <DatabaseDiagnostic />
 
       <Card className="max-w-xl shadow-sm border-gray-200 bg-white animate-in fade-in duration-300">
         <CardHeader>
