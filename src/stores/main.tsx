@@ -5,6 +5,7 @@ import React, {
   useEffect,
   ReactNode,
   useRef,
+  useCallback,
 } from 'react'
 import { Account, Contact, Activity, Opportunity, Proposal } from '@/types/crm'
 import { supabase } from '@/lib/supabase/client'
@@ -45,9 +46,18 @@ interface MainStore {
   setDateFilter: (filter: 'all' | 'today' | 'week' | 'month' | 'year') => void
   kpiFilter: string | null
   setKpiFilter: (filter: string | null) => void
+  backups: { type: string; timestamp: string; size: number; fullKey: string }[]
+  loadBackups: () => void
+  restoreBackup: (fullKey: string) => void
 }
 
 const MainContext = createContext<MainStore | undefined>(undefined)
+
+const getTimestamp = () => {
+  const d = new Date()
+  const pad = (n: number) => n.toString().padStart(2, '0')
+  return `${d.getFullYear()}${pad(d.getMonth() + 1)}${pad(d.getDate())}_${pad(d.getHours())}${pad(d.getMinutes())}${pad(d.getSeconds())}`
+}
 
 const migrateExistingLeadsToPipeline = (leads: any[]) => {
   const uniqueLeads = new Map()
@@ -109,6 +119,9 @@ export function MainProvider({ children }: { children: ReactNode }) {
     'all' | 'today' | 'week' | 'month' | 'year'
   >('month')
   const [kpiFilter, setKpiFilter] = useState<string | null>(null)
+  const [backups, setBackups] = useState<
+    { type: string; timestamp: string; size: number; fullKey: string }[]
+  >([])
 
   const oppsRef = useRef(opportunities)
   useEffect(() => {
@@ -117,27 +130,190 @@ export function MainProvider({ children }: { children: ReactNode }) {
 
   const [isInitialized, setIsInitialized] = useState(false)
 
+  const loadBackups = useCallback(() => {
+    const list = []
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i)
+      if (key && key.includes('_backup_')) {
+        const match = key.match(/^([a-zA-Z0-9_]+)_backup_(\d{8}_\d{6})$/)
+        if (match) {
+          const size = localStorage.getItem(key)?.length || 0
+          list.push({ type: match[1], timestamp: match[2], size, fullKey: key })
+        }
+      }
+    }
+    list.sort((a, b) => b.timestamp.localeCompare(a.timestamp))
+    setBackups(list)
+  }, [])
+
+  const restoreBackup = useCallback((fullKey: string) => {
+    const data = localStorage.getItem(fullKey)
+    if (!data) return
+    try {
+      const parsed = JSON.parse(data)
+      if (fullKey.startsWith('contacts_backup_')) {
+        setContacts(parsed)
+        localStorage.setItem('contacts', data)
+      } else if (
+        fullKey.startsWith('leads_backup_') ||
+        fullKey.startsWith('accounts_backup_')
+      ) {
+        setAccounts(parsed)
+        localStorage.setItem('leads', data)
+      } else if (fullKey.startsWith('proposals_backup_')) {
+        setProposals(parsed)
+        localStorage.setItem('proposals', data)
+      } else if (fullKey.startsWith('activities_backup_')) {
+        setActivities(parsed)
+        localStorage.setItem('activities', data)
+      }
+    } catch {
+      /* intentionally ignored */
+    }
+  }, [])
+
   // Load from LocalStorage
   useEffect(() => {
     try {
+      let loadedAccounts: Account[] = []
+      let loadedContacts: Contact[] = []
+      let loadedActivities: Activity[] = []
+      let loadedProposals: Proposal[] = []
+
       const localAccounts =
-        localStorage.getItem('leads') || localStorage.getItem('crm_accounts')
+        localStorage.getItem('leads') ||
+        localStorage.getItem('crm_accounts') ||
+        localStorage.getItem('crm_leads')
       if (localAccounts)
-        setAccounts(migrateExistingLeadsToPipeline(JSON.parse(localAccounts)))
+        loadedAccounts = migrateExistingLeadsToPipeline(
+          JSON.parse(localAccounts),
+        )
 
       const localContacts =
         localStorage.getItem('contacts') || localStorage.getItem('crm_contacts')
-      if (localContacts) setContacts(JSON.parse(localContacts))
+      if (localContacts) loadedContacts = JSON.parse(localContacts)
 
       const localActivities =
         localStorage.getItem('activities') ||
         localStorage.getItem('crm_activities')
-      if (localActivities) setActivities(JSON.parse(localActivities))
+      if (localActivities) loadedActivities = JSON.parse(localActivities)
 
       const localProposals =
         localStorage.getItem('proposals') ||
         localStorage.getItem('crm_proposals')
-      if (localProposals) setProposals(JSON.parse(localProposals))
+      if (localProposals) loadedProposals = JSON.parse(localProposals)
+
+      // Backup & Safe Migration Logic
+      const ts = getTimestamp()
+      let madeBackup = false
+
+      const makeBackupIfNeeded = () => {
+        if (!madeBackup) {
+          localStorage.setItem(
+            `leads_backup_${ts}`,
+            JSON.stringify(loadedAccounts),
+          )
+          localStorage.setItem(
+            `contacts_backup_${ts}`,
+            JSON.stringify(loadedContacts),
+          )
+          localStorage.setItem(
+            `activities_backup_${ts}`,
+            JSON.stringify(loadedActivities),
+          )
+          localStorage.setItem(
+            `proposals_backup_${ts}`,
+            JSON.stringify(loadedProposals),
+          )
+          madeBackup = true
+        }
+      }
+
+      const legacyKeys = [
+        'contacts',
+        'crm_contacts',
+        'oldContacts',
+        'previousContacts',
+        'leads',
+        'crm_leads',
+      ]
+      let allContacts = [...loadedContacts]
+      const contactMap = new Map()
+
+      allContacts.forEach((c) => {
+        contactMap.set(c.id, c)
+        if (c.email) contactMap.set(`email:${c.email}`, c)
+        if (c.whatsapp) contactMap.set(`phone:${c.whatsapp}`, c)
+      })
+
+      let contactsMigrated = false
+
+      legacyKeys.forEach((key) => {
+        try {
+          const data = localStorage.getItem(key)
+          if (data) {
+            const parsed = JSON.parse(data)
+            if (Array.isArray(parsed)) {
+              parsed.forEach((item) => {
+                const c =
+                  item.accountId !== undefined || item.processRole !== undefined
+                    ? item
+                    : null
+                if (c && c.id) {
+                  const exists =
+                    contactMap.has(c.id) ||
+                    (c.email && contactMap.has(`email:${c.email}`)) ||
+                    (c.whatsapp && contactMap.has(`phone:${c.whatsapp}`))
+                  if (!exists) {
+                    makeBackupIfNeeded()
+                    allContacts.push(c)
+                    contactMap.set(c.id, c)
+                    if (c.email) contactMap.set(`email:${c.email}`, c)
+                    if (c.whatsapp) contactMap.set(`phone:${c.whatsapp}`, c)
+                    contactsMigrated = true
+                  }
+                }
+              })
+            }
+          }
+        } catch {
+          /* intentionally ignored */
+        }
+      })
+
+      // Reconstruct missing contacts from Leads
+      loadedAccounts.forEach((lead) => {
+        const hasContact = allContacts.some((c) => c.accountId === lead.id)
+        if (!hasContact && (lead.contactName || lead.name)) {
+          makeBackupIfNeeded()
+          const newContact: Contact = {
+            id: crypto.randomUUID(),
+            accountId: lead.id,
+            name: lead.contactName || lead.name || '',
+            companyName: lead.companyName || lead.name || '',
+            email: lead.email,
+            whatsapp: lead.phone,
+            city: lead.city,
+            state: lead.state,
+            role: 'Contato Principal',
+            processRole: 'Decisor',
+            isDecisionMaker: true,
+            isInfluencer: false,
+            isChampion: false,
+            createdAt: lead.createdAt || new Date().toISOString(),
+            updatedAt: lead.updatedAt || new Date().toISOString(),
+          }
+          allContacts.push(newContact)
+          contactsMigrated = true
+        }
+      })
+
+      if (contactsMigrated) loadedContacts = allContacts
+
+      setAccounts(loadedAccounts)
+      setContacts(loadedContacts)
+      setActivities(loadedActivities)
+      setProposals(loadedProposals)
     } catch {
       // intentionally ignored
     }
@@ -540,6 +716,9 @@ export function MainProvider({ children }: { children: ReactNode }) {
         setDateFilter,
         kpiFilter,
         setKpiFilter,
+        backups,
+        loadBackups,
+        restoreBackup,
       }}
     >
       {children}

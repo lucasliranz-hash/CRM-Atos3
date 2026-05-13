@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { useAuth } from '@/hooks/use-auth'
 import useMainStore from '@/stores/main'
 import { supabase } from '@/lib/supabase/client'
@@ -11,12 +11,23 @@ import {
 } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { useToast } from '@/hooks/use-toast'
-import { Upload, Image as ImageIcon, Loader2 } from 'lucide-react'
+import {
+  Upload,
+  Image as ImageIcon,
+  Loader2,
+  Database,
+  RotateCcw,
+} from 'lucide-react'
 
 export default function Settings() {
   const { profile } = useAuth()
-  const { logoUrl, setLogoUrl } = useMainStore()
+  const { logoUrl, setLogoUrl, backups, loadBackups, restoreBackup } =
+    useMainStore()
   const { toast } = useToast()
+
+  useEffect(() => {
+    loadBackups()
+  }, [loadBackups])
 
   const [uploading, setUploading] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -156,6 +167,65 @@ export default function Settings() {
               className="hidden"
             />
           </div>
+        </CardContent>
+      </Card>
+
+      <Card className="max-w-xl shadow-sm border-gray-200 bg-white animate-in fade-in duration-300">
+        <CardHeader>
+          <CardTitle className="text-lg font-bold flex items-center gap-2">
+            <Database className="w-5 h-5 text-gray-500" />
+            Backup e Restauração
+          </CardTitle>
+          <CardDescription>
+            Gerencie e restaure backups automáticos do sistema.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {backups.length === 0 ? (
+            <p className="text-sm text-gray-500 font-medium">
+              Nenhum backup encontrado.
+            </p>
+          ) : (
+            <div className="space-y-3 max-h-80 overflow-y-auto pr-2 custom-scrollbar">
+              {backups.map((b) => (
+                <div
+                  key={b.fullKey}
+                  className="flex items-center justify-between p-3 border border-gray-100 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors"
+                >
+                  <div>
+                    <p className="text-sm font-bold text-gray-800 capitalize">
+                      {b.type.replace('_', ' ')}
+                    </p>
+                    <p className="text-xs text-gray-500 font-medium mt-0.5">
+                      {b.timestamp.replace(
+                        /(\d{4})(\d{2})(\d{2})_(\d{2})(\d{2})(\d{2})/,
+                        '$3/$2/$1 $4:$5:$6',
+                      )}
+                      {' • '}
+                      {(b.size / 1024).toFixed(1)} KB
+                    </p>
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      if (
+                        window.confirm(
+                          'Tem certeza que deseja restaurar este backup? Os dados atuais serão sobrescritos.',
+                        )
+                      ) {
+                        restoreBackup(b.fullKey)
+                        toast({ title: 'Backup restaurado com sucesso!' })
+                      }
+                    }}
+                    className="text-xs font-bold border-gray-300 text-gray-700"
+                  >
+                    <RotateCcw className="w-3 h-3 mr-1" /> Restaurar
+                  </Button>
+                </div>
+              ))}
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>
