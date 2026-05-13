@@ -60,7 +60,9 @@ export default function Index() {
       )
     }).length
 
-    const sentProposalsCount = proposals.length
+    const sentProposalsCount = proposals.filter(
+      (p) => p.status === 'Enviada' || p.status === 'Aprovada',
+    ).length
     const pendingActivitiesCount = activities.filter((a) => !a.completed).length
     const scheduledMeetingsCount = activities.filter(
       (a) => a.type.includes('Reunião') && !a.completed,
@@ -78,9 +80,13 @@ export default function Index() {
     const closedWonTotal = proposals
       .filter((p) => {
         const a = accounts.find((acc) => acc.id === p.accountId)
-        return a?.pipelineStage === 'Fechado'
+        return a?.pipelineStage === 'Fechado' && p.status === 'Aprovada'
       })
-      .reduce((s, p) => s + p.value, 0)
+      .reduce((s, p) => {
+        const val =
+          p.value || p.totalSetup + p.totalEquipment + p.totalMonthly * 12 || 0
+        return s + val
+      }, 0)
 
     return {
       totalLeads,
@@ -138,7 +144,11 @@ export default function Index() {
         ).length,
         fill: '#8b5cf6',
       },
-      { name: 'Propostas', value: metrics.sentProposalsCount, fill: '#f59e0b' },
+      {
+        name: 'Propostas',
+        value: proposals.filter((p) => p.status === 'Enviada').length,
+        fill: '#f59e0b',
+      },
       { name: 'Fechados', value: metrics.closedWon, fill: '#10b981' },
     ]
   }, [accounts, metrics])

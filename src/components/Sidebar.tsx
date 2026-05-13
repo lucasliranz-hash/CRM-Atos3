@@ -9,6 +9,7 @@ import {
   Settings as SettingsIcon,
   Target,
   KanbanSquare,
+  FileText,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Progress } from '@/components/ui/progress'
@@ -20,6 +21,7 @@ const navItems = [
   { icon: KanbanSquare, label: 'Pipeline', path: '/pipeline' },
   { icon: Users, label: 'Contatos', path: '/contacts' },
   { icon: Building2, label: 'Leads', path: '/accounts' },
+  { icon: FileText, label: 'Propostas', path: '/proposals' },
   { icon: Activity, label: 'Atividades', path: '/activities' },
   { icon: Calendar, label: 'Calendário', path: '/calendar' },
   { icon: BarChart, label: 'Relatórios', path: '/reports' },

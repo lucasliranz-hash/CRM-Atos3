@@ -30,7 +30,9 @@ interface MainStore {
   moveLeadToStage: (id: string, stage: string) => void
   getLeadById: (id: string) => Account | undefined
   getLeadsByPipelineStage: (stage: string) => Account[]
-  addProposalToLead: (proposal: any) => void
+  addProposalToLead: (proposal: any) => any
+  updateProposal: (id: string, prop: any) => void
+  deleteProposal: (id: string) => void
   addActivity: (act: Omit<Activity, 'id' | 'createdAt'>) => Promise<void>
   completeActivity: (id: string) => Promise<void>
   addContact: (
@@ -287,10 +289,35 @@ export function MainProvider({ children }: { children: ReactNode }) {
   const addProposalToLead = (proposal: any) => {
     const newProposal: Proposal = {
       ...proposal,
-      id: crypto.randomUUID(),
-      createdAt: new Date().toISOString(),
+      id: proposal.id || crypto.randomUUID(),
+      createdAt: proposal.createdAt || new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
     }
     setProposals((prev) => [newProposal, ...prev])
+
+    if (newProposal.status === 'Enviada') {
+      moveLeadToStage(newProposal.accountId, 'Proposta enviada')
+    }
+    return newProposal
+  }
+
+  const updateProposal = (id: string, prop: any) => {
+    setProposals((prev) => {
+      return prev.map((p) => {
+        if (p.id === id) {
+          const updated = { ...p, ...prop, updatedAt: new Date().toISOString() }
+          if (updated.status === 'Enviada' && p.status !== 'Enviada') {
+            moveLeadToStage(updated.accountId, 'Proposta enviada')
+          }
+          return updated
+        }
+        return p
+      })
+    })
+  }
+
+  const deleteProposal = (id: string) => {
+    setProposals((prev) => prev.filter((p) => p.id !== id))
   }
 
   const updateAccount = async (id: string, acc: Partial<Account>) => {
@@ -501,6 +528,8 @@ export function MainProvider({ children }: { children: ReactNode }) {
         getLeadById,
         getLeadsByPipelineStage,
         addProposalToLead,
+        updateProposal,
+        deleteProposal,
         addActivity,
         completeActivity,
         addContact,

@@ -159,15 +159,67 @@ export interface Opportunity {
   createdAt: string
 }
 
+export type ProposalStatus = 'Rascunho' | 'Enviada' | 'Aprovada' | 'Recusada'
+
+export type ProposalItemBillingType =
+  | 'Único'
+  | 'Mensal'
+  | 'Anual'
+  | 'Por Veículo'
+  | 'Por KM'
+export type ProposalItemCategory =
+  | 'Equipamento'
+  | 'Instalação'
+  | 'Mensalidade'
+  | 'Outros'
+
+export interface ProposalItem {
+  id: string
+  name: string
+  description?: string
+  quantity: number
+  unitPrice: number
+  billingType: ProposalItemBillingType
+  category: ProposalItemCategory
+}
+
+export interface ProposalTerms {
+  paymentTerms: string
+  contractDuration: string
+  validity: string
+  installationDeadline: string
+  warranty: string
+  notes?: string
+}
+
+export interface ProposalCover {
+  title: string
+  subtitle: string
+  introduction: string
+  logoUrl?: string
+  coverImageUrl?: string
+}
+
 export interface Proposal {
   id: string
   accountId: string
+  proposalNumber: string
+  status: ProposalStatus
   companyName: string
   contactName: string
   phone: string
   email: string
   vehicleQuantity: number
-  value: number
-  details: string
+  cover: ProposalCover
+  items: ProposalItem[]
+  terms: ProposalTerms
+  totalSetup: number
+  totalMonthly: number
+  totalEquipment: number
   createdAt: string
+  updatedAt: string
+
+  // Backward compatibility fields
+  value?: number
+  details?: string
 }

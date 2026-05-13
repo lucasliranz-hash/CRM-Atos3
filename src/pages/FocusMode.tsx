@@ -15,8 +15,14 @@ import { Card, CardContent } from '@/components/ui/card'
 import { useToast } from '@/hooks/use-toast'
 
 export default function FocusMode() {
-  const { accounts, activities, completeActivity, updateAccount, addActivity } =
-    useMainStore()
+  const {
+    accounts,
+    activities,
+    proposals,
+    completeActivity,
+    updateAccount,
+    addActivity,
+  } = useMainStore()
   const { toast } = useToast()
 
   const focusTasks = useMemo(() => {
@@ -73,9 +79,34 @@ export default function FocusMode() {
         }
       }
 
+      const leadProposals = proposals.filter(
+        (p) => p.accountId === a.id && p.status === 'Rascunho',
+      )
+      if (leadProposals.length > 0) {
+        if (
+          !t.find(
+            (task) => task.accountId === a.id && task.type === 'draft_proposal',
+          )
+        ) {
+          t.push({
+            id: `acc-draft-${a.id}`,
+            text: `Você tem ${leadProposals.length} proposta(s) em rascunho para finalizar.`,
+            date: new Date().toISOString(),
+            name: a.companyName || a.name,
+            accountId: a.id,
+            type: 'draft_proposal',
+            item: a,
+          })
+        }
+      }
+
       const lastUpdate = new Date(a.updatedAt || a.createdAt).getTime()
       const daysStuck = (new Date().getTime() - lastUpdate) / (1000 * 3600 * 24)
-      if (daysStuck > 7 && !['Fechado', 'Perdido'].includes(a.pipelineStage)) {
+      if (
+        daysStuck > 7 &&
+        !['Fechado', 'Perdido'].includes(a.pipelineStage) &&
+        leadProposals.length === 0
+      ) {
         if (!t.find((task) => task.accountId === a.id)) {
           t.push({
             id: `acc-stuck-${a.id}`,
@@ -92,7 +123,7 @@ export default function FocusMode() {
     return t.sort(
       (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime(),
     )
-  }, [activities, accounts])
+  }, [activities, accounts, proposals])
 
   const handleComplete = async (task: any) => {
     if (task.type === 'activity') {

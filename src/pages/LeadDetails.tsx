@@ -14,6 +14,7 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog'
 import { formatCurrency } from '@/lib/crm-utils'
+import { cn } from '@/lib/utils'
 
 export default function LeadDetails() {
   const { id } = useParams()
@@ -283,107 +284,13 @@ export default function LeadDetails() {
               Gere e acompanhe as propostas deste lead.
             </p>
             <Dialog open={isProposalOpen} onOpenChange={setIsProposalOpen}>
-              <DialogTrigger asChild>
-                <Button className="w-full bg-[#FF6A00] hover:bg-[#e65c00] text-white font-bold h-11 shadow-sm">
-                  <Plus className="w-4 h-4 mr-2" /> Criar Proposta
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="sm:max-w-[500px]">
-                <DialogHeader>
-                  <DialogTitle className="text-xl font-black text-slate-900">
-                    Nova Proposta
-                  </DialogTitle>
-                </DialogHeader>
-                <form
-                  onSubmit={handleCreateProposal}
-                  className="space-y-4 mt-4"
-                >
-                  <div className="space-y-1.5">
-                    <label className="text-sm font-bold text-slate-700">
-                      Empresa
-                    </label>
-                    <Input
-                      disabled
-                      value={leadData.name || ''}
-                      className="bg-slate-50"
-                    />
-                  </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-1.5">
-                      <label className="text-sm font-bold text-slate-700">
-                        Contato
-                      </label>
-                      <Input
-                        disabled
-                        value={leadData.contactName || ''}
-                        className="bg-slate-50"
-                      />
-                    </div>
-                    <div className="space-y-1.5">
-                      <label className="text-sm font-bold text-slate-700">
-                        Telefone
-                      </label>
-                      <Input
-                        disabled
-                        value={leadData.phone || ''}
-                        className="bg-slate-50"
-                      />
-                    </div>
-                  </div>
-                  <div className="space-y-1.5">
-                    <label className="text-sm font-bold text-slate-700">
-                      E-mail
-                    </label>
-                    <Input
-                      disabled
-                      value={leadData.email || ''}
-                      className="bg-slate-50"
-                    />
-                  </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-1.5">
-                      <label className="text-sm font-bold text-slate-700">
-                        Qtd Veículos *
-                      </label>
-                      <Input
-                        name="vehicleQuantity"
-                        type="number"
-                        required
-                        defaultValue={leadData.fleetEstimate || ''}
-                      />
-                    </div>
-                    <div className="space-y-1.5">
-                      <label className="text-sm font-bold text-slate-700">
-                        Valor (R$) *
-                      </label>
-                      <Input
-                        name="value"
-                        type="number"
-                        step="0.01"
-                        required
-                        placeholder="0.00"
-                      />
-                    </div>
-                  </div>
-                  <div className="space-y-1.5">
-                    <label className="text-sm font-bold text-slate-700">
-                      Detalhes / Escopo
-                    </label>
-                    <Textarea
-                      name="details"
-                      required
-                      placeholder="Descrição da proposta..."
-                      className="h-24 resize-none"
-                    />
-                  </div>
-                  <Button
-                    type="submit"
-                    className="w-full bg-slate-900 hover:bg-slate-800 text-white font-bold h-11 mt-4"
-                  >
-                    Salvar Proposta
-                  </Button>
-                </form>
-              </DialogContent>
+              <Button
+                onClick={() => navigate(`/proposals/new?leadId=${leadData.id}`)}
+                className="w-full bg-[#FF6A00] hover:bg-[#e65c00] text-white font-bold h-11 shadow-sm"
+              >
+                <Plus className="w-4 h-4 mr-2" /> Criar Proposta
+              </Button>
+              <DialogContent className="hidden"></DialogContent>
             </Dialog>
           </div>
 
@@ -399,27 +306,48 @@ export default function LeadDetails() {
                   Nenhuma proposta criada.
                 </p>
               ) : (
-                leadProposals.map((prop: any) => (
-                  <div
-                    key={prop.id}
-                    className="p-3 border border-slate-100 bg-white rounded-lg shadow-sm"
-                  >
-                    <div className="flex justify-between items-start mb-2">
-                      <span className="text-xs font-bold text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-md border border-emerald-100">
-                        {formatCurrency(prop.value)}
-                      </span>
-                      <span className="text-[10px] text-slate-400 font-bold bg-slate-50 px-1.5 py-0.5 rounded">
-                        {new Date(prop.createdAt).toLocaleDateString('pt-BR')}
-                      </span>
+                leadProposals.map((prop: any) => {
+                  const val =
+                    prop.value ||
+                    prop.totalSetup + prop.totalEquipment + prop.totalMonthly ||
+                    0
+                  return (
+                    <div
+                      key={prop.id}
+                      onClick={() => navigate(`/proposals/${prop.id}`)}
+                      className="p-3 border border-slate-100 bg-white rounded-lg shadow-sm hover:shadow-md cursor-pointer transition-shadow"
+                    >
+                      <div className="flex justify-between items-start mb-2">
+                        <span className="text-xs font-bold text-slate-900 bg-slate-100 px-2.5 py-1 rounded-md border border-slate-200">
+                          {prop.proposalNumber || 'PRO-000'}
+                        </span>
+                        <span
+                          className={cn(
+                            'text-[10px] font-bold px-2 py-0.5 rounded',
+                            prop.status === 'Enviada'
+                              ? 'bg-orange-50 text-orange-600'
+                              : prop.status === 'Aprovada'
+                                ? 'bg-emerald-50 text-emerald-600'
+                                : prop.status === 'Recusada'
+                                  ? 'bg-red-50 text-red-600'
+                                  : 'bg-slate-100 text-slate-600',
+                          )}
+                        >
+                          {prop.status || 'Rascunho'}
+                        </span>
+                      </div>
+                      <div className="text-sm font-black text-[#FF6A00] mb-1.5">
+                        {formatCurrency(val)}
+                      </div>
+                      <div className="text-xs text-slate-500 font-medium flex justify-between">
+                        <span>{prop.vehicleQuantity || 0} veículos</span>
+                        <span>
+                          {new Date(prop.createdAt).toLocaleDateString('pt-BR')}
+                        </span>
+                      </div>
                     </div>
-                    <div className="text-xs text-slate-700 font-bold mb-1.5">
-                      {prop.vehicleQuantity} veículos previstos
-                    </div>
-                    <p className="text-xs text-slate-500 line-clamp-3 font-medium">
-                      {prop.details}
-                    </p>
-                  </div>
-                ))
+                  )
+                })
               )}
             </div>
           </div>
