@@ -46,7 +46,7 @@ export function BackupManager() {
     setIsExporting(true)
     try {
       await exportCompleteBackup('crm_backup')
-      toast({ title: 'Backup exportado com sucesso!' })
+      toast({ title: 'Backup exportado com sucesso' })
     } catch (error: any) {
       toast({
         title: 'Erro ao exportar',

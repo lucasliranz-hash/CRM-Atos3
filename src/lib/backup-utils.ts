@@ -1,41 +1,52 @@
 import { supabase } from '@/lib/supabase/client'
 
 export const exportCompleteBackup = async (prefix = 'crm_backup') => {
-  const tables = [
-    'accounts',
-    'contacts',
-    'opportunities',
-    'activities',
-    'proposals',
-    'audit_logs',
-    'monthly_goals',
-    'company_settings',
-    'profiles',
-    'user_integrations',
-  ]
+  const { data: accounts } = await supabase.from('accounts').select('*')
+  const { data: contacts } = await supabase.from('contacts').select('*')
+  const { data: opportunities } = await supabase
+    .from('opportunities')
+    .select('*')
+  const { data: activities } = await supabase.from('activities').select('*')
+  const { data: proposals } = await supabase.from('proposals').select('*')
+  const { data: lead_actions } = await supabase.from('audit_logs').select('*')
+  const { data: monthly_goals } = await supabase
+    .from('monthly_goals')
+    .select('*')
+  const { data: profiles } = await supabase.from('profiles').select('*')
+  const { data: company_settings } = await supabase
+    .from('company_settings')
+    .select('*')
+  const { data: user_integrations } = await supabase
+    .from('user_integrations')
+    .select('*')
 
-  const backupData: Record<string, any[]> = {}
-
-  for (const table of tables) {
-    const { data } = await supabase.from(table).select('*')
-    if (data) backupData[table] = data
+  const backupData = {
+    exportedAt: new Date().toISOString(),
+    version: '1.0',
+    accounts: accounts || [],
+    contacts: contacts || [],
+    opportunities: opportunities || [],
+    activities: activities || [],
+    proposals: proposals || [],
+    lead_actions: lead_actions || [],
+    audit_logs: lead_actions || [],
+    monthly_goals: monthly_goals || [],
+    profiles: profiles || [],
+    company_settings: company_settings || [],
+    user_integrations: user_integrations || [],
   }
 
-  const blob = new Blob([JSON.stringify(backupData, null, 2)], {
+  const jsonString = JSON.stringify(backupData, null, 2)
+
+  const blob = new Blob([jsonString], {
     type: 'application/json',
   })
+
   const url = URL.createObjectURL(blob)
+
   const a = document.createElement('a')
   a.href = url
-
-  const now = new Date()
-  const dateStr = now.toISOString().split('T')[0]
-  const timeStr =
-    now.getHours().toString().padStart(2, '0') +
-    '-' +
-    now.getMinutes().toString().padStart(2, '0')
-
-  a.download = `${prefix}_${dateStr}_${timeStr}.json`
+  a.download = `${prefix}_${Date.now()}.json`
   document.body.appendChild(a)
   a.click()
   document.body.removeChild(a)
