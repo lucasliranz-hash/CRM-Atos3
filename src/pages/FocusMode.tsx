@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import useMainStore from '@/stores/main'
 import { isToday, isOverdue } from '@/lib/crm-utils'
 import { Button } from '@/components/ui/button'
@@ -13,17 +13,22 @@ import {
 } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
 import { useToast } from '@/hooks/use-toast'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/components/ui/tooltip'
+import { FocusModals } from '@/components/FocusModals'
 
 export default function FocusMode() {
-  const {
-    accounts,
-    activities,
-    proposals,
-    completeActivity,
-    updateAccount,
-    addActivity,
-  } = useMainStore()
+  const { accounts, activities, proposals, completeActivity, addActivity } =
+    useMainStore()
   const { toast } = useToast()
+  const [modalState, setModalState] = useState<{
+    type: 'call' | 'email' | 'resolve'
+    task: any
+    account: any
+  } | null>(null)
 
   const focusTasks = useMemo(() => {
     const t: any[] = []
@@ -31,15 +36,18 @@ export default function FocusMode() {
     activities.forEach((act) => {
       if (!act.completed && (isToday(act.date) || isOverdue(act.date))) {
         const acc = accounts.find((a) => a.id === act.accountId)
-        t.push({
-          id: `act-${act.id}`,
-          text: `${act.type} - ${act.title || act.result || ''}`,
-          date: act.date,
-          name: acc?.name || 'Lead',
-          accountId: act.accountId,
-          type: 'activity',
-          item: act,
-        })
+        if (acc) {
+          t.push({
+            id: `act-${act.id}`,
+            text: `${act.type} - ${act.title || act.result || ''}`,
+            date: act.date,
+            name: acc.companyName || acc.name,
+            accountId: act.accountId,
+            type: 'activity',
+            item: act,
+            account: acc,
+          })
+        }
       }
     })
 
@@ -57,6 +65,7 @@ export default function FocusMode() {
             accountId: a.id,
             type: 'account_no_action',
             item: a,
+            account: a,
           })
         }
       } else if (a.nextAction && a.nextActionDate) {
@@ -74,6 +83,7 @@ export default function FocusMode() {
               accountId: a.id,
               type: 'account',
               item: a,
+              account: a,
             })
           }
         }
@@ -96,6 +106,7 @@ export default function FocusMode() {
             accountId: a.id,
             type: 'draft_proposal',
             item: a,
+            account: a,
           })
         }
       }
@@ -116,6 +127,7 @@ export default function FocusMode() {
             accountId: a.id,
             type: 'account_stuck',
             item: a,
+            account: a,
           })
         }
       }
@@ -125,30 +137,48 @@ export default function FocusMode() {
     )
   }, [activities, accounts, proposals])
 
-  const handleComplete = async (task: any) => {
-    if (task.type === 'activity') {
-      await completeActivity(task.item.id)
-    } else {
-      await addActivity({
-        accountId: task.accountId,
-        type: 'Follow-up',
-        channel: 'WhatsApp',
-        date: new Date().toISOString(),
-        result: `Ação concluída via Focus Mode: ${task.text}`,
-        completed: true,
-      } as any)
+  const handleWhatsApp = async (task: any, account: any) => {
+    if (!account.phone)
+      return toast({ title: 'Telefone não cadastrado', variant: 'destructive' })
+    const msg = encodeURIComponent(
+      'Olá, tudo bem? Aqui é o Lucas da ATOS3. Estou entrando em contato para dar continuidade ao nosso atendimento.',
+    )
+    window.open(
+      `https://wa.me/55${account.phone.replace(/\D/g, '')}?text=${msg}`,
+      '_blank',
+    )
+    await addActivity({
+      accountId: account.id,
+      type: 'Mensagem',
+      channel: 'WhatsApp',
+      result: 'Enviou mensagem via WhatsApp Web',
+      date: new Date().toISOString(),
+      completed: true,
+    } as any)
+    if (task.type === 'activity') await completeActivity(task.item.id)
+    toast({ title: 'Ação registrada no histórico!' })
+  }
 
-      await updateAccount(task.accountId, {
-        nextAction: null as any,
-        nextActionDate: null as any,
-        updatedAt: new Date().toISOString(),
-      })
-    }
-    toast({ title: 'Ação resolvida com sucesso!' })
+  const handleCall = (task: any, account: any) => {
+    if (!account.phone)
+      return toast({ title: 'Telefone não cadastrado', variant: 'destructive' })
+    window.open(`tel:${account.phone.replace(/\D/g, '')}`, '_self')
+    setModalState({ type: 'call', task, account })
+  }
+
+  const handleEmail = (task: any, account: any) => {
+    if (!account.email)
+      return toast({ title: 'E-mail não cadastrado', variant: 'destructive' })
+    setModalState({ type: 'email', task, account })
   }
 
   return (
     <div className="space-y-6 max-w-5xl mx-auto pb-10 animate-in fade-in duration-500">
+      <FocusModals
+        modalState={modalState}
+        onClose={() => setModalState(null)}
+      />
+
       <div className="flex flex-col items-center text-center mb-8">
         <div className="w-16 h-16 bg-orange-100 text-orange-500 rounded-full flex items-center justify-center mb-4">
           <Target className="w-8 h-8" />
@@ -211,30 +241,77 @@ export default function FocusMode() {
                     </div>
 
                     <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
-                      <Button
-                        variant="outline"
-                        size="icon"
-                        className="w-10 h-10 rounded-full text-green-600 hover:text-green-700 hover:bg-green-50 border-green-200"
-                      >
-                        <MessageSquare className="w-4 h-4" />
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="icon"
-                        className="w-10 h-10 rounded-full text-blue-600 hover:text-blue-700 hover:bg-blue-50 border-blue-200"
-                      >
-                        <Phone className="w-4 h-4" />
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="icon"
-                        className="w-10 h-10 rounded-full text-purple-600 hover:text-purple-700 hover:bg-purple-50 border-purple-200"
-                      >
-                        <Mail className="w-4 h-4" />
-                      </Button>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <div className="inline-block">
+                            <Button
+                              variant="outline"
+                              size="icon"
+                              disabled={!task.account.phone}
+                              onClick={() => handleWhatsApp(task, task.account)}
+                              className="w-10 h-10 rounded-full text-green-600 hover:text-green-700 hover:bg-green-50 border-green-200 disabled:opacity-50"
+                            >
+                              <MessageSquare className="w-4 h-4" />
+                            </Button>
+                          </div>
+                        </TooltipTrigger>
+                        {!task.account.phone && (
+                          <TooltipContent>
+                            Telefone não cadastrado
+                          </TooltipContent>
+                        )}
+                      </Tooltip>
+
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <div className="inline-block">
+                            <Button
+                              variant="outline"
+                              size="icon"
+                              disabled={!task.account.phone}
+                              onClick={() => handleCall(task, task.account)}
+                              className="w-10 h-10 rounded-full text-blue-600 hover:text-blue-700 hover:bg-blue-50 border-blue-200 disabled:opacity-50"
+                            >
+                              <Phone className="w-4 h-4" />
+                            </Button>
+                          </div>
+                        </TooltipTrigger>
+                        {!task.account.phone && (
+                          <TooltipContent>
+                            Telefone não cadastrado
+                          </TooltipContent>
+                        )}
+                      </Tooltip>
+
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <div className="inline-block">
+                            <Button
+                              variant="outline"
+                              size="icon"
+                              disabled={!task.account.email}
+                              onClick={() => handleEmail(task, task.account)}
+                              className="w-10 h-10 rounded-full text-purple-600 hover:text-purple-700 hover:bg-purple-50 border-purple-200 disabled:opacity-50"
+                            >
+                              <Mail className="w-4 h-4" />
+                            </Button>
+                          </div>
+                        </TooltipTrigger>
+                        {!task.account.email && (
+                          <TooltipContent>E-mail não cadastrado</TooltipContent>
+                        )}
+                      </Tooltip>
+
                       <div className="w-px h-8 bg-slate-200 mx-2 hidden sm:block" />
+
                       <Button
-                        onClick={() => handleComplete(task)}
+                        onClick={() =>
+                          setModalState({
+                            type: 'resolve',
+                            task,
+                            account: task.account,
+                          })
+                        }
                         className="flex-1 sm:flex-none bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-full px-6"
                       >
                         <CheckCircle2 className="w-4 h-4 mr-2" /> Resolver
