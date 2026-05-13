@@ -36,7 +36,7 @@ export function NewLeadDialog({ children }: { children?: React.ReactNode }) {
         city: data.city,
         state: data.state,
         segment: data.segment,
-        vehicleCount: parseInt(data.vehicleCount || '0', 10),
+        vehicleCount: data.vehicleCount ? parseInt(data.vehicleCount, 10) : 0,
         source: data.source,
         notes: data.notes,
         pipelineStage: data.pipelineStage || 'Prospecção',
@@ -46,8 +46,12 @@ export function NewLeadDialog({ children }: { children?: React.ReactNode }) {
       toast({ title: 'Lead criado com sucesso!' })
       setIsOpen(false)
       navigate('/pipeline')
-    } catch (err) {
-      toast({ title: 'Erro ao criar lead', variant: 'destructive' })
+    } catch (err: any) {
+      toast({
+        title: 'Erro ao criar lead',
+        description: err.message || 'Erro desconhecido',
+        variant: 'destructive',
+      })
     } finally {
       setIsSubmitting(false)
     }

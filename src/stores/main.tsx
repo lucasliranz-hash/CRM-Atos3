@@ -128,27 +128,45 @@ export function MainProvider({ children }: { children: ReactNode }) {
   }, [accounts, contacts, activities, proposals, opportunities, loadBackups])
 
   const fetchSupabaseData = useCallback(async () => {
-    if (!profile?.loja_id) return
+    if (!user) return
+
+    let accQuery = supabase.from('accounts').select('*')
+    let contQuery = supabase.from('contacts').select('*')
+    let actQuery = supabase.from('activities').select('*')
+    let oppQuery = supabase.from('opportunities').select('*')
+    let propQuery = supabase.from('proposals' as any).select('*')
+    let settingsQuery = supabase
+      .from('company_settings' as any)
+      .select('*')
+      .single()
+
+    if (profile?.loja_id) {
+      accQuery = accQuery.eq('loja_id', profile.loja_id)
+      contQuery = contQuery.eq('loja_id', profile.loja_id)
+      actQuery = actQuery.eq('loja_id', profile.loja_id)
+      oppQuery = oppQuery.eq('loja_id', profile.loja_id)
+      propQuery = propQuery.eq('loja_id', profile.loja_id)
+      settingsQuery = supabase
+        .from('company_settings' as any)
+        .select('*')
+        .eq('loja_id', profile.loja_id)
+        .single()
+    }
 
     const [accRes, contRes, actRes, oppRes, propRes, logoRes] =
       await Promise.all([
-        supabase.from('accounts').select('*').eq('loja_id', profile.loja_id),
-        supabase.from('contacts').select('*').eq('loja_id', profile.loja_id),
-        supabase.from('activities').select('*').eq('loja_id', profile.loja_id),
-        supabase
-          .from('opportunities')
-          .select('*')
-          .eq('loja_id', profile.loja_id),
-        supabase
-          .from('proposals' as any)
-          .select('*')
-          .eq('loja_id', profile.loja_id),
-        supabase
-          .from('company_settings' as any)
-          .select('*')
-          .eq('loja_id', profile.loja_id)
-          .single(),
+        accQuery,
+        contQuery,
+        actQuery,
+        oppQuery,
+        propQuery,
+        profile?.loja_id
+          ? settingsQuery
+          : Promise.resolve({ data: null, error: null }),
       ])
+
+    if (accRes.error) console.error('Erro ao buscar accounts:', accRes.error)
+    if (contRes.error) console.error('Erro ao buscar contacts:', contRes.error)
 
     if (accRes.data) setAccounts(accRes.data as Account[])
     if (contRes.data) setContacts(contRes.data as Contact[])
@@ -156,7 +174,7 @@ export function MainProvider({ children }: { children: ReactNode }) {
     if (oppRes.data) setOpportunities(oppRes.data as Opportunity[])
     if (propRes.data) setProposals(propRes.data as Proposal[])
     if (logoRes.data?.logo_url) setLogoUrl(logoRes.data.logo_url)
-  }, [profile?.loja_id])
+  }, [user, profile?.loja_id])
 
   const importBackup = useCallback(
     async (jsonStr: string) => {
@@ -272,10 +290,10 @@ export function MainProvider({ children }: { children: ReactNode }) {
   }, [profile?.loja_id])
 
   useEffect(() => {
-    if (profile?.loja_id) {
+    if (user) {
       migrateLocalToSupabase().then(() => fetchSupabaseData())
     }
-  }, [profile?.loja_id, fetchSupabaseData, migrateLocalToSupabase])
+  }, [user, profile?.loja_id, fetchSupabaseData, migrateLocalToSupabase])
 
   const syncLeadToContact = async (lead: Account) => {
     if (!lead.contactName && !lead.name) return
@@ -293,113 +311,100 @@ export function MainProvider({ children }: { children: ReactNode }) {
         state: lead.state || existing.state,
         updatedAt: new Date().toISOString(),
       }
-      setContacts((prev) =>
-        prev.map((c) => (c.id === existing.id ? { ...c, ...payload } : c)),
-      )
-      if (profile?.loja_id)
-        await supabase
-          .from('contacts' as any)
-          .update(payload)
-          .eq('id', existing.id)
+
+      const { error } = await supabase
+        .from('contacts')
+        .update(payload)
+        .eq('id', existing.id)
+      if (error) console.error('Error updating contact:', error)
     } else {
-      const newContact: Contact = {
+      const newContact = {
         id: crypto.randomUUID(),
         accountId: lead.id,
         name: lead.contactName || lead.name || '',
         companyName: lead.companyName || lead.name || '',
-        email: lead.email,
-        whatsapp: lead.phone,
-        city: lead.city,
-        state: lead.state,
+        email: lead.email || null,
+        whatsapp: lead.phone || null,
+        city: lead.city || null,
+        state: lead.state || null,
         role: 'Contato Principal',
         processRole: 'Decisor',
         isDecisionMaker: true,
         isInfluencer: false,
         isChampion: false,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
+        ...(profile?.loja_id ? { loja_id: profile.loja_id } : {}),
       }
-      setContacts((prev) => [newContact, ...prev])
-      if (profile?.loja_id)
-        await supabase
-          .from('contacts' as any)
-          .insert({ ...newContact, loja_id: profile.loja_id })
+
+      const { error } = await supabase.from('contacts').insert(newContact)
+      if (error) console.error('Error inserting contact:', error)
     }
   }
 
   const deleteLeadCascade = async (id: string) => {
-    setAccounts((prev) => prev.filter((a) => a.id !== id))
-    setContacts((prev) => prev.filter((c) => c.accountId !== id))
-    setActivities((prev) => prev.filter((a) => a.accountId !== id))
-    setOpportunities((prev) => prev.filter((o) => o.accountId !== id))
-    setProposals((prev) => prev.filter((p) => p.accountId !== id))
-
-    if (profile?.loja_id) {
-      Promise.allSettled([
-        supabase.from('accounts').delete().eq('id', id),
-        supabase.from('contacts').delete().eq('accountId', id),
-        supabase.from('activities').delete().eq('accountId', id),
-        supabase.from('opportunities').delete().eq('accountId', id),
-        supabase
-          .from('proposals' as any)
-          .delete()
-          .eq('accountId', id),
-      ])
+    const { error } = await supabase.from('accounts').delete().eq('id', id)
+    if (error) {
+      console.error('Error deleting lead:', error)
+      throw new Error(`Erro ao excluir lead: ${error.message}`)
     }
+    await fetchSupabaseData()
   }
 
   const addLead = async (leadData: any) => {
-    const newLead: Account = {
-      ...leadData,
+    const newLead = {
       id: crypto.randomUUID(),
+      name: leadData.companyName || leadData.name || 'Novo Lead',
       companyName: leadData.companyName || leadData.name || '',
-      name: leadData.companyName || leadData.name || '',
-      vehicleCount:
-        leadData.vehicleCount !== undefined
-          ? leadData.vehicleCount
-          : leadData.fleetEstimate || 0,
-      fleetEstimate:
-        leadData.vehicleCount !== undefined
-          ? leadData.vehicleCount
-          : leadData.fleetEstimate || 0,
-      source: leadData.source || leadData.leadSource || '',
-      leadSource: leadData.source || leadData.leadSource || '',
+      contactName: leadData.contactName || null,
+      phone: leadData.phone || null,
+      email: leadData.email || null,
+      city: leadData.city || null,
+      state: leadData.state || null,
+      segment: leadData.segment || null,
+      vehicleCount: leadData.vehicleCount
+        ? parseInt(leadData.vehicleCount, 10)
+        : 0,
+      fleetEstimate: leadData.vehicleCount
+        ? parseInt(leadData.vehicleCount, 10)
+        : 0,
+      source: leadData.source || leadData.leadSource || null,
+      leadSource: leadData.source || leadData.leadSource || null,
+      notes: leadData.notes || null,
       pipelineStage: leadData.pipelineStage || 'Prospecção',
       status: leadData.status || 'Novo Lead',
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
+      priority: leadData.priority || 'Média',
+      ...(profile?.loja_id ? { loja_id: profile.loja_id } : {}),
     }
 
-    setAccounts((prev) => {
-      if (prev.some((a) => a.id === newLead.id)) return prev
-      return [newLead, ...prev]
-    })
+    const { data, error } = await supabase
+      .from('accounts')
+      .insert(newLead)
+      .select()
 
-    if (profile?.loja_id) {
-      await supabase
-        .from('accounts' as any)
-        .insert({ ...newLead, loja_id: profile.loja_id })
+    if (error) {
+      console.error('Supabase Insert Error:', error)
+      throw new Error(
+        `Erro do Supabase: ${error.message} (Code: ${error.code})`,
+      )
     }
 
-    await syncLeadToContact(newLead)
+    if (data && data[0]) {
+      await syncLeadToContact(data[0] as unknown as Account)
+    }
+
+    await fetchSupabaseData()
   }
 
   const updateLead = async (id: string, leadData: any) => {
-    setAccounts((prev) =>
-      prev.map((a) => {
-        if (a.id === id) {
-          return { ...a, ...leadData, updatedAt: new Date().toISOString() }
-        }
-        return a
-      }),
-    )
-
-    if (profile?.loja_id) {
-      await supabase
-        .from('accounts' as any)
-        .update(leadData)
-        .eq('id', id)
+    const { error } = await supabase
+      .from('accounts')
+      .update(leadData)
+      .eq('id', id)
+    if (error) {
+      console.error('Error updating lead:', error)
+      throw new Error(`Erro ao atualizar lead: ${error.message}`)
     }
+
+    await fetchSupabaseData()
 
     const acc = accounts.find((a) => a.id === id)
     if (acc) {
@@ -409,7 +414,11 @@ export function MainProvider({ children }: { children: ReactNode }) {
   }
 
   const moveLeadToStage = async (id: string, stage: string) => {
-    await updateLead(id, { pipelineStage: stage })
+    try {
+      await updateLead(id, { pipelineStage: stage })
+    } catch (e) {
+      console.error(e)
+    }
   }
 
   const getLeadById = (id: string) => accounts.find((a) => a.id === id)
@@ -417,56 +426,56 @@ export function MainProvider({ children }: { children: ReactNode }) {
     accounts.filter((a) => a.pipelineStage === stage)
 
   const addProposalToLead = async (proposal: any) => {
-    const newProposal: Proposal = {
+    const newProposal = {
       ...proposal,
       id: proposal.id || crypto.randomUUID(),
-      createdAt: proposal.createdAt || new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
+      ...(profile?.loja_id ? { loja_id: profile.loja_id } : {}),
     }
-    setProposals((prev) => [newProposal, ...prev])
+
+    const { error } = await supabase
+      .from('proposals' as any)
+      .insert(newProposal)
+    if (error) {
+      console.error('Error inserting proposal:', error)
+      throw new Error(`Erro ao salvar proposta: ${error.message}`)
+    }
 
     if (newProposal.status === 'Enviada') {
       await moveLeadToStage(newProposal.accountId, 'Proposta enviada')
     }
 
-    if (profile?.loja_id) {
-      await supabase
-        .from('proposals' as any)
-        .insert({ ...newProposal, loja_id: profile.loja_id })
-    }
+    await fetchSupabaseData()
     return newProposal
   }
 
   const updateProposal = async (id: string, prop: any) => {
-    setProposals((prev) =>
-      prev.map((p) =>
-        p.id === id
-          ? { ...p, ...prop, updatedAt: new Date().toISOString() }
-          : p,
-      ),
-    )
+    const { error } = await supabase
+      .from('proposals' as any)
+      .update(prop)
+      .eq('id', id)
+    if (error) {
+      console.error('Error updating proposal:', error)
+      throw new Error(`Erro ao atualizar proposta: ${error.message}`)
+    }
 
     if (prop.status === 'Enviada') {
       const p = proposals.find((x) => x.id === id)
       if (p) await moveLeadToStage(p.accountId, 'Proposta enviada')
     }
 
-    if (profile?.loja_id) {
-      await supabase
-        .from('proposals' as any)
-        .update(prop)
-        .eq('id', id)
-    }
+    await fetchSupabaseData()
   }
 
   const deleteProposal = async (id: string) => {
-    setProposals((prev) => prev.filter((p) => p.id !== id))
-    if (profile?.loja_id) {
-      await supabase
-        .from('proposals' as any)
-        .delete()
-        .eq('id', id)
+    const { error } = await supabase
+      .from('proposals' as any)
+      .delete()
+      .eq('id', id)
+    if (error) {
+      console.error('Error deleting proposal:', error)
+      throw new Error(`Erro ao excluir proposta: ${error.message}`)
     }
+    await fetchSupabaseData()
   }
 
   const updateAccount = async (id: string, acc: Partial<Account>) => {
@@ -479,43 +488,44 @@ export function MainProvider({ children }: { children: ReactNode }) {
     const toInsert = {
       ...acc,
       id: crypto.randomUUID(),
+      name: acc.companyName || acc.name || 'Nova Conta',
       companyName: acc.companyName || acc.name || '',
       pipelineStage: acc.pipelineStage || acc.status || 'Prospecção',
       status:
         acc.status === 'Novo Lead' ? 'Novo Lead' : acc.status || 'Novo Lead',
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
+      priority: acc.priority || 'Média',
+      ...(profile?.loja_id ? { loja_id: profile.loja_id } : {}),
     }
 
-    setAccounts((prev) => [toInsert as Account, ...prev])
+    const { data, error } = await supabase
+      .from('accounts')
+      .insert(toInsert)
+      .select()
 
-    if (profile?.loja_id) {
-      await supabase
-        .from('accounts' as any)
-        .insert({ ...toInsert, loja_id: profile.loja_id })
+    if (error) {
+      console.error('Error inserting account:', error)
+      throw new Error(`Erro ao salvar conta: ${error.message}`)
     }
 
-    await syncLeadToContact(toInsert as Account)
-    return toInsert as Account
+    if (data && data[0]) {
+      await syncLeadToContact(data[0] as unknown as Account)
+    }
+
+    await fetchSupabaseData()
+    return (data && data[0] ? data[0] : toInsert) as Account
   }
 
   const addActivity = async (act: Omit<Activity, 'id' | 'createdAt'>) => {
-    let newAct: Activity = {
+    const newAct = {
       ...act,
       id: crypto.randomUUID(),
-      createdAt: new Date().toISOString(),
+      ...(profile?.loja_id ? { loja_id: profile.loja_id } : {}),
     }
 
-    setActivities((prev) =>
-      [newAct, ...prev].sort(
-        (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime(),
-      ),
-    )
-
-    if (profile?.loja_id) {
-      await supabase
-        .from('activities' as any)
-        .insert({ ...newAct, loja_id: profile.loja_id })
+    const { error } = await supabase.from('activities' as any).insert(newAct)
+    if (error) {
+      console.error('Error inserting activity:', error)
+      throw new Error(`Erro ao salvar atividade: ${error.message}`)
     }
 
     await updateAccount(act.accountId, {
@@ -525,93 +535,89 @@ export function MainProvider({ children }: { children: ReactNode }) {
         nextActionDate: act.nextActionDate,
       }),
     })
+
+    await fetchSupabaseData()
   }
 
   const completeActivity = async (id: string) => {
-    setActivities((prev) =>
-      prev.map((a) => (a.id === id ? { ...a, completed: true } : a)),
-    )
-    if (profile?.loja_id) {
-      await supabase.from('activities').update({ completed: true }).eq('id', id)
+    const { error } = await supabase
+      .from('activities')
+      .update({ completed: true })
+      .eq('id', id)
+    if (error) {
+      console.error('Error completing activity:', error)
+      throw new Error(`Erro ao completar atividade: ${error.message}`)
     }
+    await fetchSupabaseData()
   }
 
   const addContact = async (
     contact: Omit<Contact, 'id' | 'createdAt' | 'updatedAt'>,
   ) => {
-    let newContact: Contact = {
+    const newContact = {
       ...contact,
       id: crypto.randomUUID(),
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
+      ...(profile?.loja_id ? { loja_id: profile.loja_id } : {}),
     }
-    setContacts((prev) => [newContact, ...prev])
-    if (profile?.loja_id) {
-      await supabase
-        .from('contacts' as any)
-        .insert({ ...newContact, loja_id: profile.loja_id })
+    const { error } = await supabase.from('contacts' as any).insert(newContact)
+    if (error) {
+      console.error('Error inserting contact:', error)
+      throw new Error(`Erro ao salvar contato: ${error.message}`)
     }
+    await fetchSupabaseData()
   }
 
   const updateContact = async (id: string, payload: Partial<Contact>) => {
-    setContacts((prev) => {
-      const existing = prev.find((c) => c.id === id)
-      const isMain = existing?.isDecisionMaker || payload.isDecisionMaker
-      if (isMain && existing?.accountId) {
-        updateAccount(existing.accountId, {
-          contactName:
-            payload.name !== undefined ? payload.name : existing.name,
-          email: payload.email !== undefined ? payload.email : existing.email,
-          phone:
-            payload.whatsapp !== undefined
-              ? payload.whatsapp
-              : existing.whatsapp,
-          city: payload.city !== undefined ? payload.city : existing.city,
-          state: payload.state !== undefined ? payload.state : existing.state,
-        })
-      }
-      return prev.map((c) =>
-        c.id === id
-          ? { ...c, ...payload, updatedAt: new Date().toISOString() }
-          : c,
-      )
-    })
+    const { error } = await supabase
+      .from('contacts' as any)
+      .update(payload)
+      .eq('id', id)
+    if (error) {
+      console.error('Error updating contact:', error)
+      throw new Error(`Erro ao atualizar contato: ${error.message}`)
+    }
 
-    if (profile?.loja_id) {
-      await supabase
-        .from('contacts' as any)
-        .update(payload)
-        .eq('id', id)
+    const existing = contacts.find((c) => c.id === id)
+    const isMain = existing?.isDecisionMaker || payload.isDecisionMaker
+    if (isMain && existing?.accountId) {
+      await updateAccount(existing.accountId, {
+        contactName: payload.name !== undefined ? payload.name : existing.name,
+        email: payload.email !== undefined ? payload.email : existing.email,
+        phone:
+          payload.whatsapp !== undefined ? payload.whatsapp : existing.whatsapp,
+        city: payload.city !== undefined ? payload.city : existing.city,
+        state: payload.state !== undefined ? payload.state : existing.state,
+      })
+    } else {
+      await fetchSupabaseData()
     }
   }
 
   const addOpportunity = async (opp: Omit<Opportunity, 'id' | 'createdAt'>) => {
-    let newOpp: Opportunity = {
+    const newOpp = {
       ...opp,
       id: crypto.randomUUID(),
-      createdAt: new Date().toISOString(),
+      ...(profile?.loja_id ? { loja_id: profile.loja_id } : {}),
     }
-    setOpportunities((prev) => [newOpp, ...prev])
-    if (profile?.loja_id) {
-      await supabase
-        .from('opportunities' as any)
-        .insert({ ...newOpp, loja_id: profile.loja_id })
+    const { error } = await supabase.from('opportunities' as any).insert(newOpp)
+    if (error) {
+      console.error('Error inserting opportunity:', error)
+      throw new Error(`Erro ao salvar oportunidade: ${error.message}`)
     }
+    await fetchSupabaseData()
   }
 
   const updateOpportunity = async (id: string, opp: Partial<Opportunity>) => {
     if (opp.stage === 'Fechado Ganho') opp.probability = 100
     else if (opp.stage === 'Fechado Perdido') opp.probability = 0
 
-    setOpportunities((prev) =>
-      prev.map((o) => (o.id === id ? { ...o, ...opp } : o)),
-    )
-
-    if (profile?.loja_id) {
-      await supabase
-        .from('opportunities' as any)
-        .update(opp)
-        .eq('id', id)
+    const { error } = await supabase
+      .from('opportunities' as any)
+      .update(opp)
+      .eq('id', id)
+    if (error) {
+      console.error('Error updating opportunity:', error)
+      throw new Error(`Erro ao atualizar oportunidade: ${error.message}`)
     }
 
     const existingOpp = oppsRef.current.find((o) => o.id === id)
@@ -630,7 +636,11 @@ export function MainProvider({ children }: { children: ReactNode }) {
       }
       if (Object.keys(accountUpdates).length > 0) {
         await updateAccount(existingOpp.accountId, accountUpdates)
+      } else {
+        await fetchSupabaseData()
       }
+    } else {
+      await fetchSupabaseData()
     }
   }
 
