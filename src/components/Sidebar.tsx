@@ -14,6 +14,7 @@ import {
 import { cn } from '@/lib/utils'
 import { Progress } from '@/components/ui/progress'
 import useMainStore from '@/stores/main'
+import { SidebarGoals } from './SidebarGoals'
 
 const navItems = [
   { icon: LayoutDashboard, label: 'Dashboard', path: '/' },
@@ -68,63 +69,7 @@ export function Sidebar() {
         })}
       </div>
 
-      <div className="px-6 py-6 border-t border-white/10 space-y-4">
-        <h4 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-4 flex justify-between">
-          Metas do Mês <span className="text-slate-400">Abril/2025</span>
-        </h4>
-
-        <div className="space-y-2">
-          <div className="flex justify-between text-xs font-medium">
-            <span className="flex items-center gap-2 text-slate-300">
-              <Users className="w-3.5 h-3.5 text-blue-400" /> Leads Novos
-            </span>
-            <span className="text-white font-bold">62 / 100</span>
-          </div>
-          <Progress
-            value={62}
-            className="h-1.5 bg-white/10 [&>div]:bg-blue-500"
-          />
-        </div>
-
-        <div className="space-y-2">
-          <div className="flex justify-between text-xs font-medium">
-            <span className="flex items-center gap-2 text-slate-300">
-              <Calendar className="w-3.5 h-3.5 text-green-400" /> Reuniões
-            </span>
-            <span className="text-white font-bold">8 / 15</span>
-          </div>
-          <Progress
-            value={53}
-            className="h-1.5 bg-white/10 [&>div]:bg-green-500"
-          />
-        </div>
-
-        <div className="space-y-2">
-          <div className="flex justify-between text-xs font-medium">
-            <span className="flex items-center gap-2 text-slate-300">
-              <Target className="w-3.5 h-3.5 text-yellow-400" /> Propostas
-            </span>
-            <span className="text-white font-bold">3 / 8</span>
-          </div>
-          <Progress
-            value={37}
-            className="h-1.5 bg-white/10 [&>div]:bg-yellow-500"
-          />
-        </div>
-
-        <div className="space-y-2">
-          <div className="flex justify-between text-xs font-medium">
-            <span className="flex items-center gap-2 text-slate-300">
-              <BarChart className="w-3.5 h-3.5 text-purple-400" /> Vendas
-            </span>
-            <span className="text-white font-bold">1 / 4</span>
-          </div>
-          <Progress
-            value={25}
-            className="h-1.5 bg-white/10 [&>div]:bg-purple-500"
-          />
-        </div>
-      </div>
+      <SidebarGoals />
 
       <div className="p-4 border-t border-white/10 flex items-center gap-3">
         <img
