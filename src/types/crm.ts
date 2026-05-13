@@ -47,6 +47,7 @@ export interface Account {
   loja_id?: string
   createdAt: string
   updatedAt: string
+  user_id?: string
 }
 
 export type ContactRole =
@@ -76,6 +77,7 @@ export interface Contact {
   loja_id?: string
   createdAt: string
   updatedAt: string
+  user_id?: string
 }
 
 export type ActivityChannel =
@@ -129,6 +131,7 @@ export interface Activity {
   loja_id?: string
   createdAt: string
   updatedAt?: string
+  user_id?: string
 }
 
 export type OpportunityStage =
@@ -157,6 +160,7 @@ export interface Opportunity {
   nextActionDate?: string
   loja_id?: string
   createdAt: string
+  user_id?: string
 }
 
 export type ProposalStatus = 'Rascunho' | 'Enviada' | 'Aprovada' | 'Recusada'
@@ -231,6 +235,7 @@ export interface Proposal {
   travelFee?: ProposalTravelFee
   createdAt: string
   updatedAt: string
+  user_id?: string
 
   // Backward compatibility fields
   value?: number
