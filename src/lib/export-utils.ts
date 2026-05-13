@@ -1,99 +1,48 @@
-import { jsPDF } from 'jspdf'
-import html2canvas from 'html2canvas'
-import * as XLSX from 'xlsx'
+export const exportExcelReport = (tables: any) => {
+  let html =
+    '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40"><head><meta charset="utf-8"></head><body>'
 
-export async function generatePDFReport(
-  elementId: string,
-  userName: string,
-  companyLogo?: string | null,
-) {
-  try {
-    const element = document.getElementById(elementId)
-    if (!element) return
-
-    element.classList.add('pdf-print-mode')
-    const canvas = await html2canvas(element, {
-      scale: 2,
-      useCORS: true,
-      logging: false,
+  if (tables.leads?.length) {
+    html +=
+      '<h2>Leads</h2><table border="1"><tr><th>Empresa</th><th>Contato</th><th>Telefone</th><th>Cidade</th><th>Segmento</th><th>Etapa</th><th>Status</th></tr>'
+    tables.leads.forEach((l: any) => {
+      html += `<tr><td>${l.companyName || l.name || ''}</td><td>${l.contactName || '-'}</td><td>${l.phone || '-'}</td><td>${l.city || '-'}</td><td>${l.segment || '-'}</td><td>${l.pipelineStage || '-'}</td><td>${l.status || '-'}</td></tr>`
     })
-    const imgData = canvas.toDataURL('image/png')
-    element.classList.remove('pdf-print-mode')
-
-    const pdf = new jsPDF('p', 'mm', 'a4')
-    const pdfWidth = pdf.internal.pageSize.getWidth()
-    const pdfHeight = (canvas.height * pdfWidth) / canvas.width
-
-    pdf.setFontSize(10)
-    pdf.setTextColor(100)
-    pdf.text(`Relatório Executivo CRM ATOS3`, 10, 10)
-    pdf.text(
-      `Gerado por: ${userName} | Data: ${new Date().toLocaleString()}`,
-      10,
-      16,
-    )
-
-    if (companyLogo) {
-      try {
-        pdf.addImage(companyLogo, 'PNG', pdfWidth - 40, 5, 30, 10)
-      } catch (e) {
-        // Ignora erro da imagem
-      }
-    }
-
-    pdf.addImage(imgData, 'PNG', 0, 25, pdfWidth, pdfHeight)
-    pdf.save(`relatorio_crm_${new Date().getTime()}.pdf`)
-  } catch (err) {
-    console.error('Erro ao gerar PDF', err)
-    alert('Erro ao gerar PDF. Verifique o console para mais detalhes.')
+    html += '</table><br/>'
   }
+
+  if (tables.proposals?.length) {
+    html +=
+      '<h2>Propostas</h2><table border="1"><tr><th>Número</th><th>Empresa</th><th>Mensalidade</th><th>Setup</th><th>Status</th></tr>'
+    tables.proposals.forEach((p: any) => {
+      html += `<tr><td>${p.proposalNumber || '-'}</td><td>${p.companyName || '-'}</td><td>${p.totalMonthly || 0}</td><td>${p.totalSetup || 0}</td><td>${p.status || '-'}</td></tr>`
+    })
+    html += '</table><br/>'
+  }
+
+  if (tables.activities?.length) {
+    html +=
+      '<h2>Atividades</h2><table border="1"><tr><th>Data</th><th>Tipo</th><th>Canal</th><th>Resultado</th><th>Concluída</th></tr>'
+    tables.activities.forEach((a: any) => {
+      html += `<tr><td>${new Date(a.date).toLocaleString('pt-BR')}</td><td>${a.type || '-'}</td><td>${a.channel || '-'}</td><td>${a.result || '-'}</td><td>${a.completed ? 'Sim' : 'Não'}</td></tr>`
+    })
+    html += '</table><br/>'
+  }
+
+  html += '</body></html>'
+
+  const blob = new Blob([html], { type: 'application/vnd.ms-excel' })
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = `Relatorio_Comercial_${new Date().toISOString().split('T')[0]}.xls`
+  a.click()
 }
 
-export function exportExcelReport(tables: any) {
-  try {
-    const wb = XLSX.utils.book_new()
-
-    const leadsWs = XLSX.utils.json_to_sheet(
-      tables.leads.map((l: any) => ({
-        Empresa: l.companyName,
-        Contato: l.contactName || l.name,
-        Telefone: l.phone,
-        Email: l.email,
-        Etapa: l.pipelineStage,
-        Status: l.status,
-        Origem: l.source,
-        Data: l.createdAt ? new Date(l.createdAt).toLocaleDateString() : '',
-      })),
-    )
-    XLSX.utils.book_append_sheet(wb, leadsWs, 'Leads')
-
-    const proposalsWs = XLSX.utils.json_to_sheet(
-      tables.proposals.map((p: any) => ({
-        Numero: p.proposalNumber,
-        Empresa: p.companyName,
-        Status: p.status,
-        Mensalidade: p.totalMonthly,
-        Setup: p.totalSetup,
-        DataEnvio: p.createdAt
-          ? new Date(p.createdAt).toLocaleDateString()
-          : '',
-      })),
-    )
-    XLSX.utils.book_append_sheet(wb, proposalsWs, 'Propostas')
-
-    const activitiesWs = XLSX.utils.json_to_sheet(
-      tables.activities.map((a: any) => ({
-        Tipo: a.type,
-        Data: a.date ? new Date(a.date).toLocaleDateString() : '',
-        Status: a.completed ? 'Concluída' : 'Pendente',
-        Resultado: a.result || '',
-      })),
-    )
-    XLSX.utils.book_append_sheet(wb, activitiesWs, 'Atividades')
-
-    XLSX.writeFile(wb, `exportacao_crm_${new Date().getTime()}.xlsx`)
-  } catch (err) {
-    console.error('Erro ao exportar Excel', err)
-    alert('Erro ao exportar Excel. Verifique o console para mais detalhes.')
-  }
+export const generatePDFReport = async (
+  elementId: string,
+  userName: string,
+  logoUrl: string | null,
+) => {
+  window.print()
 }

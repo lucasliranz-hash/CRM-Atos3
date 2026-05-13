@@ -1,93 +1,91 @@
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { formatCurrency } from '@/lib/crm-utils'
+import { Card, CardContent } from '@/components/ui/card'
 import {
-  ArrowUpRight,
-  TrendingUp,
   Users,
   Target,
-  FileText,
-  CheckCircle,
+  CheckCircle2,
+  TrendingUp,
+  DollarSign,
+  Calendar,
   Clock,
   AlertCircle,
-  DollarSign,
 } from 'lucide-react'
+import { formatCurrency } from '@/lib/crm-utils'
 
 export function ReportsKPIs({ kpis }: { kpis: any }) {
-  const items = [
-    {
-      title: 'Total de Leads',
-      value: kpis.totalLeads,
-      icon: Users,
-      desc: 'No período filtrado',
-    },
-    {
-      title: 'Taxa de Conversão',
-      value: `${kpis.conversionRate.toFixed(1)}%`,
-      icon: Target,
-      desc: 'Win rate geral',
-    },
-    {
-      title: 'Propostas Enviadas',
-      value: kpis.proposalsSent,
-      icon: FileText,
-      desc: 'No período filtrado',
-    },
-    {
-      title: 'Vendas Fechadas',
-      value: kpis.totalSales,
-      icon: CheckCircle,
-      desc: 'Negócios ganhos',
-    },
-    {
-      title: 'Receita (MRR)',
-      value: formatCurrency(kpis.mrr),
-      icon: TrendingUp,
-      desc: 'Adicionado no período',
-    },
-    {
-      title: 'Ticket Médio',
-      value: formatCurrency(kpis.ticketMedio),
-      icon: DollarSign,
-      desc: 'Por cliente fechado',
-    },
-    {
-      title: 'Reuniões Realizadas',
-      value: kpis.meetings,
-      icon: Clock,
-      desc: 'No período filtrado',
-    },
-    {
-      title: 'Leads Atrasados',
-      value: kpis.delayedLeads,
-      icon: AlertCircle,
-      desc: 'Base geral sem ação',
-    },
-  ]
-
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-      {items.map((item, i) => (
-        <Card
-          key={i}
-          className="bg-white border-slate-200 hover:shadow-md transition-all duration-300 rounded-xl overflow-hidden"
-        >
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 bg-slate-50/50">
-            <CardTitle className="text-xs font-bold uppercase tracking-wider text-slate-600">
-              {item.title}
-            </CardTitle>
-            <item.icon className="h-4 w-4 text-slate-400" />
-          </CardHeader>
-          <CardContent className="pt-4">
-            <div className="text-2xl font-black text-slate-900">
-              {item.value}
-            </div>
-            <p className="text-xs font-medium text-slate-500 mt-2 flex items-center gap-1">
-              <ArrowUpRight className="h-3 w-3 text-emerald-500" />
-              {item.desc}
-            </p>
-          </CardContent>
-        </Card>
-      ))}
+    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+      <KPICard
+        title="Total de Leads"
+        value={kpis.totalLeads}
+        icon={<Users />}
+        color="text-blue-600"
+        bg="bg-blue-50"
+      />
+      <KPICard
+        title="Taxa de Conversão"
+        value={`${kpis.conversionRate.toFixed(1)}%`}
+        icon={<Target />}
+        color="text-emerald-600"
+        bg="bg-emerald-50"
+      />
+      <KPICard
+        title="Propostas Enviadas"
+        value={kpis.proposalsSent}
+        icon={<TrendingUp />}
+        color="text-orange-600"
+        bg="bg-orange-50"
+      />
+      <KPICard
+        title="Vendas Fechadas"
+        value={kpis.totalSales}
+        icon={<CheckCircle2 />}
+        color="text-indigo-600"
+        bg="bg-indigo-50"
+      />
+      <KPICard
+        title="Ticket Médio"
+        value={formatCurrency(kpis.ticketMedio)}
+        icon={<DollarSign />}
+        color="text-violet-600"
+        bg="bg-violet-50"
+      />
+      <KPICard
+        title="MRR Adicionado"
+        value={formatCurrency(kpis.mrr)}
+        icon={<DollarSign />}
+        color="text-emerald-600"
+        bg="bg-emerald-50"
+      />
+      <KPICard
+        title="Reuniões Realizadas"
+        value={kpis.meetings}
+        icon={<Calendar />}
+        color="text-pink-600"
+        bg="bg-pink-50"
+      />
+      <KPICard
+        title="Leads Atrasados"
+        value={kpis.delayedLeads}
+        icon={<AlertCircle />}
+        color="text-red-600"
+        bg="bg-red-50"
+      />
     </div>
+  )
+}
+
+function KPICard({ title, value, icon, color, bg }: any) {
+  return (
+    <Card className="shadow-sm border-slate-200">
+      <CardContent className="p-4 flex items-center gap-4">
+        <div className={`p-3 rounded-xl ${bg} ${color}`}>{icon}</div>
+        <div>
+          <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+            {title}
+          </p>
+          <h3 className="text-2xl font-black text-slate-900 mt-1">{value}</h3>
+        </div>
+      </CardContent>
+    </Card>
   )
 }

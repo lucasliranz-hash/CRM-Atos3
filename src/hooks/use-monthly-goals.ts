@@ -18,15 +18,6 @@ export function useMonthlyGoals() {
   const [goals, setGoals] = useState<MonthlyGoal[]>([])
 
   const loadGoals = useCallback(async () => {
-    const local = localStorage.getItem('monthly_goals')
-    if (local) {
-      try {
-        setGoals(JSON.parse(local))
-      } catch {
-        // ignore
-      }
-    }
-
     if (profile?.loja_id) {
       const { data, error } = await supabase
         .from('monthly_goals' as any)
@@ -45,7 +36,6 @@ export function useMonthlyGoals() {
           user_id: d.user_id,
         }))
         setGoals(mapped)
-        localStorage.setItem('monthly_goals', JSON.stringify(mapped))
       }
     }
   }, [profile?.loja_id])
@@ -67,9 +57,7 @@ export function useMonthlyGoals() {
 
     setGoals((prev) => {
       const filtered = prev.filter((g) => g.month !== month)
-      const next = [...filtered, newGoal]
-      localStorage.setItem('monthly_goals', JSON.stringify(next))
-      return next
+      return [...filtered, newGoal]
     })
 
     if (profile?.loja_id) {

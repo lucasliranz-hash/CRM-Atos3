@@ -1,131 +1,119 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table'
 import { formatCurrency } from '@/lib/crm-utils'
 
 export function ReportsTables({ tables }: { tables: any }) {
+  if (!tables) return null
+
   return (
     <div className="space-y-6">
-      <Card className="rounded-xl overflow-hidden bg-white">
-        <CardHeader className="bg-slate-50/50 border-b border-slate-100">
-          <CardTitle className="text-sm font-black text-slate-800">
-            Últimos Leads (Filtrados)
+      <Card className="shadow-sm border-slate-200">
+        <CardHeader>
+          <CardTitle className="text-sm font-bold text-slate-700">
+            Últimas Propostas
           </CardTitle>
         </CardHeader>
-        <CardContent className="p-0">
+        <CardContent>
           <div className="overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow className="bg-slate-50/50 hover:bg-slate-50/50">
-                  <TableHead className="font-bold text-slate-700">
-                    Empresa / Lead
-                  </TableHead>
-                  <TableHead className="font-bold text-slate-700">
-                    Contato
-                  </TableHead>
-                  <TableHead className="font-bold text-slate-700">
-                    Etapa
-                  </TableHead>
-                  <TableHead className="font-bold text-slate-700">
-                    Status
-                  </TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {tables.leads.length === 0 && (
-                  <TableRow>
-                    <TableCell
-                      colSpan={4}
-                      className="text-center text-slate-500 py-8"
-                    >
-                      Nenhum lead encontrado.
-                    </TableCell>
-                  </TableRow>
-                )}
-                {tables.leads.slice(0, 10).map((l: any) => (
-                  <TableRow key={l.id}>
-                    <TableCell className="font-semibold text-slate-900">
-                      {l.companyName}
-                    </TableCell>
-                    <TableCell className="text-slate-600">
-                      {l.contactName || l.name}
-                    </TableCell>
-                    <TableCell>
-                      <span className="inline-flex items-center px-2 py-1 rounded-md text-xs font-bold bg-blue-50 text-blue-700 border border-blue-100">
-                        {l.pipelineStage}
+            <table className="w-full text-sm text-left">
+              <thead className="bg-slate-50 text-xs font-bold text-slate-500 uppercase">
+                <tr>
+                  <th className="px-4 py-3 rounded-tl-lg">Número</th>
+                  <th className="px-4 py-3">Empresa</th>
+                  <th className="px-4 py-3">Status</th>
+                  <th className="px-4 py-3 text-right">Mensalidade</th>
+                  <th className="px-4 py-3 text-right rounded-tr-lg">Setup</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {tables.proposals?.slice(0, 5).map((p: any) => (
+                  <tr key={p.id}>
+                    <td className="px-4 py-3 font-medium text-slate-900">
+                      {p.proposalNumber || '-'}
+                    </td>
+                    <td className="px-4 py-3 text-slate-600">
+                      {p.companyName || '-'}
+                    </td>
+                    <td className="px-4 py-3">
+                      <span className="px-2 py-1 bg-slate-100 text-slate-600 rounded text-xs font-bold">
+                        {p.status || 'Rascunho'}
                       </span>
-                    </TableCell>
-                    <TableCell className="text-slate-600">{l.status}</TableCell>
-                  </TableRow>
+                    </td>
+                    <td className="px-4 py-3 text-right font-bold text-emerald-600">
+                      {formatCurrency(p.totalMonthly || 0)}
+                    </td>
+                    <td className="px-4 py-3 text-right text-slate-600">
+                      {formatCurrency(p.totalSetup || 0)}
+                    </td>
+                  </tr>
                 ))}
-              </TableBody>
-            </Table>
+                {(!tables.proposals || tables.proposals.length === 0) && (
+                  <tr>
+                    <td
+                      colSpan={5}
+                      className="px-4 py-8 text-center text-slate-500"
+                    >
+                      Nenhuma proposta no período
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
           </div>
         </CardContent>
       </Card>
 
-      <Card className="rounded-xl overflow-hidden bg-white">
-        <CardHeader className="bg-slate-50/50 border-b border-slate-100">
-          <CardTitle className="text-sm font-black text-slate-800">
-            Últimas Propostas (Filtradas)
+      <Card className="shadow-sm border-slate-200">
+        <CardHeader>
+          <CardTitle className="text-sm font-bold text-slate-700">
+            Últimos Leads (Prospecção)
           </CardTitle>
         </CardHeader>
-        <CardContent className="p-0">
+        <CardContent>
           <div className="overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow className="bg-slate-50/50 hover:bg-slate-50/50">
-                  <TableHead className="font-bold text-slate-700">
-                    Número
-                  </TableHead>
-                  <TableHead className="font-bold text-slate-700">
-                    Empresa
-                  </TableHead>
-                  <TableHead className="font-bold text-slate-700">
-                    Status
-                  </TableHead>
-                  <TableHead className="text-right font-bold text-slate-700">
-                    MRR
-                  </TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {tables.proposals.length === 0 && (
-                  <TableRow>
-                    <TableCell
-                      colSpan={4}
-                      className="text-center text-slate-500 py-8"
-                    >
-                      Nenhuma proposta encontrada.
-                    </TableCell>
-                  </TableRow>
-                )}
-                {tables.proposals.slice(0, 10).map((p: any) => (
-                  <TableRow key={p.id}>
-                    <TableCell className="font-semibold text-slate-900">
-                      {p.proposalNumber}
-                    </TableCell>
-                    <TableCell className="text-slate-600">
-                      {p.companyName}
-                    </TableCell>
-                    <TableCell>
-                      <span className="inline-flex items-center px-2 py-1 rounded-md text-xs font-bold bg-orange-50 text-orange-700 border border-orange-100">
-                        {p.status}
+            <table className="w-full text-sm text-left">
+              <thead className="bg-slate-50 text-xs font-bold text-slate-500 uppercase">
+                <tr>
+                  <th className="px-4 py-3 rounded-tl-lg">Empresa</th>
+                  <th className="px-4 py-3">Contato</th>
+                  <th className="px-4 py-3">Etapa</th>
+                  <th className="px-4 py-3">Próx. Ação</th>
+                  <th className="px-4 py-3 rounded-tr-lg text-right">Data</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {tables.leads?.slice(0, 5).map((l: any) => (
+                  <tr key={l.id}>
+                    <td className="px-4 py-3 font-medium text-slate-900">
+                      {l.companyName || l.name}
+                    </td>
+                    <td className="px-4 py-3 text-slate-600">
+                      {l.contactName || '-'}
+                    </td>
+                    <td className="px-4 py-3">
+                      <span className="px-2 py-1 bg-blue-50 text-blue-600 rounded text-xs font-bold">
+                        {l.pipelineStage || 'Prospecção'}
                       </span>
-                    </TableCell>
-                    <TableCell className="text-right font-bold text-slate-900">
-                      {formatCurrency(p.totalMonthly || 0)}
-                    </TableCell>
-                  </TableRow>
+                    </td>
+                    <td className="px-4 py-3 text-slate-600">
+                      {l.nextAction || '-'}
+                    </td>
+                    <td className="px-4 py-3 text-right text-slate-500 text-xs">
+                      {new Date(l.createdAt).toLocaleDateString('pt-BR')}
+                    </td>
+                  </tr>
                 ))}
-              </TableBody>
-            </Table>
+                {(!tables.leads || tables.leads.length === 0) && (
+                  <tr>
+                    <td
+                      colSpan={5}
+                      className="px-4 py-8 text-center text-slate-500"
+                    >
+                      Nenhum lead no período
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
           </div>
         </CardContent>
       </Card>

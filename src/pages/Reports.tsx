@@ -136,9 +136,17 @@ export default function Reports() {
         </div>
       )}
 
+      <style>{`
+        @media print {
+          body * { visibility: hidden; }
+          #report-content, #report-content * { visibility: visible; }
+          #report-content { position: absolute; left: 0; top: 0; width: 100%; border: none; box-shadow: none; }
+          .no-print { display: none !important; }
+        }
+      `}</style>
       <div
         id="report-content"
-        className="space-y-8 bg-slate-50/50 p-6 rounded-2xl border border-slate-200 shadow-sm"
+        className="space-y-8 bg-white p-6 rounded-2xl border border-slate-200 shadow-sm print:border-none print:shadow-none"
       >
         <div className="mb-6 border-b border-slate-200 pb-4">
           <h2 className="text-xl font-black tracking-tight text-slate-900">
