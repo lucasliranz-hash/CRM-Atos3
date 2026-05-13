@@ -11,33 +11,13 @@ import {
 } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { useToast } from '@/hooks/use-toast'
-import {
-  Upload,
-  Image as ImageIcon,
-  Loader2,
-  Database,
-  RotateCcw,
-  FileDown,
-  FileUp,
-  AlertTriangle,
-} from 'lucide-react'
+import { Upload, Image as ImageIcon, Loader2 } from 'lucide-react'
+import { BackupManager } from '@/components/BackupManager'
 
 export default function Settings() {
   const { profile } = useAuth()
-  const {
-    logoUrl,
-    setLogoUrl,
-    backups,
-    loadBackups,
-    restoreBackup,
-    exportBackup,
-    importBackup,
-  } = useMainStore()
+  const { logoUrl, setLogoUrl } = useMainStore()
   const { toast } = useToast()
-
-  useEffect(() => {
-    loadBackups()
-  }, [loadBackups])
 
   const [uploading, setUploading] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -96,20 +76,6 @@ export default function Settings() {
     } finally {
       setUploading(false)
     }
-  }
-
-  const handleImportFile = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (!file) return
-    const reader = new FileReader()
-    reader.onload = (ev) => {
-      const content = ev.target?.result
-      if (typeof content === 'string') {
-        importBackup(content)
-        toast({ title: 'Backup importado com sucesso!' })
-      }
-    }
-    reader.readAsText(file)
   }
 
   return (
@@ -194,108 +160,7 @@ export default function Settings() {
         </CardContent>
       </Card>
 
-      <Card className="max-w-xl shadow-sm border-gray-200 bg-white animate-in fade-in duration-300">
-        <CardHeader>
-          <CardTitle className="text-lg font-bold flex items-center gap-2">
-            <Database className="w-5 h-5 text-gray-500" />
-            Backup e Restauração
-          </CardTitle>
-          <CardDescription>
-            Gerencie e restaure backups automáticos do sistema.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="bg-orange-50 border border-orange-200 rounded-lg p-4 mb-6 flex items-start gap-3">
-            <AlertTriangle className="w-5 h-5 text-orange-500 shrink-0 mt-0.5" />
-            <div>
-              <h4 className="text-sm font-bold text-orange-800">
-                Antes de publicar, exporte seus dados!
-              </h4>
-              <p className="text-xs text-orange-600 mt-1">
-                Gere um arquivo JSON com o backup completo do CRM para garantir
-                que nenhuma informação se perca em atualizações ou limpeza de
-                cache.
-              </p>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-3 mb-6">
-            <Button
-              onClick={exportBackup}
-              variant="outline"
-              className="flex-1 font-bold border-gray-300"
-            >
-              <FileDown className="w-4 h-4 mr-2" />
-              Exportar JSON
-            </Button>
-            <Button
-              variant="outline"
-              className="flex-1 font-bold border-gray-300"
-              onClick={() => document.getElementById('import-json')?.click()}
-            >
-              <FileUp className="w-4 h-4 mr-2" />
-              Importar JSON
-            </Button>
-            <input
-              id="import-json"
-              type="file"
-              accept=".json"
-              className="hidden"
-              onChange={handleImportFile}
-            />
-          </div>
-
-          <h4 className="text-sm font-bold text-gray-700 mb-3 border-b pb-2">
-            Histórico de Backups Locais
-          </h4>
-
-          {backups.length === 0 ? (
-            <p className="text-sm text-gray-500 font-medium">
-              Nenhum backup encontrado.
-            </p>
-          ) : (
-            <div className="space-y-3 max-h-80 overflow-y-auto pr-2 custom-scrollbar">
-              {backups.map((b) => (
-                <div
-                  key={b.fullKey}
-                  className="flex items-center justify-between p-3 border border-gray-100 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors"
-                >
-                  <div>
-                    <p className="text-sm font-bold text-gray-800 capitalize">
-                      {b.type.replace('_', ' ')}
-                    </p>
-                    <p className="text-xs text-gray-500 font-medium mt-0.5">
-                      {b.timestamp.replace(
-                        /(\d{4})(\d{2})(\d{2})_(\d{2})(\d{2})(\d{2})/,
-                        '$3/$2/$1 $4:$5:$6',
-                      )}
-                      {' • '}
-                      {(b.size / 1024).toFixed(1)} KB
-                    </p>
-                  </div>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => {
-                      if (
-                        window.confirm(
-                          'Tem certeza que deseja restaurar este backup? Os dados atuais serão sobrescritos.',
-                        )
-                      ) {
-                        restoreBackup(b.fullKey)
-                        toast({ title: 'Backup restaurado com sucesso!' })
-                      }
-                    }}
-                    className="text-xs font-bold border-gray-300 text-gray-700"
-                  >
-                    <RotateCcw className="w-3 h-3 mr-1" /> Restaurar
-                  </Button>
-                </div>
-              ))}
-            </div>
-          )}
-        </CardContent>
-      </Card>
+      <BackupManager />
     </div>
   )
 }
