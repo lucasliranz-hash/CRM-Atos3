@@ -69,7 +69,7 @@ export function Header() {
         fleetEstimate: data.fleetEstimate
           ? parseInt(data.fleetEstimate, 10)
           : undefined,
-        status: 'Novo',
+        status: 'Prospecção',
         priority: 'B',
         nextAction: data.nextAction || undefined,
         nextActionDate,

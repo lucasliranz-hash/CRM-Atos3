@@ -123,9 +123,13 @@ export function MainProvider({ children }: { children: ReactNode }) {
       ]).then(([accs, conts, acts, opps]) => {
         if (!mounted) return
         if (accs.data) {
-          setAccounts((prev) =>
-            prev.length > 0 ? prev : (accs.data as Account[]),
-          )
+          setAccounts((prev) => {
+            const dbData = accs.data as Account[]
+            if (prev.length === 0) return dbData
+            const dbIds = new Set(dbData.map((a) => a.id))
+            const onlyLocal = prev.filter((a) => !dbIds.has(a.id))
+            return [...dbData, ...onlyLocal]
+          })
         }
         if (conts.data) setContacts(conts.data as Contact[])
         if (acts.data) setActivities(acts.data as Activity[])
@@ -299,26 +303,20 @@ export function MainProvider({ children }: { children: ReactNode }) {
   }
 
   const updateAccount = async (id: string, acc: Partial<Account>) => {
-    const { error } = await supabase.from('accounts').update(acc).eq('id', id)
-    if (!error) {
-      setAccounts((prev) =>
-        prev.map((a) =>
-          a.id === id
-            ? { ...a, ...acc, updatedAt: new Date().toISOString() }
-            : a,
-        ),
-      )
-    }
+    await supabase.from('accounts').update(acc).eq('id', id)
+    setAccounts((prev) =>
+      prev.map((a) =>
+        a.id === id ? { ...a, ...acc, updatedAt: new Date().toISOString() } : a,
+      ),
+    )
   }
 
   const deleteAccount = async (id: string) => {
-    const { error } = await supabase.from('accounts').delete().eq('id', id)
-    if (!error) {
-      setAccounts((prev) => prev.filter((a) => a.id !== id))
-      setOpportunities((prev) => prev.filter((o) => o.accountId !== id))
-      setContacts((prev) => prev.filter((c) => c.accountId !== id))
-      setActivities((prev) => prev.filter((a) => a.accountId !== id))
-    }
+    await supabase.from('accounts').delete().eq('id', id)
+    setAccounts((prev) => prev.filter((a) => a.id !== id))
+    setOpportunities((prev) => prev.filter((o) => o.accountId !== id))
+    setContacts((prev) => prev.filter((c) => c.accountId !== id))
+    setActivities((prev) => prev.filter((a) => a.accountId !== id))
   }
 
   const addAccount = async (
@@ -336,7 +334,15 @@ export function MainProvider({ children }: { children: ReactNode }) {
       )
       return data as Account
     }
-    return undefined
+
+    const fallbackAcc: Account = {
+      ...acc,
+      id: crypto.randomUUID(),
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    }
+    setAccounts((prev) => [fallbackAcc, ...prev])
+    return fallbackAcc
   }
 
   const addActivity = async (act: Omit<Activity, 'id' | 'createdAt'>) => {
@@ -351,42 +357,44 @@ export function MainProvider({ children }: { children: ReactNode }) {
       setActivities((prev) =>
         prev.some((a) => a.id === data.id) ? prev : [data as Activity, ...prev],
       )
+    } else {
+      const fallbackAct: Activity = {
+        ...act,
+        id: crypto.randomUUID(),
+        createdAt: new Date().toISOString(),
+      }
+      setActivities((prev) => [fallbackAct, ...prev])
+    }
 
-      await updateAccount(act.accountId, {
-        lastTouchDate: new Date().toISOString(),
-        ...(act.nextAction && {
+    await updateAccount(act.accountId, {
+      lastTouchDate: new Date().toISOString(),
+      ...(act.nextAction && {
+        nextAction: act.nextAction,
+        nextActionDate: act.nextActionDate,
+      }),
+    })
+
+    if (act.nextAction) {
+      const linkedOpps = oppsRef.current.filter(
+        (o) =>
+          o.accountId === act.accountId &&
+          o.stage !== 'Fechado Ganho' &&
+          o.stage !== 'Fechado Perdido',
+      )
+      for (const opp of linkedOpps) {
+        await updateOpportunity(opp.id, {
           nextAction: act.nextAction,
           nextActionDate: act.nextActionDate,
-        }),
-      })
-
-      if (act.nextAction) {
-        const linkedOpps = oppsRef.current.filter(
-          (o) =>
-            o.accountId === act.accountId &&
-            o.stage !== 'Fechado Ganho' &&
-            o.stage !== 'Fechado Perdido',
-        )
-        for (const opp of linkedOpps) {
-          await updateOpportunity(opp.id, {
-            nextAction: act.nextAction,
-            nextActionDate: act.nextActionDate,
-          })
-        }
+        })
       }
     }
   }
 
   const completeActivity = async (id: string) => {
-    const { error } = await supabase
-      .from('activities')
-      .update({ completed: true })
-      .eq('id', id)
-    if (!error) {
-      setActivities((prev) =>
-        prev.map((a) => (a.id === id ? { ...a, completed: true } : a)),
-      )
-    }
+    await supabase.from('activities').update({ completed: true }).eq('id', id)
+    setActivities((prev) =>
+      prev.map((a) => (a.id === id ? { ...a, completed: true } : a)),
+    )
   }
 
   const addContact = async (
@@ -402,6 +410,14 @@ export function MainProvider({ children }: { children: ReactNode }) {
       setContacts((prev) =>
         prev.some((c) => c.id === data.id) ? prev : [data as Contact, ...prev],
       )
+    } else {
+      const fallbackContact: Contact = {
+        ...contact,
+        id: crypto.randomUUID(),
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      }
+      setContacts((prev) => [fallbackContact, ...prev])
     }
   }
 
@@ -418,13 +434,20 @@ export function MainProvider({ children }: { children: ReactNode }) {
           ? prev
           : [data as Opportunity, ...prev],
       )
-
-      if (opp.nextAction && opp.accountId) {
-        await updateAccount(opp.accountId, {
-          nextAction: opp.nextAction,
-          nextActionDate: opp.nextActionDate,
-        })
+    } else {
+      const fallbackOpp: Opportunity = {
+        ...opp,
+        id: crypto.randomUUID(),
+        createdAt: new Date().toISOString(),
       }
+      setOpportunities((prev) => [fallbackOpp, ...prev])
+    }
+
+    if (opp.nextAction && opp.accountId) {
+      await updateAccount(opp.accountId, {
+        nextAction: opp.nextAction,
+        nextActionDate: opp.nextActionDate,
+      })
     }
   }
 
@@ -435,33 +458,29 @@ export function MainProvider({ children }: { children: ReactNode }) {
       opp.probability = 0
     }
 
-    const { error } = await supabase
-      .from('opportunities')
-      .update(opp)
-      .eq('id', id)
-    if (!error) {
-      setOpportunities((prev) =>
-        prev.map((o) => (o.id === id ? { ...o, ...opp } : o)),
-      )
+    await supabase.from('opportunities').update(opp).eq('id', id)
 
-      const existingOpp = oppsRef.current.find((o) => o.id === id)
-      if (existingOpp?.accountId) {
-        let accountUpdates: Partial<Account> = {}
+    setOpportunities((prev) =>
+      prev.map((o) => (o.id === id ? { ...o, ...opp } : o)),
+    )
 
-        if (opp.nextAction !== undefined) {
-          accountUpdates.nextAction = opp.nextAction
-          accountUpdates.nextActionDate = opp.nextActionDate
-        }
+    const existingOpp = oppsRef.current.find((o) => o.id === id)
+    if (existingOpp?.accountId) {
+      let accountUpdates: Partial<Account> = {}
 
-        if (opp.stage === 'Fechado Ganho') {
-          accountUpdates.status = 'Cliente'
-        } else if (opp.stage === 'Fechado Perdido') {
-          accountUpdates.status = 'Perdido'
-        }
+      if (opp.nextAction !== undefined) {
+        accountUpdates.nextAction = opp.nextAction
+        accountUpdates.nextActionDate = opp.nextActionDate
+      }
 
-        if (Object.keys(accountUpdates).length > 0) {
-          await updateAccount(existingOpp.accountId, accountUpdates)
-        }
+      if (opp.stage === 'Fechado Ganho') {
+        accountUpdates.status = 'Cliente'
+      } else if (opp.stage === 'Fechado Perdido') {
+        accountUpdates.status = 'Perdido'
+      }
+
+      if (Object.keys(accountUpdates).length > 0) {
+        await updateAccount(existingOpp.accountId, accountUpdates)
       }
     }
   }

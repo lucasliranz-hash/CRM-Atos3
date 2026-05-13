@@ -164,7 +164,9 @@ export default function Pipeline() {
         {COLUMNS_CONFIG.map((col) => {
           const leadsInStage = filteredLeads.filter(
             (a: any) =>
-              a.status === col.id || (!a.status && col.id === 'Prospecção'),
+              a.status === col.id ||
+              (!a.status && col.id === 'Prospecção') ||
+              (a.status === 'Novo' && col.id === 'Prospecção'),
           )
           return (
             <div
