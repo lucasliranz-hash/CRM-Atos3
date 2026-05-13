@@ -1,7 +1,18 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import useMainStore from '@/stores/main'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { Textarea } from '@/components/ui/textarea'
+import { useToast } from '@/hooks/use-toast'
+import { Plus } from 'lucide-react'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog'
 import {
   Table,
   TableBody,
@@ -10,26 +21,42 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import { Search, Building2, ExternalLink } from 'lucide-react'
-import { Badge } from '@/components/ui/badge'
-import LeadHistorySheet from '@/components/LeadHistorySheet'
-import { cn } from '@/lib/utils'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 
 export default function Accounts() {
-  const { accounts, contacts } = useMainStore()
-  const [searchTerm, setSearchTerm] = useState('')
-  const [selectedAccountId, setSelectedAccountId] = useState<string | null>(
-    null,
-  )
+  const { accounts, addLead } = useMainStore()
+  const { toast } = useToast()
+  const navigate = useNavigate()
+  const [isOpen, setIsOpen] = useState(false)
 
-  const filteredAccounts = accounts.filter(
-    (acc) =>
-      acc.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      acc.tags?.some((t) =>
-        t.toLowerCase().includes(searchTerm.toLowerCase()),
-      ) ||
-      acc.status.toLowerCase().includes(searchTerm.toLowerCase()),
-  )
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault()
+    const fd = new FormData(e.currentTarget)
+
+    const newLead = {
+      name: fd.get('name'),
+      contactName: fd.get('contactName'),
+      phone: fd.get('phone'),
+      email: fd.get('email'),
+      city: fd.get('city'),
+      segment: fd.get('segment'),
+      fleetEstimate: Number(fd.get('fleetEstimate')) || 0,
+      leadSource: fd.get('leadSource'),
+      notes: fd.get('notes'),
+      status: fd.get('status') || 'Prospecção',
+    }
+
+    addLead(newLead)
+    setIsOpen(false)
+    toast({ title: 'Lead cadastrado e enviado para o Pipeline' })
+    navigate('/pipeline')
+  }
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto pb-10 animate-in fade-in duration-500">
@@ -39,149 +66,202 @@ export default function Accounts() {
             Leads
           </h1>
           <p className="text-slate-500 mt-1 font-medium">
-            Gerencie todas as empresas em prospecção.
+            Gerenciamento de leads e empresas
           </p>
         </div>
-        <div className="flex items-center gap-3 w-full sm:w-auto">
-          <div className="relative flex-1 sm:w-64">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-            <Input
-              placeholder="Buscar leads..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-9 bg-white border-slate-200"
-            />
-          </div>
-        </div>
+
+        <Dialog open={isOpen} onOpenChange={setIsOpen}>
+          <DialogTrigger asChild>
+            <Button className="bg-[#FF6A00] text-white hover:bg-[#e65c00] rounded-[8px] font-bold shadow-md h-10">
+              <Plus className="w-4 h-4 mr-2" /> Novo Lead
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="sm:max-w-[700px] max-h-[90vh] overflow-y-auto custom-scrollbar">
+            <DialogHeader>
+              <DialogTitle className="text-xl font-black text-slate-900">
+                Cadastrar Novo Lead
+              </DialogTitle>
+            </DialogHeader>
+            <form onSubmit={handleSubmit} className="space-y-4 mt-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-1.5 col-span-2 sm:col-span-1">
+                  <label className="text-sm font-bold text-slate-700">
+                    Empresa *
+                  </label>
+                  <Input name="name" required placeholder="Nome da empresa" />
+                </div>
+                <div className="space-y-1.5 col-span-2 sm:col-span-1">
+                  <label className="text-sm font-bold text-slate-700">
+                    Contato *
+                  </label>
+                  <Input
+                    name="contactName"
+                    required
+                    placeholder="Nome do decisor"
+                  />
+                </div>
+                <div className="space-y-1.5 col-span-2 sm:col-span-1">
+                  <label className="text-sm font-bold text-slate-700">
+                    Telefone *
+                  </label>
+                  <Input name="phone" required placeholder="(00) 00000-0000" />
+                </div>
+                <div className="space-y-1.5 col-span-2 sm:col-span-1">
+                  <label className="text-sm font-bold text-slate-700">
+                    E-mail
+                  </label>
+                  <Input
+                    name="email"
+                    type="email"
+                    placeholder="contato@empresa.com"
+                  />
+                </div>
+                <div className="space-y-1.5 col-span-2 sm:col-span-1">
+                  <label className="text-sm font-bold text-slate-700">
+                    Cidade/Estado
+                  </label>
+                  <Input name="city" placeholder="Ex: São Paulo / SP" />
+                </div>
+                <div className="space-y-1.5 col-span-2 sm:col-span-1">
+                  <label className="text-sm font-bold text-slate-700">
+                    Segmento
+                  </label>
+                  <Input name="segment" placeholder="Ex: Logística" />
+                </div>
+                <div className="space-y-1.5 col-span-2 sm:col-span-1">
+                  <label className="text-sm font-bold text-slate-700">
+                    Qtd Veículos
+                  </label>
+                  <Input
+                    name="fleetEstimate"
+                    type="number"
+                    placeholder="Ex: 10"
+                  />
+                </div>
+                <div className="space-y-1.5 col-span-2 sm:col-span-1">
+                  <label className="text-sm font-bold text-slate-700">
+                    Origem do Lead
+                  </label>
+                  <Select name="leadSource" defaultValue="Inbound">
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Inbound">Inbound</SelectItem>
+                      <SelectItem value="Outbound">Outbound</SelectItem>
+                      <SelectItem value="Indicação">Indicação</SelectItem>
+                      <SelectItem value="Parceiro">Parceiro</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-1.5 col-span-2 sm:col-span-1">
+                  <label className="text-sm font-bold text-slate-700">
+                    Estágio Inicial
+                  </label>
+                  <Select name="status" defaultValue="Prospecção">
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Prospecção">Prospecção</SelectItem>
+                      <SelectItem value="Contato realizado">
+                        Contato realizado
+                      </SelectItem>
+                      <SelectItem value="Reunião agendada">
+                        Reunião agendada
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-1.5 col-span-2">
+                  <label className="text-sm font-bold text-slate-700">
+                    Observações
+                  </label>
+                  <Textarea
+                    name="notes"
+                    placeholder="Detalhes adicionais..."
+                    className="resize-none h-20"
+                  />
+                </div>
+              </div>
+              <Button
+                type="submit"
+                className="w-full bg-slate-900 hover:bg-slate-800 text-white font-bold h-11 mt-6"
+              >
+                Salvar e Ir para Pipeline
+              </Button>
+            </form>
+          </DialogContent>
+        </Dialog>
       </div>
 
-      <div className="bg-white rounded-[10px] shadow-sm border border-slate-200 overflow-hidden">
+      <div className="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm">
         <Table>
-          <TableHeader className="bg-slate-50">
-            <TableRow>
-              <TableHead className="font-bold text-slate-700">
-                Empresa
+          <TableHeader>
+            <TableRow className="bg-slate-50">
+              <TableHead className="font-bold text-slate-900">
+                Empresa / Contato
               </TableHead>
-              <TableHead className="font-bold text-slate-700">Status</TableHead>
-              <TableHead className="font-bold text-slate-700">
-                Contato Principal
+              <TableHead className="font-bold text-slate-900">
+                Telefone / E-mail
               </TableHead>
-              <TableHead className="font-bold text-slate-700">
-                Próxima Ação
+              <TableHead className="font-bold text-slate-900">
+                Segmento / Cidade
               </TableHead>
-              <TableHead className="w-[100px]"></TableHead>
+              <TableHead className="font-bold text-slate-900">
+                Estágio
+              </TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filteredAccounts.length === 0 ? (
-              <TableRow>
-                <TableCell
-                  colSpan={5}
-                  className="text-center py-8 text-slate-500 font-medium"
-                >
-                  Nenhum lead encontrado.
+            {accounts.map((acc: any) => (
+              <TableRow
+                key={acc.id}
+                className="hover:bg-slate-50/50 cursor-pointer"
+                onClick={() => navigate(`/leads/${acc.id}`)}
+              >
+                <TableCell>
+                  <div className="font-bold text-slate-900">{acc.name}</div>
+                  <div className="text-xs text-slate-500 font-medium mt-0.5">
+                    {acc.contactName || '-'}
+                  </div>
+                </TableCell>
+                <TableCell>
+                  <div className="text-sm text-slate-700 font-medium">
+                    {acc.phone || '-'}
+                  </div>
+                  <div className="text-xs text-slate-500 mt-0.5">
+                    {acc.email || '-'}
+                  </div>
+                </TableCell>
+                <TableCell>
+                  <div className="text-sm text-slate-700 font-medium">
+                    {acc.segment || '-'}
+                  </div>
+                  <div className="text-xs text-slate-500 mt-0.5">
+                    {acc.city || '-'}
+                  </div>
+                </TableCell>
+                <TableCell>
+                  <span className="px-2.5 py-1 rounded-md text-xs font-bold bg-blue-50 text-blue-700 border border-blue-100">
+                    {acc.status || 'Prospecção'}
+                  </span>
                 </TableCell>
               </TableRow>
-            ) : (
-              filteredAccounts.map((acc) => {
-                const mainContact =
-                  contacts.find(
-                    (c) => c.accountId === acc.id && c.isDecisionMaker,
-                  ) || contacts.find((c) => c.accountId === acc.id)
-                const isOverdue =
-                  acc.nextActionDate &&
-                  new Date(acc.nextActionDate) < new Date()
-
-                return (
-                  <TableRow
-                    key={acc.id}
-                    className="hover:bg-slate-50/50 cursor-pointer"
-                    onClick={() => setSelectedAccountId(acc.id)}
-                  >
-                    <TableCell>
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center shrink-0">
-                          <Building2 className="w-4 h-4 text-blue-600" />
-                        </div>
-                        <div>
-                          <div className="font-bold text-sm text-slate-900">
-                            {acc.name}
-                          </div>
-                          <div className="text-xs text-slate-500">
-                            {acc.city || '-'}
-                          </div>
-                        </div>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <Badge
-                        variant="secondary"
-                        className="font-bold bg-slate-100 text-slate-700"
-                      >
-                        {acc.status}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      <div className="text-sm font-medium text-slate-900">
-                        {mainContact?.name || '-'}
-                      </div>
-                      <div className="text-xs text-slate-500">
-                        {mainContact?.processRole || ''}
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div
-                        className={cn(
-                          'text-sm font-bold',
-                          isOverdue ? 'text-red-600' : 'text-slate-700',
-                        )}
-                      >
-                        {acc.nextAction || '-'}
-                      </div>
-                      {acc.nextActionDate && (
-                        <div
-                          className={cn(
-                            'text-xs',
-                            isOverdue ? 'text-red-500' : 'text-slate-500',
-                          )}
-                        >
-                          {new Date(acc.nextActionDate).toLocaleDateString(
-                            'pt-BR',
-                            {
-                              day: '2-digit',
-                              month: '2-digit',
-                              year: 'numeric',
-                              hour: '2-digit',
-                              minute: '2-digit',
-                            },
-                          )}
-                        </div>
-                      )}
-                    </TableCell>
-                    <TableCell>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="text-slate-400 hover:text-blue-600"
-                      >
-                        <ExternalLink className="w-4 h-4" />
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                )
-              })
+            ))}
+            {accounts.length === 0 && (
+              <TableRow>
+                <TableCell
+                  colSpan={4}
+                  className="text-center py-10 text-slate-500 font-medium"
+                >
+                  Nenhum lead cadastrado ainda.
+                </TableCell>
+              </TableRow>
             )}
           </TableBody>
         </Table>
       </div>
-
-      {selectedAccountId && (
-        <LeadHistorySheet
-          account={accounts.find((a) => a.id === selectedAccountId) || null}
-          open={!!selectedAccountId}
-          onOpenChange={(open) => !open && setSelectedAccountId(null)}
-        />
-      )}
     </div>
   )
 }

@@ -1,12 +1,10 @@
 export type AccountStatus =
-  | 'Novo'
-  | 'Em pesquisa'
-  | 'Pronto para contato'
-  | 'Em prospecção'
-  | 'Qualificado'
-  | 'Aguardando retorno'
-  | 'Sem fit'
-  | 'Cliente'
+  | 'Prospecção'
+  | 'Contato realizado'
+  | 'Reunião agendada'
+  | 'Proposta enviada'
+  | 'Negociação'
+  | 'Fechado'
   | 'Perdido'
 
 export type Priority = 'A' | 'B' | 'C'
@@ -17,6 +15,8 @@ export type PotencialConta = 'Baixo' | 'Médio' | 'Alto'
 export interface Account {
   id: string
   name: string
+  contactName?: string
+  email?: string
   website?: string
   phone?: string
   segment?: string
@@ -141,5 +141,18 @@ export interface Opportunity {
   nextAction?: string
   nextActionDate?: string
   loja_id?: string
+  createdAt: string
+}
+
+export interface Proposal {
+  id: string
+  accountId: string
+  companyName: string
+  contactName: string
+  phone: string
+  email: string
+  vehicleQuantity: number
+  value: number
+  details: string
   createdAt: string
 }

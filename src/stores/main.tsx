@@ -6,7 +6,7 @@ import React, {
   ReactNode,
   useRef,
 } from 'react'
-import { Account, Contact, Activity, Opportunity } from '@/types/crm'
+import { Account, Contact, Activity, Opportunity, Proposal } from '@/types/crm'
 import { supabase } from '@/lib/supabase/client'
 import { useAuth } from '@/hooks/use-auth'
 
@@ -22,6 +22,13 @@ interface MainStore {
   ) => Promise<Account | undefined>
   updateAccount: (id: string, acc: Partial<Account>) => Promise<void>
   deleteAccount: (id: string) => Promise<void>
+  addLead: (lead: any) => void
+  updateLead: (id: string, lead: any) => void
+  deleteLead: (id: string) => void
+  moveLeadToStage: (id: string, stage: string) => void
+  getLeadById: (id: string) => Account | undefined
+  addProposalToLead: (proposal: any) => void
+  proposals: Proposal[]
   addActivity: (act: Omit<Activity, 'id' | 'createdAt'>) => Promise<void>
   completeActivity: (id: string) => Promise<void>
   addContact: (
@@ -43,6 +50,7 @@ export function MainProvider({ children }: { children: ReactNode }) {
   const [contacts, setContacts] = useState<Contact[]>([])
   const [activities, setActivities] = useState<Activity[]>([])
   const [opportunities, setOpportunities] = useState<Opportunity[]>([])
+  const [proposals, setProposals] = useState<Proposal[]>([])
   const [logoUrl, setLogoUrl] = useState<string | null>(null)
   const [dateFilter, setDateFilter] = useState<
     'all' | 'today' | 'week' | 'month' | 'year'
@@ -53,6 +61,39 @@ export function MainProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     oppsRef.current = opportunities
   }, [opportunities])
+
+  // Load from LocalStorage
+  useEffect(() => {
+    const localAccounts = localStorage.getItem('crm_accounts')
+    if (localAccounts) {
+      try {
+        setAccounts(JSON.parse(localAccounts))
+      } catch {
+        /* intentionally ignored */
+      }
+    }
+    const localProposals = localStorage.getItem('crm_proposals')
+    if (localProposals) {
+      try {
+        setProposals(JSON.parse(localProposals))
+      } catch {
+        /* intentionally ignored */
+      }
+    }
+  }, [])
+
+  // Save to LocalStorage on change
+  useEffect(() => {
+    if (accounts.length > 0) {
+      localStorage.setItem('crm_accounts', JSON.stringify(accounts))
+    }
+  }, [accounts])
+
+  useEffect(() => {
+    if (proposals.length > 0) {
+      localStorage.setItem('crm_proposals', JSON.stringify(proposals))
+    }
+  }, [proposals])
 
   useEffect(() => {
     let mounted = true
@@ -78,7 +119,11 @@ export function MainProvider({ children }: { children: ReactNode }) {
           .order('createdAt', { ascending: false }),
       ]).then(([accs, conts, acts, opps]) => {
         if (!mounted) return
-        if (accs.data) setAccounts(accs.data as Account[])
+        if (accs.data) {
+          setAccounts((prev) =>
+            prev.length > 0 ? prev : (accs.data as Account[]),
+          )
+        }
         if (conts.data) setContacts(conts.data as Contact[])
         if (acts.data) setActivities(acts.data as Activity[])
         if (opps.data) setOpportunities(opps.data as Opportunity[])
@@ -207,6 +252,48 @@ export function MainProvider({ children }: { children: ReactNode }) {
       if (channel) supabase.removeChannel(channel)
     }
   }, [user, profile])
+
+  // Core Operations for Leads & Proposals
+  const addLead = (lead: any) => {
+    const newLead: Account = {
+      ...lead,
+      id: crypto.randomUUID(),
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    }
+    setAccounts((prev) => [newLead, ...prev])
+  }
+
+  const updateLead = (id: string, lead: any) => {
+    setAccounts((prev) =>
+      prev.map((a) =>
+        a.id === id
+          ? { ...a, ...lead, updatedAt: new Date().toISOString() }
+          : a,
+      ),
+    )
+  }
+
+  const deleteLead = (id: string) => {
+    setAccounts((prev) => prev.filter((a) => a.id !== id))
+  }
+
+  const moveLeadToStage = (id: string, stage: string) => {
+    updateLead(id, { status: stage as any })
+  }
+
+  const getLeadById = (id: string) => {
+    return accounts.find((a) => a.id === id)
+  }
+
+  const addProposalToLead = (proposal: any) => {
+    const newProposal: Proposal = {
+      ...proposal,
+      id: crypto.randomUUID(),
+      createdAt: new Date().toISOString(),
+    }
+    setProposals((prev) => [newProposal, ...prev])
+  }
 
   const updateAccount = async (id: string, acc: Partial<Account>) => {
     const { error } = await supabase.from('accounts').update(acc).eq('id', id)
@@ -383,10 +470,17 @@ export function MainProvider({ children }: { children: ReactNode }) {
         contacts,
         activities,
         opportunities,
+        proposals,
         logoUrl,
         setLogoUrl,
         addAccount,
         updateAccount,
+        addLead,
+        updateLead,
+        deleteLead,
+        moveLeadToStage,
+        getLeadById,
+        addProposalToLead,
         addActivity,
         completeActivity,
         addContact,
