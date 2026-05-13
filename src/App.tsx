@@ -18,6 +18,7 @@ import NotFound from './pages/NotFound'
 import Login from './pages/Login'
 import Signup from './pages/Signup'
 import Layout from './components/Layout'
+import DebugSupabase from './pages/DebugSupabase'
 import { MainProvider } from '@/stores/main'
 import { AuthProvider } from '@/hooks/use-auth'
 
@@ -33,6 +34,7 @@ const App = () => (
           <Routes>
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<Signup />} />
+            <Route path="/debug-supabase" element={<DebugSupabase />} />
             <Route element={<Layout />}>
               <Route path="/" element={<Index />} />
               <Route path="/accounts" element={<Accounts />} />
