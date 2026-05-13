@@ -14,20 +14,28 @@ export type PotencialConta = 'Baixo' | 'Médio' | 'Alto'
 
 export interface Account {
   id: string
-  name: string
+  companyName: string
   contactName?: string
-  email?: string
-  website?: string
   phone?: string
-  segment?: string
+  email?: string
   city?: string
+  state?: string
+  segment?: string
+  vehicleCount?: number
+  source?: string
+  notes?: string
+  pipelineStage: string
+  status: string
+
+  // Keep for backwards compatibility
+  name?: string
+  website?: string
   tags?: string[]
   fleetModel?: string
   fleetEstimate?: number
   leadSource?: string
   detailedSource?: string
-  status: AccountStatus
-  priority: Priority
+  priority?: Priority
   icpFit?: string
   interestLevel?: NivelInteresse
   accountPotential?: PotencialConta
@@ -36,7 +44,6 @@ export interface Account {
   lastTouchDate?: string
   cadenceStage?: string
   lossReason?: string
-  notes?: string
   loja_id?: string
   createdAt: string
   updatedAt: string

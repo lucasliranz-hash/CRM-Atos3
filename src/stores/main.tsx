@@ -22,11 +22,12 @@ interface MainStore {
   ) => Promise<Account | undefined>
   updateAccount: (id: string, acc: Partial<Account>) => Promise<void>
   deleteAccount: (id: string) => Promise<void>
-  addLead: (lead: any) => void
+  addLead: (lead: any) => Promise<void>
   updateLead: (id: string, lead: any) => void
   deleteLead: (id: string) => void
   moveLeadToStage: (id: string, stage: string) => void
   getLeadById: (id: string) => Account | undefined
+  getLeadsByPipelineStage: (stage: string) => Account[]
   addProposalToLead: (proposal: any) => void
   proposals: Proposal[]
   addActivity: (act: Omit<Activity, 'id' | 'createdAt'>) => Promise<void>
@@ -43,6 +44,54 @@ interface MainStore {
 }
 
 const MainContext = createContext<MainStore | undefined>(undefined)
+
+const migrateExistingLeadsToPipeline = (leads: any[]) => {
+  const uniqueLeads = new Map()
+  leads.forEach((lead) => {
+    if (!uniqueLeads.has(lead.id)) {
+      const isMissingPipelineStage = !lead.pipelineStage
+      let stage = lead.pipelineStage
+      if (isMissingPipelineStage) {
+        if (
+          [
+            'Prospecção',
+            'Contato realizado',
+            'Reunião agendada',
+            'Proposta enviada',
+            'Negociação',
+            'Fechado',
+            'Perdido',
+          ].includes(lead.status)
+        ) {
+          stage = lead.status
+        } else {
+          stage = 'Prospecção'
+        }
+      }
+
+      uniqueLeads.set(lead.id, {
+        ...lead,
+        companyName: lead.companyName || lead.name || '',
+        name: lead.name || lead.companyName || '',
+        vehicleCount:
+          lead.vehicleCount !== undefined
+            ? lead.vehicleCount
+            : lead.fleetEstimate || 0,
+        fleetEstimate:
+          lead.vehicleCount !== undefined
+            ? lead.vehicleCount
+            : lead.fleetEstimate || 0,
+        source: lead.source || lead.leadSource || '',
+        leadSource: lead.source || lead.leadSource || '',
+        pipelineStage: stage,
+        status: isMissingPipelineStage
+          ? 'Novo Lead'
+          : lead.status || 'Novo Lead',
+      })
+    }
+  })
+  return Array.from(uniqueLeads.values())
+}
 
 export function MainProvider({ children }: { children: ReactNode }) {
   const { user, profile } = useAuth()
@@ -69,7 +118,7 @@ export function MainProvider({ children }: { children: ReactNode }) {
     const localAccounts = localStorage.getItem('crm_accounts')
     if (localAccounts) {
       try {
-        setAccounts(JSON.parse(localAccounts))
+        setAccounts(migrateExistingLeadsToPipeline(JSON.parse(localAccounts)))
       } catch {
         /* intentionally ignored */
       }
@@ -125,10 +174,10 @@ export function MainProvider({ children }: { children: ReactNode }) {
         if (accs.data) {
           setAccounts((prev) => {
             const dbData = accs.data as Account[]
-            if (prev.length === 0) return dbData
+            if (prev.length === 0) return migrateExistingLeadsToPipeline(dbData)
             const dbIds = new Set(dbData.map((a) => a.id))
             const onlyLocal = prev.filter((a) => !dbIds.has(a.id))
-            return [...dbData, ...onlyLocal]
+            return migrateExistingLeadsToPipeline([...dbData, ...onlyLocal])
           })
         }
         if (conts.data) setContacts(conts.data as Contact[])
@@ -157,12 +206,19 @@ export function MainProvider({ children }: { children: ReactNode }) {
               setAccounts((prev) =>
                 prev.some((a) => a.id === payload.new.id)
                   ? prev
-                  : [payload.new as Account, ...prev],
+                  : migrateExistingLeadsToPipeline([
+                      payload.new as Account,
+                      ...prev,
+                    ]),
               )
             } else if (payload.eventType === 'UPDATE') {
               setAccounts((prev) =>
                 prev.map((a) =>
-                  a.id === payload.new.id ? { ...a, ...payload.new } : a,
+                  a.id === payload.new.id
+                    ? migrateExistingLeadsToPipeline([
+                        { ...a, ...payload.new },
+                      ])[0]
+                    : a,
                 ),
               )
             } else if (payload.eventType === 'DELETE') {
@@ -247,7 +303,6 @@ export function MainProvider({ children }: { children: ReactNode }) {
         )
         .subscribe()
     } else {
-      // Do not clear accounts to preserve local storage data when no backend is connected
       setContacts([])
       setActivities([])
       setOpportunities([])
@@ -260,37 +315,79 @@ export function MainProvider({ children }: { children: ReactNode }) {
     }
   }, [user, profile])
 
-  // Core Operations for Leads & Proposals
-  const addLead = (lead: any) => {
+  const addLead = async (leadData: any) => {
     const newLead: Account = {
-      ...lead,
+      ...leadData,
       id: crypto.randomUUID(),
+      companyName: leadData.companyName || leadData.name || '',
+      name: leadData.companyName || leadData.name || '',
+      vehicleCount:
+        leadData.vehicleCount !== undefined
+          ? leadData.vehicleCount
+          : leadData.fleetEstimate || 0,
+      fleetEstimate:
+        leadData.vehicleCount !== undefined
+          ? leadData.vehicleCount
+          : leadData.fleetEstimate || 0,
+      source: leadData.source || leadData.leadSource || '',
+      leadSource: leadData.source || leadData.leadSource || '',
+      pipelineStage: leadData.pipelineStage || 'Prospecção',
+      status: leadData.status || 'Novo Lead',
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     }
-    setAccounts((prev) => [newLead, ...prev])
+
+    setAccounts((prev) => {
+      const exists = prev.some(
+        (a) =>
+          a.id === newLead.id ||
+          (a.companyName === newLead.companyName && a.companyName),
+      )
+      if (exists) return prev
+      return [newLead, ...prev]
+    })
+
+    if (profile?.loja_id) {
+      await supabase
+        .from('accounts')
+        .insert({
+          ...newLead,
+          loja_id: profile.loja_id,
+        })
+        .catch(() => {})
+    }
   }
 
-  const updateLead = (id: string, lead: any) => {
+  const updateLead = (id: string, leadData: any) => {
     setAccounts((prev) =>
       prev.map((a) =>
         a.id === id
-          ? { ...a, ...lead, updatedAt: new Date().toISOString() }
+          ? { ...a, ...leadData, updatedAt: new Date().toISOString() }
           : a,
       ),
     )
+    if (profile?.loja_id) {
+      supabase.from('accounts').update(leadData).eq('id', id).then()
+    }
   }
 
   const deleteLead = (id: string) => {
     setAccounts((prev) => prev.filter((a) => a.id !== id))
+    if (profile?.loja_id) {
+      supabase.from('accounts').delete().eq('id', id).then()
+    }
   }
 
   const moveLeadToStage = (id: string, stage: string) => {
-    updateLead(id, { status: stage as any })
+    updateLead(id, { pipelineStage: stage })
   }
 
   const getLeadById = (id: string) => {
     return accounts.find((a) => a.id === id)
+  }
+
+  const getLeadsByPipelineStage = (stage: string) => {
+    return accounts.filter((a) => a.pipelineStage === stage)
   }
 
   const addProposalToLead = (proposal: any) => {
@@ -322,7 +419,14 @@ export function MainProvider({ children }: { children: ReactNode }) {
   const addAccount = async (
     acc: Omit<Account, 'id' | 'createdAt' | 'updatedAt'>,
   ) => {
-    const toInsert = { ...acc, loja_id: profile?.loja_id }
+    const toInsert = {
+      ...acc,
+      loja_id: profile?.loja_id,
+      companyName: acc.companyName || acc.name || '',
+      pipelineStage: acc.pipelineStage || acc.status || 'Prospecção',
+      status:
+        acc.status === 'Novo Lead' ? 'Novo Lead' : acc.status || 'Novo Lead',
+    }
     const { data, error } = await supabase
       .from('accounts')
       .insert(toInsert)
@@ -330,17 +434,19 @@ export function MainProvider({ children }: { children: ReactNode }) {
       .single()
     if (data && !error) {
       setAccounts((prev) =>
-        prev.some((a) => a.id === data.id) ? prev : [data as Account, ...prev],
+        prev.some((a) => a.id === data.id)
+          ? prev
+          : migrateExistingLeadsToPipeline([data as Account, ...prev]),
       )
       return data as Account
     }
 
     const fallbackAcc: Account = {
-      ...acc,
+      ...toInsert,
       id: crypto.randomUUID(),
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
-    }
+    } as Account
     setAccounts((prev) => [fallbackAcc, ...prev])
     return fallbackAcc
   }
@@ -474,8 +580,10 @@ export function MainProvider({ children }: { children: ReactNode }) {
       }
 
       if (opp.stage === 'Fechado Ganho') {
+        accountUpdates.pipelineStage = 'Fechado'
         accountUpdates.status = 'Cliente'
       } else if (opp.stage === 'Fechado Perdido') {
+        accountUpdates.pipelineStage = 'Perdido'
         accountUpdates.status = 'Perdido'
       }
 
@@ -502,6 +610,7 @@ export function MainProvider({ children }: { children: ReactNode }) {
         deleteLead,
         moveLeadToStage,
         getLeadById,
+        getLeadsByPipelineStage,
         addProposalToLead,
         addActivity,
         completeActivity,

@@ -90,6 +90,7 @@ export default function Pipeline() {
       const q = search.toLowerCase()
       leads = leads.filter(
         (a: any) =>
+          a.companyName?.toLowerCase().includes(q) ||
           a.name?.toLowerCase().includes(q) ||
           a.contactName?.toLowerCase().includes(q) ||
           a.phone?.toLowerCase().includes(q),
@@ -164,9 +165,8 @@ export default function Pipeline() {
         {COLUMNS_CONFIG.map((col) => {
           const leadsInStage = filteredLeads.filter(
             (a: any) =>
-              a.status === col.id ||
-              (!a.status && col.id === 'Prospecção') ||
-              (a.status === 'Novo' && col.id === 'Prospecção'),
+              a.pipelineStage === col.id ||
+              (!a.pipelineStage && col.id === 'Prospecção'),
           )
           return (
             <div
@@ -227,7 +227,7 @@ function KanbanCard({ lead, onClick, onDragStart }: any) {
     >
       <div>
         <h4 className="font-bold text-[14px] text-[#0D1B2A] leading-snug group-hover:text-[#FF6A00] transition-colors">
-          {lead.name}
+          {lead.companyName || lead.name}
         </h4>
         <p className="text-[13px] text-slate-600 mt-1">
           {lead.contactName || 'Sem contato'}
@@ -239,13 +239,13 @@ function KanbanCard({ lead, onClick, onDragStart }: any) {
           <Phone className="w-3.5 h-3.5" /> {lead.phone || '-'}
         </div>
         <div className="font-semibold text-slate-700 bg-slate-100 px-2 py-0.5 rounded">
-          Frota: {lead.fleetEstimate || 0}
+          Frota: {lead.vehicleCount ?? lead.fleetEstimate ?? 0}
         </div>
       </div>
 
       <div className="pt-2 mt-1 border-t border-slate-100 flex justify-between items-center gap-2">
         <span className="text-[10px] font-bold px-1.5 py-0.5 bg-slate-100 text-slate-600 rounded whitespace-nowrap overflow-hidden text-ellipsis">
-          {lead.status || 'Prospecção'}
+          {lead.pipelineStage || 'Prospecção'}
         </span>
         <div className="text-[10px] text-slate-400 font-medium whitespace-nowrap">
           {dateText} {timeText}
