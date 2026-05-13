@@ -29,6 +29,10 @@ interface MainStore {
   ) => Promise<void>
   addOpportunity: (opp: Omit<Opportunity, 'id' | 'createdAt'>) => Promise<void>
   updateOpportunity: (id: string, opp: Partial<Opportunity>) => Promise<void>
+  dateFilter: 'all' | 'today' | 'week' | 'month' | 'year'
+  setDateFilter: (filter: 'all' | 'today' | 'week' | 'month' | 'year') => void
+  kpiFilter: string | null
+  setKpiFilter: (filter: string | null) => void
 }
 
 const MainContext = createContext<MainStore | undefined>(undefined)
@@ -40,6 +44,10 @@ export function MainProvider({ children }: { children: ReactNode }) {
   const [activities, setActivities] = useState<Activity[]>([])
   const [opportunities, setOpportunities] = useState<Opportunity[]>([])
   const [logoUrl, setLogoUrl] = useState<string | null>(null)
+  const [dateFilter, setDateFilter] = useState<
+    'all' | 'today' | 'week' | 'month' | 'year'
+  >('month')
+  const [kpiFilter, setKpiFilter] = useState<string | null>(null)
 
   const oppsRef = useRef(opportunities)
   useEffect(() => {
@@ -385,6 +393,10 @@ export function MainProvider({ children }: { children: ReactNode }) {
         addOpportunity,
         updateOpportunity,
         deleteAccount,
+        dateFilter,
+        setDateFilter,
+        kpiFilter,
+        setKpiFilter,
       }}
     >
       {children}

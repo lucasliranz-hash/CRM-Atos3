@@ -36,6 +36,7 @@ export interface Account {
   lastTouchDate?: string
   cadenceStage?: string
   lossReason?: string
+  notes?: string
   loja_id?: string
   createdAt: string
   updatedAt: string

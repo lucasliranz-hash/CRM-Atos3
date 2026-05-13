@@ -176,7 +176,13 @@ export default function LeadHistorySheet({
               </p>
             </div>
           </div>
-          <Select defaultValue={activeOpp?.stage || 'Follow-up'}>
+          <Select
+            value={activeOpp?.stage || 'Follow-up'}
+            onValueChange={(val) =>
+              activeOpp &&
+              updateOpportunity(activeOpp.id, { stage: val as any })
+            }
+          >
             <SelectTrigger className="w-[170px] bg-orange-50 text-orange-700 border-orange-200 font-bold h-10 rounded-full shadow-sm">
               <SelectValue />
             </SelectTrigger>
@@ -185,6 +191,9 @@ export default function LeadHistorySheet({
               <SelectItem value="Conexão Enviada">Conexão Enviada</SelectItem>
               <SelectItem value="Primeiro Contato">Primeiro Contato</SelectItem>
               <SelectItem value="Follow-up">Follow-up</SelectItem>
+              <SelectItem value="Em Conversa">Em Conversa</SelectItem>
+              <SelectItem value="Reunião">Reunião</SelectItem>
+              <SelectItem value="Proposta">Proposta</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -337,10 +346,16 @@ export default function LeadHistorySheet({
           </div>
 
           <div>
+            <div className="flex justify-between items-center mb-3">
+              <h3 className="font-bold text-lg text-slate-900">Anotações</h3>
+            </div>
             <Textarea
-              className="min-h-[120px] bg-white border-slate-200 rounded-xl resize-none text-[14px] text-slate-700 p-4 shadow-sm mb-4"
+              className="min-h-[120px] bg-white border-slate-200 rounded-xl resize-none text-[14px] text-slate-700 p-4 shadow-sm mb-4 focus-visible:ring-[#FF6A00]"
               placeholder="Adicione observações importantes..."
-              defaultValue="Interesse em reduzir custos com gestão de frota.&#10;Disse que está avaliando soluções até final de maio.&#10;Prioridade: relatórios e rastreamento."
+              value={account.notes || ''}
+              onChange={(e) =>
+                updateAccount(account.id, { notes: e.target.value })
+              }
             />
           </div>
         </div>

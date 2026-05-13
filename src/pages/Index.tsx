@@ -1,21 +1,41 @@
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import useMainStore from '@/stores/main'
 import { isOverdue, isToday, formatCurrency } from '@/lib/crm-utils'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import {
   Clock,
-  Building2,
-  TrendingUp,
   Target,
   Phone,
   Calendar,
   Briefcase,
+  Users,
+  Filter,
+  CheckCircle2,
 } from 'lucide-react'
-import { Link } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import { useAuth } from '@/hooks/use-auth'
-import { useToast } from '@/hooks/use-toast'
 import { cn } from '@/lib/utils'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  Tooltip,
+  PieChart,
+  Pie,
+  Cell,
+  CartesianGrid,
+} from 'recharts'
+import { ChartContainer, ChartTooltipContent } from '@/components/ui/chart'
+import LeadHistorySheet from '@/components/LeadHistorySheet'
 
 const getVariance = (items: any[], dateField = 'createdAt') => {
   const now = new Date()
@@ -36,73 +56,90 @@ const getVariance = (items: any[], dateField = 'createdAt') => {
   return diff >= 0 ? `+${diff}` : `${diff}`
 }
 
+function isWithinFilter(dateStr: string | undefined, filter: string) {
+  if (filter === 'all' || !dateStr) return true
+  const d = new Date(dateStr)
+  const now = new Date()
+  if (filter === 'today') return d.toDateString() === now.toDateString()
+  if (filter === 'week') {
+    const w = new Date(now)
+    w.setDate(now.getDate() - now.getDay())
+    return d >= w
+  }
+  if (filter === 'month')
+    return (
+      d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear()
+    )
+  if (filter === 'year') return d.getFullYear() === now.getFullYear()
+  return true
+}
+
 export default function Index() {
-  const { activities, accounts, opportunities } = useMainStore()
+  const navigate = useNavigate()
+  const {
+    activities,
+    accounts,
+    opportunities,
+    dateFilter,
+    setDateFilter,
+    setKpiFilter,
+  } = useMainStore()
   const { profile } = useAuth()
+
+  const [detailsAccountId, setDetailsAccountId] = useState<string | null>(null)
+
+  // Filtered Data
+  const fAccounts = useMemo(
+    () => accounts.filter((a) => isWithinFilter(a.createdAt, dateFilter)),
+    [accounts, dateFilter],
+  )
+  const fOpps = useMemo(
+    () => opportunities.filter((o) => isWithinFilter(o.createdAt, dateFilter)),
+    [opportunities, dateFilter],
+  )
+  const fActivities = useMemo(
+    () => activities.filter((a) => isWithinFilter(a.date, dateFilter)),
+    [activities, dateFilter],
+  )
 
   // Top Metrics
   const closedWonTotal = useMemo(
     () =>
-      opportunities
+      fOpps
         .filter((o) => o.stage === 'Fechado Ganho')
         .reduce((s, o) => s + o.total, 0),
-    [opportunities],
+    [fOpps],
   )
 
-  const mappedLeads = useMemo(() => accounts.length, [accounts])
-  const mappedLeadsVar = useMemo(() => getVariance(accounts), [accounts])
+  const mappedLeads = fAccounts.length
+  const mappedLeadsVar = getVariance(accounts)
 
-  const contactsMade = useMemo(
-    () =>
-      activities.filter(
-        (a) =>
-          a.completed &&
-          ['Ligação', 'Mensagem', 'E-mail', 'Follow-up'].includes(a.type),
-      ).length,
-    [activities],
-  )
-  const contactsMadeVar = useMemo(
-    () =>
-      getVariance(
-        activities.filter(
-          (a) =>
-            a.completed &&
-            ['Ligação', 'Mensagem', 'E-mail', 'Follow-up'].includes(a.type),
-        ),
-        'date',
-      ),
-    [activities],
+  const contactsMade = fActivities.filter(
+    (a) =>
+      a.completed &&
+      ['Ligação', 'Mensagem', 'E-mail', 'Follow-up'].includes(a.type),
+  ).length
+  const contactsMadeVar = getVariance(
+    activities.filter(
+      (a) =>
+        a.completed &&
+        ['Ligação', 'Mensagem', 'E-mail', 'Follow-up'].includes(a.type),
+    ),
+    'date',
   )
 
-  const meetingsScheduled = useMemo(
-    () => activities.filter((a) => a.type === 'Reunião agendada').length,
-    [activities],
-  )
-  const meetingsScheduledVar = useMemo(
-    () =>
-      getVariance(
-        activities.filter((a) => a.type === 'Reunião agendada'),
-        'date',
-      ),
-    [activities],
+  const meetingsScheduled = fActivities.filter(
+    (a) => a.type === 'Reunião agendada',
+  ).length
+  const meetingsScheduledVar = getVariance(
+    activities.filter((a) => a.type === 'Reunião agendada'),
+    'date',
   )
 
-  const proposalsSent = useMemo(
-    () => opportunities.filter((o) => o.stage === 'Proposta').length,
-    [opportunities],
-  )
-  const proposalsSentVar = useMemo(
-    () => getVariance(opportunities.filter((o) => o.stage === 'Proposta')),
-    [opportunities],
-  )
-
-  const salesClosed = useMemo(
-    () => opportunities.filter((o) => o.stage === 'Fechado Ganho').length,
-    [opportunities],
-  )
-  const salesClosedVar = useMemo(
-    () => getVariance(opportunities.filter((o) => o.stage === 'Fechado Ganho')),
-    [opportunities],
+  const proposalsSent = fOpps.filter((o) => o.stage === 'Proposta').length
+  const salesClosed = fOpps.filter((o) => o.stage === 'Fechado Ganho').length
+  const salesClosedVar = getVariance(
+    opportunities.filter((o) => o.stage === 'Fechado Ganho'),
   )
 
   // Tasks Dashboard System
@@ -147,35 +184,14 @@ export default function Index() {
     )
   }, [opportunities, accounts])
 
-  const { addActivity, updateAccount, updateOpportunity } = useMainStore()
-  const { toast } = useToast()
-
-  const handleCompleteTask = async (task: any) => {
-    await addActivity({
-      accountId: task.accountId,
-      type: 'Mensagem',
-      channel: 'Presencial',
-      date: new Date().toISOString(),
-      result: `Ação concluída via Dashboard: ${task.text}`,
-      completed: true,
-    } as any)
-    await updateAccount(task.accountId, {
-      nextAction: null as any,
-      nextActionDate: null as any,
-    })
-    if (task.id.startsWith('opp-')) {
-      const oppId = task.id.replace('opp-', '')
-      await updateOpportunity(oppId, {
-        nextAction: null as any,
-        nextActionDate: null as any,
-      })
-    }
-    toast({ title: 'Ação concluída com sucesso!' })
-  }
-
   const overdue = tasks.filter((t) => isOverdue(t.date))
   const today = tasks.filter((t) => isToday(t.date))
   const upcoming = tasks.filter((t) => !isOverdue(t.date) && !isToday(t.date))
+
+  const handleKpiClick = (filterName: string) => {
+    setKpiFilter(filterName)
+    navigate('/pipeline')
+  }
 
   const MetricCard = ({
     title,
@@ -183,242 +199,431 @@ export default function Index() {
     variance,
     icon: Icon,
     colorClass,
+    kpiName,
   }: any) => (
-    <Card className="rounded-2xl border-none shadow-[0_2px_12px_rgba(0,0,0,0.04)] bg-white overflow-hidden">
+    <Card
+      className="rounded-[10px] border border-slate-100 shadow-sm bg-white overflow-hidden cursor-pointer hover:shadow-md transition-shadow group"
+      onClick={() => handleKpiClick(kpiName)}
+    >
       <CardContent className="p-5">
         <div className="flex justify-between items-start mb-4">
-          <div className={`p-2.5 rounded-xl ${colorClass}`}>
+          <div className={cn('p-2.5 rounded-xl transition-colors', colorClass)}>
             <Icon className="w-5 h-5" />
           </div>
-          <span className="text-xs font-bold text-slate-500 bg-slate-50 px-2 py-1 rounded-md border border-slate-100">
-            {variance} esta semana
+          <span className="text-[11px] font-bold text-emerald-600 bg-emerald-50 px-2 py-1 rounded-md border border-emerald-100">
+            {variance} sem
           </span>
         </div>
-        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">
+        <p className="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1">
           {title}
         </p>
-        <h3 className="text-2xl font-black text-slate-900">{value}</h3>
+        <h3 className="text-2xl font-black text-slate-900 group-hover:text-[#FF6A00] transition-colors">
+          {value}
+        </h3>
       </CardContent>
     </Card>
   )
 
-  const TaskList = ({ title, items, emptyText, isRed }: any) => (
-    <div className="flex flex-col h-full">
-      <h3
-        className={`font-black text-sm uppercase tracking-wider mb-4 flex items-center ${isRed ? 'text-red-600' : 'text-slate-800'}`}
-      >
-        {title}
-        <span
-          className={`ml-2 text-[10px] px-2 py-0.5 rounded-full ${isRed ? 'bg-red-100 text-red-700' : 'bg-slate-100 text-slate-600'}`}
-        >
-          {items.length}
-        </span>
-      </h3>
-      <div className="space-y-3 flex-1">
-        {items.length === 0 ? (
-          <div className="h-24 flex items-center justify-center border-2 border-dashed border-slate-200 rounded-xl text-xs font-bold text-slate-400 bg-slate-50/50">
-            {emptyText}
-          </div>
-        ) : (
-          items.map((task: any) => (
-            <div
-              key={task.id}
-              className={`p-4 rounded-xl border ${isRed ? 'bg-red-50/50 border-red-100' : 'bg-white border-slate-200 shadow-sm'} group`}
-            >
-              <div className="flex justify-between items-start mb-2">
-                <div className="font-bold text-sm text-slate-900">
-                  {task.name}
-                </div>
-                <div
-                  className={`text-[10px] font-bold px-2 py-0.5 rounded flex items-center gap-1 ${isRed ? 'bg-red-100 text-red-700' : 'bg-slate-100 text-slate-600'}`}
-                >
-                  <Clock className="w-3 h-3" />
-                  {new Date(task.date).toLocaleDateString()}
-                </div>
-              </div>
-              <p className="text-xs font-medium text-slate-600 mb-3">
-                {task.text}
-              </p>
-              <div className="flex justify-end">
-                <Button
-                  size="sm"
-                  onClick={() => handleCompleteTask(task)}
-                  className={`h-7 text-[10px] font-bold ${isRed ? 'bg-red-100 text-red-700 hover:bg-red-200' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'} shadow-none`}
-                >
-                  Concluir
-                </Button>
-              </div>
-            </div>
-          ))
-        )}
-      </div>
-    </div>
-  )
+  const chartData = [
+    { name: 'Seg', Contatos: 12, Reuniões: 3, Propostas: 1 },
+    { name: 'Ter', Contatos: 19, Reuniões: 5, Propostas: 2 },
+    { name: 'Qua', Contatos: 15, Reuniões: 4, Propostas: 1 },
+    { name: 'Qui', Contatos: 22, Reuniões: 6, Propostas: 3 },
+    { name: 'Sex', Contatos: 10, Reuniões: 2, Propostas: 0 },
+  ]
+
+  const conversionData = [
+    { name: 'Leads', value: mappedLeads, fill: '#3b82f6' },
+    { name: 'Reuniões', value: meetingsScheduled, fill: '#8b5cf6' },
+    { name: 'Propostas', value: proposalsSent, fill: '#f59e0b' },
+    { name: 'Vendas', value: salesClosed, fill: '#10b981' },
+  ]
 
   return (
-    <div className="space-y-8 pb-10 animate-in fade-in slide-in-from-bottom-4 duration-700">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4">
-        <div>
-          <h1 className="text-3xl md:text-4xl font-black text-slate-900 tracking-tight">
-            Olá, {profile?.nome?.split(' ')[0] || 'Líder'} 👋
-          </h1>
-          <p className="text-slate-500 mt-1.5 font-semibold text-sm md:text-base">
-            Aqui está o resumo da sua execução diária no Atos3 CRM.
-          </p>
-        </div>
-        <Link to="/pipeline" className="w-full sm:w-auto">
-          <Button className="w-full bg-orange-500 text-white hover:bg-orange-600 rounded-xl shadow-lg shadow-orange-500/20 font-bold text-sm h-11 px-6">
-            <Target className="w-4 h-4 mr-2" /> Ver Pipeline
-          </Button>
-        </Link>
-      </div>
-
-      {/* Revenue Card & Metrics */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-4">
-        <Card className="col-span-1 sm:col-span-2 lg:col-span-2 rounded-2xl border-none shadow-[0_4px_20px_rgba(0,0,0,0.06)] bg-gradient-to-br from-slate-900 to-slate-800 text-white relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-32 h-32 bg-white opacity-5 rounded-full blur-2xl -translate-y-10 translate-x-10" />
-          <CardContent className="p-6 relative z-10 h-full flex flex-col justify-center">
-            <div className="flex justify-between items-start mb-4">
-              <div className="p-3 bg-white/10 text-white rounded-xl backdrop-blur-sm border border-white/10">
-                <TrendingUp className="w-6 h-6 text-orange-400" />
-              </div>
-            </div>
-            <p className="text-sm font-bold text-slate-300 uppercase tracking-wider mb-1">
-              Receita Total (Ganhos)
+    <div className="flex flex-col lg:flex-row gap-6 pb-10 animate-in fade-in duration-500 min-h-[calc(100vh-6rem)]">
+      {/* Main Content Area */}
+      <div className="flex-1 space-y-6">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4">
+          <div>
+            <h1 className="text-3xl font-black text-slate-900 tracking-tight">
+              Visão Estratégica 👋
+            </h1>
+            <p className="text-slate-500 mt-1 font-medium text-sm">
+              Acompanhe seus resultados e funil em tempo real.
             </p>
-            <h3 className="text-3xl sm:text-4xl font-black text-white">
-              {formatCurrency(closedWonTotal)}
+          </div>
+          <div className="flex gap-3 w-full sm:w-auto">
+            <Select value={dateFilter} onValueChange={setDateFilter as any}>
+              <SelectTrigger className="w-[160px] bg-white h-10 border-slate-200 font-semibold shadow-sm">
+                <Filter className="w-4 h-4 mr-2 text-slate-400" />
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="today">Hoje</SelectItem>
+                <SelectItem value="week">Esta Semana</SelectItem>
+                <SelectItem value="month">Este Mês</SelectItem>
+                <SelectItem value="year">Este Ano</SelectItem>
+                <SelectItem value="all">Todo Período</SelectItem>
+              </SelectContent>
+            </Select>
+            <Button
+              onClick={() => navigate('/pipeline')}
+              className="bg-[#FF6A00] text-white hover:bg-[#e65c00] rounded-[8px] font-bold h-10 shadow-md hidden sm:flex"
+            >
+              <Target className="w-4 h-4 mr-2" /> Ver Pipeline
+            </Button>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <MetricCard
+            title="Leads Mapeados"
+            value={mappedLeads}
+            variance={mappedLeadsVar}
+            icon={Users}
+            colorClass="bg-blue-50 text-blue-600 group-hover:bg-[#FF6A00]/10 group-hover:text-[#FF6A00]"
+            kpiName="leads"
+          />
+          <MetricCard
+            title="Contatos Realizados"
+            value={contactsMade}
+            variance={contactsMadeVar}
+            icon={Phone}
+            colorClass="bg-indigo-50 text-indigo-600 group-hover:bg-[#FF6A00]/10 group-hover:text-[#FF6A00]"
+            kpiName="contatos"
+          />
+          <MetricCard
+            title="Reuniões Agendadas"
+            value={meetingsScheduled}
+            variance={meetingsScheduledVar}
+            icon={Calendar}
+            colorClass="bg-purple-50 text-purple-600 group-hover:bg-[#FF6A00]/10 group-hover:text-[#FF6A00]"
+            kpiName="reunioes"
+          />
+          <MetricCard
+            title="Vendas Fechadas"
+            value={salesClosed}
+            variance={salesClosedVar}
+            icon={Briefcase}
+            colorClass="bg-emerald-50 text-emerald-600 group-hover:bg-[#FF6A00]/10 group-hover:text-[#FF6A00]"
+            kpiName="vendas"
+          />
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <Card className="rounded-[10px] shadow-sm border-slate-100 bg-white">
+            <CardContent className="p-6">
+              <h3 className="font-black text-slate-900 mb-6">
+                Atividades da Semana
+              </h3>
+              <ChartContainer config={{}} className="h-[240px] w-full">
+                <BarChart
+                  data={chartData}
+                  margin={{ top: 0, right: 0, left: -20, bottom: 0 }}
+                >
+                  <CartesianGrid
+                    strokeDasharray="3 3"
+                    vertical={false}
+                    stroke="#f1f5f9"
+                  />
+                  <XAxis
+                    dataKey="name"
+                    axisLine={false}
+                    tickLine={false}
+                    tick={{ fontSize: 12, fill: '#64748b' }}
+                    dy={10}
+                  />
+                  <YAxis
+                    axisLine={false}
+                    tickLine={false}
+                    tick={{ fontSize: 12, fill: '#64748b' }}
+                  />
+                  <Tooltip
+                    content={<ChartTooltipContent />}
+                    cursor={{ fill: '#f8fafc' }}
+                  />
+                  <Bar
+                    dataKey="Contatos"
+                    fill="#3b82f6"
+                    radius={[4, 4, 0, 0]}
+                    barSize={12}
+                  />
+                  <Bar
+                    dataKey="Reuniões"
+                    fill="#8b5cf6"
+                    radius={[4, 4, 0, 0]}
+                    barSize={12}
+                  />
+                  <Bar
+                    dataKey="Propostas"
+                    fill="#f59e0b"
+                    radius={[4, 4, 0, 0]}
+                    barSize={12}
+                  />
+                </BarChart>
+              </ChartContainer>
+            </CardContent>
+          </Card>
+
+          <Card className="rounded-[10px] shadow-sm border-slate-100 bg-white">
+            <CardContent className="p-6 flex flex-col">
+              <h3 className="font-black text-slate-900 mb-6">
+                Eficiência do Funil
+              </h3>
+              <div className="flex items-center justify-center flex-1">
+                <ChartContainer
+                  config={{}}
+                  className="h-[200px] w-[200px] shrink-0"
+                >
+                  <PieChart>
+                    <Pie
+                      data={conversionData}
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={60}
+                      outerRadius={80}
+                      paddingAngle={5}
+                      dataKey="value"
+                    >
+                      {conversionData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.fill} />
+                      ))}
+                    </Pie>
+                    <Tooltip content={<ChartTooltipContent />} />
+                  </PieChart>
+                </ChartContainer>
+                <div className="ml-6 space-y-3 w-full max-w-[140px]">
+                  {conversionData.map((item) => (
+                    <div key={item.name} className="flex items-center gap-2">
+                      <div
+                        className="w-3 h-3 rounded-full shrink-0"
+                        style={{ backgroundColor: item.fill }}
+                      />
+                      <span className="text-sm font-medium text-slate-600">
+                        {item.name}
+                      </span>
+                      <span className="text-sm font-bold text-slate-900 ml-auto">
+                        {item.value}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Funnel */}
+        <Card className="rounded-[10px] shadow-sm border-slate-100 bg-white overflow-hidden">
+          <CardContent className="p-6">
+            <h3 className="font-black text-slate-900 mb-6 flex justify-between items-center">
+              Funil de Vendas
+              <span className="text-xs font-bold text-emerald-600 bg-emerald-50 px-2.5 py-1.5 rounded-md border border-emerald-100">
+                Receita Total: {formatCurrency(closedWonTotal)}
+              </span>
             </h3>
+            <div className="space-y-3">
+              {[
+                {
+                  label: 'Leads Mapeados',
+                  count: fAccounts.length,
+                  color: 'bg-blue-500',
+                },
+                {
+                  label: 'Conexão Enviada',
+                  count: fOpps.filter((o) => o.stage === 'Conexão Enviada')
+                    .length,
+                  color: 'bg-indigo-400',
+                },
+                {
+                  label: 'Primeiro Contato',
+                  count: fOpps.filter((o) => o.stage === 'Primeiro Contato')
+                    .length,
+                  color: 'bg-purple-400',
+                },
+                {
+                  label: 'Follow-up',
+                  count: fOpps.filter((o) => o.stage === 'Follow-up').length,
+                  color: 'bg-fuchsia-400',
+                },
+                {
+                  label: 'Em Conversa',
+                  count: fOpps.filter((o) => o.stage === 'Em Conversa').length,
+                  color: 'bg-pink-400',
+                },
+                {
+                  label: 'Reunião',
+                  count: fOpps.filter((o) => o.stage === 'Reunião').length,
+                  color: 'bg-rose-400',
+                },
+                {
+                  label: 'Proposta',
+                  count: proposalsSent,
+                  color: 'bg-orange-500',
+                },
+              ].map((stage) => {
+                const maxCount = Math.max(fAccounts.length, 1)
+                const width = Math.max((stage.count / maxCount) * 100, 4)
+                return (
+                  <div
+                    key={stage.label}
+                    className="flex items-center gap-4 group"
+                  >
+                    <div className="w-32 text-xs font-bold text-slate-600 text-right group-hover:text-slate-900 transition-colors">
+                      {stage.label}
+                    </div>
+                    <div className="flex-1 flex items-center gap-3">
+                      <div
+                        className={cn(
+                          'h-7 rounded-r-md transition-all duration-1000 ease-out',
+                          stage.color,
+                        )}
+                        style={{ width: `${width}%` }}
+                      />
+                      <span className="text-sm font-black text-slate-900">
+                        {stage.count}
+                      </span>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
           </CardContent>
         </Card>
-
-        <MetricCard
-          title="Leads Mapeados"
-          value={mappedLeads}
-          variance={mappedLeadsVar}
-          icon={Building2}
-          colorClass="bg-blue-50 text-blue-600"
-        />
-        <MetricCard
-          title="Contatos Realizados"
-          value={contactsMade}
-          variance={contactsMadeVar}
-          icon={Phone}
-          colorClass="bg-emerald-50 text-emerald-600"
-        />
-        <MetricCard
-          title="Reuniões Agendadas"
-          value={meetingsScheduled}
-          variance={meetingsScheduledVar}
-          icon={Calendar}
-          colorClass="bg-yellow-50 text-yellow-600"
-        />
-        <MetricCard
-          title="Vendas Fechadas"
-          value={salesClosed}
-          variance={salesClosedVar}
-          icon={Briefcase}
-          colorClass="bg-purple-50 text-purple-600"
-        />
       </div>
 
-      {/* Funnel */}
-      <div className="bg-white rounded-[10px] p-6 shadow-sm border border-slate-200 mb-8">
-        <h2 className="text-xl font-black text-slate-900 mb-6">
-          Funil de Vendas
-        </h2>
-        <div className="space-y-3 max-w-2xl">
-          {[
-            {
-              label: 'Leads Mapeados',
-              count: mappedLeads,
-              color: 'bg-blue-500',
-            },
-            {
-              label: 'Conexão Enviada',
-              count: opportunities.filter((o) => o.stage === 'Conexão Enviada')
-                .length,
-              color: 'bg-blue-400',
-            },
-            {
-              label: 'Primeiro Contato',
-              count: opportunities.filter((o) => o.stage === 'Primeiro Contato')
-                .length,
-              color: 'bg-emerald-400',
-            },
-            {
-              label: 'Follow-up',
-              count: opportunities.filter((o) => o.stage === 'Follow-up')
-                .length,
-              color: 'bg-yellow-400',
-            },
-            {
-              label: 'Em Conversa',
-              count: opportunities.filter((o) => o.stage === 'Em Conversa')
-                .length,
-              color: 'bg-orange-400',
-            },
-            {
-              label: 'Reunião',
-              count: opportunities.filter((o) => o.stage === 'Reunião').length,
-              color: 'bg-purple-500',
-            },
-            { label: 'Proposta', count: proposalsSent, color: 'bg-red-500' },
-          ].map((stage) => {
-            const maxCount = Math.max(mappedLeads, 1)
-            const width = Math.max((stage.count / maxCount) * 100, 5)
-            return (
-              <div key={stage.label} className="flex items-center gap-4">
-                <div className="w-32 text-xs font-bold text-slate-600 text-right">
-                  {stage.label}
-                </div>
-                <div className="flex-1 flex items-center gap-3">
-                  <div
-                    className={cn(
-                      'h-6 rounded-r-md transition-all duration-1000 ease-out',
-                      stage.color,
-                    )}
-                    style={{ width: `${width}%` }}
-                  ></div>
-                  <span className="text-sm font-black text-slate-900">
-                    {stage.count}
+      {/* Sidebar Tasks */}
+      <div className="w-full lg:w-[340px] shrink-0">
+        <Card className="rounded-[10px] shadow-sm border-slate-100 bg-white sticky top-24 h-[calc(100vh-7rem)] flex flex-col">
+          <div className="p-5 border-b border-slate-100 shrink-0">
+            <h2 className="text-lg font-black text-[#0D1B2A] flex items-center gap-2">
+              <CheckCircle2 className="w-5 h-5 text-[#FF6A00]" /> Minhas Ações
+              Hoje
+            </h2>
+            <p className="text-xs font-medium text-slate-500 mt-1">
+              {today.length + overdue.length} tarefas pendentes
+            </p>
+          </div>
+
+          <div className="flex-1 overflow-y-auto custom-scrollbar p-5 space-y-6">
+            {overdue.length > 0 && (
+              <div className="space-y-3">
+                <h4 className="text-xs font-black text-red-600 uppercase tracking-wider flex items-center gap-2">
+                  Atrasadas{' '}
+                  <span className="bg-red-100 text-red-700 px-1.5 py-0.5 rounded-md">
+                    {overdue.length}
                   </span>
-                </div>
+                </h4>
+                {overdue.map((t) => (
+                  <TaskItem
+                    key={t.id}
+                    task={t}
+                    isRed
+                    onClick={() => setDetailsAccountId(t.accountId)}
+                  />
+                ))}
               </div>
-            )
-          })}
-        </div>
+            )}
+
+            <div className="space-y-3">
+              <h4 className="text-xs font-black text-slate-800 uppercase tracking-wider flex items-center gap-2">
+                Hoje{' '}
+                <span className="bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded-md">
+                  {today.length}
+                </span>
+              </h4>
+              {today.length === 0 ? (
+                <div className="text-xs font-medium text-slate-400 p-4 border border-dashed border-slate-200 rounded-lg text-center">
+                  Tudo limpo para hoje!
+                </div>
+              ) : (
+                today.map((t) => (
+                  <TaskItem
+                    key={t.id}
+                    task={t}
+                    onClick={() => setDetailsAccountId(t.accountId)}
+                  />
+                ))
+              )}
+            </div>
+
+            {upcoming.length > 0 && (
+              <div className="space-y-3">
+                <h4 className="text-xs font-black text-slate-800 uppercase tracking-wider flex items-center gap-2">
+                  Próximas{' '}
+                  <span className="bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded-md">
+                    {upcoming.length}
+                  </span>
+                </h4>
+                {upcoming.slice(0, 5).map((t) => (
+                  <TaskItem
+                    key={t.id}
+                    task={t}
+                    onClick={() => setDetailsAccountId(t.accountId)}
+                  />
+                ))}
+              </div>
+            )}
+          </div>
+
+          <div className="p-4 border-t border-slate-100 shrink-0">
+            <Button
+              variant="outline"
+              className="w-full font-bold text-slate-700 h-10 shadow-sm"
+              onClick={() => navigate('/activities')}
+            >
+              Ver todas as atividades
+            </Button>
+          </div>
+        </Card>
       </div>
 
-      {/* Tasks System */}
-      <div className="bg-white rounded-2xl p-6 shadow-[0_2px_12px_rgba(0,0,0,0.03)] border border-slate-100">
-        <div className="mb-6">
-          <h2 className="text-xl font-black text-slate-900">
-            Minhas ações do dia
-          </h2>
-          <p className="text-sm font-medium text-slate-500 mt-1">
-            Gestão de tarefas baseada nas próximas ações definidas.
-          </p>
-        </div>
+      <LeadHistorySheet
+        account={accounts.find((a) => a.id === detailsAccountId) || null}
+        open={!!detailsAccountId}
+        onOpenChange={(open) => !open && setDetailsAccountId(null)}
+      />
+    </div>
+  )
+}
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          <TaskList
-            title="Atrasados"
-            items={overdue}
-            emptyText="Nenhum atraso. Mandou bem!"
-            isRed={true}
-          />
-          <TaskList
-            title="Hoje"
-            items={today}
-            emptyText="Tudo limpo para hoje."
-          />
-          <TaskList
-            title="Próximos"
-            items={upcoming}
-            emptyText="Nenhuma ação futura."
-          />
+function TaskItem({ task, isRed, onClick }: any) {
+  return (
+    <div
+      onClick={onClick}
+      className={cn(
+        'p-3 rounded-xl border cursor-pointer transition-all group',
+        isRed
+          ? 'bg-red-50/50 border-red-100 hover:border-red-300 hover:shadow-sm'
+          : 'bg-slate-50/50 border-slate-200 hover:border-slate-300 hover:shadow-sm',
+      )}
+    >
+      <div className="flex justify-between items-start mb-1.5">
+        <div className="font-bold text-sm text-slate-900 line-clamp-1">
+          {task.name}
         </div>
+        <Clock
+          className={cn(
+            'w-3.5 h-3.5 mt-0.5',
+            isRed ? 'text-red-500' : 'text-slate-400',
+          )}
+        />
+      </div>
+      <p className="text-xs font-medium text-slate-600 line-clamp-2">
+        {task.text}
+      </p>
+      <div
+        className={cn(
+          'text-[10px] font-bold mt-2',
+          isRed ? 'text-red-600' : 'text-[#FF6A00]',
+        )}
+      >
+        {new Date(task.date).toLocaleString('pt-BR', {
+          day: '2-digit',
+          month: '2-digit',
+          hour: '2-digit',
+          minute: '2-digit',
+        })}
       </div>
     </div>
   )

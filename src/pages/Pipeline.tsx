@@ -1,10 +1,11 @@
-import { useState } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import useMainStore from '@/stores/main'
-import { Search, Filter, MessageCircle, Phone } from 'lucide-react'
+import { Search, Filter, MessageCircle, Phone, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import LeadHistorySheet from '@/components/LeadHistorySheet'
 import { cn } from '@/lib/utils'
+import { isOverdue, isToday } from '@/lib/crm-utils'
 
 const COLUMNS_CONFIG = [
   {
@@ -16,27 +17,122 @@ const COLUMNS_CONFIG = [
   {
     id: 'Conexão Enviada',
     title: '2. Conexão Enviada',
-    color: 'border-t-purple-500',
-    badgeColor: 'bg-purple-50 text-purple-600',
+    color: 'border-t-indigo-500',
+    badgeColor: 'bg-indigo-50 text-indigo-600',
   },
   {
     id: 'Primeiro Contato',
     title: '3. Primeiro Contato',
-    color: 'border-t-amber-500',
-    badgeColor: 'bg-amber-50 text-amber-600',
+    color: 'border-t-purple-500',
+    badgeColor: 'bg-purple-50 text-purple-600',
   },
   {
     id: 'Follow-up',
     title: '4. Follow-up',
+    color: 'border-t-fuchsia-500',
+    badgeColor: 'bg-fuchsia-50 text-fuchsia-600',
+  },
+  {
+    id: 'Em Conversa',
+    title: '5. Em Conversa',
+    color: 'border-t-pink-500',
+    badgeColor: 'bg-pink-50 text-pink-600',
+  },
+  {
+    id: 'Reunião',
+    title: '6. Reunião',
+    color: 'border-t-rose-500',
+    badgeColor: 'bg-rose-50 text-rose-600',
+  },
+  {
+    id: 'Proposta',
+    title: '7. Proposta',
     color: 'border-t-orange-500',
     badgeColor: 'bg-orange-50 text-orange-600',
   },
 ]
 
 export default function Pipeline() {
-  const { opportunities, accounts, contacts, updateOpportunity } =
-    useMainStore()
+  const {
+    opportunities,
+    accounts,
+    contacts,
+    activities,
+    updateOpportunity,
+    kpiFilter,
+    setKpiFilter,
+    dateFilter,
+  } = useMainStore()
   const [detailsAccountId, setDetailsAccountId] = useState<string | null>(null)
+  const [search, setSearch] = useState('')
+
+  useEffect(() => {
+    return () => setKpiFilter(null)
+  }, [setKpiFilter])
+
+  const filteredOpps = useMemo(() => {
+    let opps = opportunities
+
+    if (dateFilter !== 'all') {
+      const now = new Date()
+      opps = opps.filter((o) => {
+        const d = new Date(o.createdAt)
+        if (dateFilter === 'today')
+          return d.toDateString() === now.toDateString()
+        if (dateFilter === 'week') {
+          const w = new Date(now)
+          w.setDate(now.getDate() - now.getDay())
+          return d >= w
+        }
+        if (dateFilter === 'month')
+          return (
+            d.getMonth() === now.getMonth() &&
+            d.getFullYear() === now.getFullYear()
+          )
+        if (dateFilter === 'year') return d.getFullYear() === now.getFullYear()
+        return true
+      })
+    }
+
+    if (kpiFilter) {
+      if (kpiFilter === 'leads') {
+        // No extra filtering, base filtered opps
+      } else if (kpiFilter === 'contatos') {
+        const accsWithActivity = activities.map((a) => a.accountId)
+        opps = opps.filter((o) => accsWithActivity.includes(o.accountId))
+      } else if (kpiFilter === 'reunioes') {
+        const accsWithMeetings = activities
+          .filter((a) => a.type === 'Reunião agendada')
+          .map((a) => a.accountId)
+        opps = opps.filter((o) => accsWithMeetings.includes(o.accountId))
+      } else if (kpiFilter === 'vendas') {
+        opps = opps.filter((o) => o.stage === 'Fechado Ganho')
+      }
+    }
+
+    if (search) {
+      const q = search.toLowerCase()
+      opps = opps.filter((o) => {
+        const acc = accounts.find((a) => a.id === o.accountId)
+        const contact = contacts.find((c) => c.accountId === o.accountId)
+        return (
+          o.name.toLowerCase().includes(q) ||
+          acc?.name.toLowerCase().includes(q) ||
+          contact?.name.toLowerCase().includes(q)
+        )
+      })
+    }
+
+    return opps
+  }, [
+    opportunities,
+    kpiFilter,
+    search,
+    activities,
+    accounts,
+    contacts,
+    dateFilter,
+  ])
 
   const onDragStart = (e: React.DragEvent, oppId: string) =>
     e.dataTransfer.setData('oppId', oppId)
@@ -44,6 +140,14 @@ export default function Pipeline() {
     e.preventDefault()
     const oppId = e.dataTransfer.getData('oppId')
     if (oppId) updateOpportunity(oppId, { stage: stage as any })
+  }
+
+  const getKpiLabel = () => {
+    if (kpiFilter === 'leads') return 'Filtrando: Leads Mapeados'
+    if (kpiFilter === 'contatos') return 'Filtrando: Contatos Realizados'
+    if (kpiFilter === 'reunioes') return 'Filtrando: Reuniões Agendadas'
+    if (kpiFilter === 'vendas') return 'Filtrando: Vendas Fechadas'
+    return null
   }
 
   return (
@@ -58,16 +162,29 @@ export default function Pipeline() {
           </p>
         </div>
         <div className="flex items-center gap-4 w-full xl:w-auto">
+          {kpiFilter && (
+            <div className="flex items-center gap-2 bg-[#FF6A00]/10 text-[#FF6A00] px-3 py-1.5 rounded-lg text-sm font-bold border border-[#FF6A00]/20">
+              {getKpiLabel()}
+              <button
+                onClick={() => setKpiFilter(null)}
+                className="hover:bg-[#FF6A00]/20 rounded-full p-0.5"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          )}
           <div className="relative w-full xl:w-80">
             <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
             <Input
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
               placeholder="Buscar lead, empresa ou contato..."
-              className="pl-9 h-10 bg-white"
+              className="pl-9 h-10 bg-white border-slate-200 shadow-sm"
             />
           </div>
           <Button
             variant="outline"
-            className="h-10 bg-white shadow-sm font-bold gap-2 text-slate-700"
+            className="h-10 bg-white shadow-sm font-bold gap-2 text-slate-700 border-slate-200"
           >
             <Filter className="w-4 h-4" /> Filtros
           </Button>
@@ -76,7 +193,7 @@ export default function Pipeline() {
 
       <div className="flex gap-6 overflow-x-auto pb-4 custom-scrollbar items-start flex-1">
         {COLUMNS_CONFIG.map((col) => {
-          const oppsInStage = opportunities.filter((o) => o.stage === col.id)
+          const oppsInStage = filteredOpps.filter((o) => o.stage === col.id)
           return (
             <div
               key={col.id}
@@ -119,12 +236,6 @@ export default function Pipeline() {
                   )
                 })}
               </div>
-              <Button
-                variant="ghost"
-                className="w-full mt-3 text-[13px] text-blue-600 font-bold hover:bg-blue-50 shrink-0"
-              >
-                + Ver todos ({oppsInStage.length})
-              </Button>
             </div>
           )
         })}
@@ -139,23 +250,12 @@ export default function Pipeline() {
   )
 }
 
-const getTag = (stage: string) => {
-  if (stage === 'Leads Mapeados')
-    return { label: 'Novo', color: 'bg-blue-100 text-blue-700' }
-  if (stage === 'Conexão Enviada')
-    return { label: 'Conexão enviada', color: 'bg-purple-100 text-purple-700' }
-  if (stage === 'Primeiro Contato')
-    return { label: 'Mensagem enviada', color: 'bg-amber-100 text-amber-700' }
-  if (stage === 'Follow-up')
-    return { label: 'Follow-up', color: 'bg-orange-100 text-orange-700' }
-  return { label: stage, color: 'bg-slate-100 text-slate-700' }
-}
-
 function KanbanCard({ opp, acc, contact, onClick, onDragStart }: any) {
-  const tag = getTag(opp.stage)
-  const isFollowUp = opp.stage === 'Follow-up'
-
+  const isFollowUp = !!acc.nextAction
   const dateStr = acc.nextActionDate || acc.lastTouchDate || opp.createdAt
+  const isLate = isOverdue(dateStr)
+  const isTod = isToday(dateStr)
+
   const dateObj = new Date(dateStr)
   const dateText = `${dateObj.getDate().toString().padStart(2, '0')}/${(dateObj.getMonth() + 1).toString().padStart(2, '0')}`
 
@@ -164,28 +264,52 @@ function KanbanCard({ opp, acc, contact, onClick, onDragStart }: any) {
       draggable
       onDragStart={(e) => onDragStart(e, opp.id)}
       onClick={onClick}
-      className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm hover:shadow-md transition-all cursor-grab active:cursor-grabbing flex flex-col gap-3"
+      className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm hover:shadow-md transition-all cursor-grab active:cursor-grabbing flex flex-col gap-3 group relative overflow-hidden"
     >
+      {isLate && (
+        <div className="absolute left-0 top-0 bottom-0 w-1 bg-red-500" />
+      )}
+      {isTod && !isLate && (
+        <div className="absolute left-0 top-0 bottom-0 w-1 bg-[#FF6A00]" />
+      )}
+
       <div>
-        <h4 className="font-bold text-[14px] text-slate-900 leading-snug">
+        <h4 className="font-bold text-[14px] text-[#0D1B2A] leading-snug group-hover:text-[#FF6A00] transition-colors">
           {acc.name}
         </h4>
         <p className="text-[13px] text-slate-600 mt-1">
           {contact?.name || 'Sem contato'}
         </p>
-        <p className="text-[12px] text-slate-500">{contact?.role || '-'}</p>
       </div>
 
       <div className="flex items-center justify-between mt-1">
-        <span
-          className={cn('px-2 py-0.5 rounded text-[11px] font-bold', tag.color)}
-        >
-          {tag.label}
-        </span>
-        {isFollowUp && (
-          <div className="flex items-center gap-1.5 text-[11px] text-slate-500 font-medium">
-            <span>Próx: {dateText}</span>
-            <MessageCircle className="w-3.5 h-3.5 text-green-500" />
+        {isFollowUp ? (
+          <div className="flex items-center gap-1.5 text-[11px] font-bold bg-slate-50 px-2 py-1 rounded-md border border-slate-100">
+            <span
+              className={cn(
+                isLate
+                  ? 'text-red-600'
+                  : isTod
+                    ? 'text-[#FF6A00]'
+                    : 'text-slate-600',
+              )}
+            >
+              Próx: {dateText}
+            </span>
+            <MessageCircle
+              className={cn(
+                'w-3.5 h-3.5',
+                isLate
+                  ? 'text-red-500'
+                  : isTod
+                    ? 'text-[#FF6A00]'
+                    : 'text-slate-400',
+              )}
+            />
+          </div>
+        ) : (
+          <div className="text-[11px] font-medium text-slate-400">
+            Sem ação agendada
           </div>
         )}
       </div>
@@ -200,14 +324,9 @@ function KanbanCard({ opp, acc, contact, onClick, onDragStart }: any) {
             </div>
           )}
           {(contact?.whatsapp || acc?.phone) && (
-            <Phone className="w-4 h-4 text-slate-500" />
+            <Phone className="w-4 h-4 text-slate-400" />
           )}
         </div>
-        {!isFollowUp && (
-          <span className="text-[12px] font-medium text-slate-500">
-            {dateText}
-          </span>
-        )}
       </div>
     </div>
   )
