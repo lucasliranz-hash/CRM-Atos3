@@ -1,11 +1,19 @@
-import { useState, useMemo } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useState } from 'react'
 import useMainStore from '@/stores/main'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { useToast } from '@/hooks/use-toast'
-import { Plus, Search, Building2, Phone, Mail } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
+import {
+  Plus,
+  Search,
+  MapPin,
+  Phone,
+  Building2,
+  Mail,
+  Users,
+} from 'lucide-react'
 import {
   Dialog,
   DialogContent,
@@ -13,33 +21,17 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
+import { Card, CardContent } from '@/components/ui/card'
 
 export default function Accounts() {
   const { accounts, addLead } = useMainStore()
   const navigate = useNavigate()
   const { toast } = useToast()
+
+  const [isOpen, setIsOpen] = useState(false)
   const [search, setSearch] = useState('')
-  const [isCreateOpen, setIsCreateOpen] = useState(false)
 
-  const filteredAccounts = useMemo(() => {
-    if (!search) return accounts
-    const q = search.toLowerCase()
-    return accounts.filter(
-      (a: any) =>
-        a.name?.toLowerCase().includes(q) ||
-        a.contactName?.toLowerCase().includes(q) ||
-        a.email?.toLowerCase().includes(q),
-    )
-  }, [accounts, search])
-
-  const handleCreateLead = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleAddLead = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     const fd = new FormData(e.currentTarget)
 
@@ -53,235 +45,236 @@ export default function Accounts() {
       fleetEstimate: Number(fd.get('fleetEstimate')) || 0,
       leadSource: fd.get('leadSource'),
       notes: fd.get('notes'),
-      status: fd.get('status') || 'Prospecção',
-      priority: 'B',
+      status: 'Prospecção',
     })
 
-    setIsCreateOpen(false)
-    toast({
-      title: 'Sucesso',
-      description: 'Lead cadastrado e enviado para o Pipeline',
-    })
+    setIsOpen(false)
+    toast({ title: 'Lead cadastrado e enviado para o Pipeline' })
     navigate('/pipeline')
   }
 
+  const filtered = accounts.filter(
+    (a) =>
+      a.name?.toLowerCase().includes(search.toLowerCase()) ||
+      a.contactName?.toLowerCase().includes(search.toLowerCase()) ||
+      a.phone?.includes(search),
+  )
+
   return (
-    <div className="h-full flex flex-col space-y-6 animate-in fade-in duration-500 pb-6">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 shrink-0">
+    <div className="h-full flex flex-col space-y-6 animate-in fade-in duration-500 pb-10">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <h1 className="text-3xl font-black text-slate-900 tracking-tight">
-            Leads & Contas
+            Contas & Leads
           </h1>
-          <p className="text-slate-500 text-sm font-medium mt-1">
-            Gerencie sua base de contatos e empresas
+          <p className="text-slate-500 mt-1 font-medium text-sm">
+            Gerencie sua base de clientes e prospects
           </p>
         </div>
 
-        <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
+        <Dialog open={isOpen} onOpenChange={setIsOpen}>
           <DialogTrigger asChild>
-            <Button className="bg-[#FF6A00] hover:bg-[#e65c00] text-white font-bold h-10 px-4">
+            <Button className="bg-[#FF6A00] text-white hover:bg-[#e65c00] rounded-[8px] font-bold h-10 shadow-md">
               <Plus className="w-4 h-4 mr-2" /> Novo Lead
             </Button>
           </DialogTrigger>
-          <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto custom-scrollbar">
+          <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle className="text-xl font-black text-slate-900">
                 Cadastrar Novo Lead
               </DialogTitle>
             </DialogHeader>
-            <form onSubmit={handleCreateLead} className="space-y-4 mt-4">
+            <form onSubmit={handleAddLead} className="space-y-4 mt-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-1.5">
                   <label className="text-sm font-bold text-slate-700">
-                    Empresa *
+                    Nome da empresa *
                   </label>
-                  <Input name="name" required placeholder="Nome da empresa" />
+                  <Input
+                    name="name"
+                    required
+                    placeholder="Ex: Transportes Silva"
+                  />
                 </div>
                 <div className="space-y-1.5">
                   <label className="text-sm font-bold text-slate-700">
-                    Contato *
+                    Nome do contato *
                   </label>
                   <Input
                     name="contactName"
                     required
-                    placeholder="Nome do contato"
+                    placeholder="Ex: João Souza"
                   />
                 </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-1.5">
                   <label className="text-sm font-bold text-slate-700">
-                    Telefone *
+                    Telefone
                   </label>
-                  <Input name="phone" required placeholder="(00) 00000-0000" />
+                  <Input name="phone" placeholder="(00) 00000-0000" />
                 </div>
                 <div className="space-y-1.5">
                   <label className="text-sm font-bold text-slate-700">
-                    E-mail *
+                    E-mail
                   </label>
                   <Input
                     name="email"
                     type="email"
-                    required
-                    placeholder="contato@empresa.com"
+                    placeholder="joao@empresa.com"
                   />
                 </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-1.5">
                   <label className="text-sm font-bold text-slate-700">
-                    Cidade/Estado *
+                    Cidade/Estado
                   </label>
-                  <Input
-                    name="city"
-                    required
-                    placeholder="Ex: São Paulo - SP"
-                  />
+                  <Input name="city" placeholder="Ex: São Paulo / SP" />
                 </div>
                 <div className="space-y-1.5">
                   <label className="text-sm font-bold text-slate-700">
-                    Segmento *
+                    Segmento
                   </label>
-                  <Input name="segment" required placeholder="Ex: Logística" />
+                  <Input name="segment" placeholder="Ex: Logística" />
                 </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-1.5">
                   <label className="text-sm font-bold text-slate-700">
-                    Qtd Veículos *
+                    Quantidade de veículos
                   </label>
                   <Input
                     name="fleetEstimate"
                     type="number"
-                    required
                     placeholder="Ex: 50"
                   />
                 </div>
                 <div className="space-y-1.5">
                   <label className="text-sm font-bold text-slate-700">
-                    Origem do Lead
+                    Origem do lead
                   </label>
                   <Input
                     name="leadSource"
-                    placeholder="Ex: Indicação, Site, LinkedIn"
-                  />
-                </div>
-                <div className="space-y-1.5 md:col-span-2">
-                  <label className="text-sm font-bold text-slate-700">
-                    Estágio no Pipeline
-                  </label>
-                  <Select name="status" defaultValue="Prospecção">
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecione o estágio" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Prospecção">Prospecção</SelectItem>
-                      <SelectItem value="Contato realizado">
-                        Contato realizado
-                      </SelectItem>
-                      <SelectItem value="Reunião agendada">
-                        Reunião agendada
-                      </SelectItem>
-                      <SelectItem value="Proposta enviada">
-                        Proposta enviada
-                      </SelectItem>
-                      <SelectItem value="Negociação">Negociação</SelectItem>
-                      <SelectItem value="Fechado">Fechado</SelectItem>
-                      <SelectItem value="Perdido">Perdido</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-1.5 md:col-span-2">
-                  <label className="text-sm font-bold text-slate-700">
-                    Observações
-                  </label>
-                  <Textarea
-                    name="notes"
-                    placeholder="Detalhes adicionais..."
-                    className="h-20 resize-none"
+                    placeholder="Ex: Indicação, Site, etc."
                   />
                 </div>
               </div>
-              <div className="pt-4 flex justify-end">
-                <Button
-                  type="submit"
-                  className="bg-slate-900 hover:bg-slate-800 text-white font-bold w-full md:w-auto"
-                >
-                  Salvar e ir para Pipeline
-                </Button>
+
+              <div className="space-y-1.5">
+                <label className="text-sm font-bold text-slate-700">
+                  Observações
+                </label>
+                <Textarea
+                  name="notes"
+                  placeholder="Detalhes adicionais..."
+                  className="resize-none h-20"
+                />
               </div>
+
+              <Button
+                type="submit"
+                className="w-full bg-slate-900 hover:bg-slate-800 text-white font-bold h-11 mt-6"
+              >
+                Salvar Lead
+              </Button>
             </form>
           </DialogContent>
         </Dialog>
       </div>
 
-      <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex items-center gap-4">
-        <div className="relative flex-1 max-w-md">
-          <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-          <Input
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Buscar por empresa, contato ou email..."
-            className="pl-9 h-10 bg-slate-50 border-slate-200"
-          />
+      <Card className="rounded-[10px] border border-slate-100 shadow-sm bg-white flex-1 overflow-hidden flex flex-col">
+        <div className="p-4 border-b border-slate-100 shrink-0">
+          <div className="relative max-w-md">
+            <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+            <Input
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Buscar por empresa, contato ou telefone..."
+              className="pl-9 bg-slate-50 border-slate-200"
+            />
+          </div>
         </div>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 flex-1 overflow-y-auto content-start custom-scrollbar">
-        {filteredAccounts.map((acc: any) => (
-          <div
-            key={acc.id}
-            onClick={() => navigate(`/leads/${acc.id}`)}
-            className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm hover:shadow-md hover:border-[#FF6A00]/50 transition-all cursor-pointer flex flex-col gap-3 group"
-          >
-            <div className="flex justify-between items-start">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-lg bg-slate-50 border border-slate-100 flex items-center justify-center text-slate-400 group-hover:text-[#FF6A00] transition-colors">
-                  <Building2 className="w-5 h-5" />
-                </div>
-                <div>
-                  <h3 className="font-bold text-slate-900 text-[15px] leading-tight group-hover:text-[#FF6A00] transition-colors line-clamp-1">
-                    {acc.name}
-                  </h3>
-                  <span className="text-xs font-medium text-slate-500">
-                    {acc.segment || 'Sem segmento'}
-                  </span>
-                </div>
-              </div>
+        <CardContent className="p-0 overflow-y-auto flex-1 custom-scrollbar">
+          {filtered.length === 0 ? (
+            <div className="p-10 text-center flex flex-col items-center justify-center h-full">
+              <Users className="w-12 h-12 text-slate-200 mb-3" />
+              <p className="text-slate-500 font-medium">
+                Nenhum lead encontrado.
+              </p>
             </div>
+          ) : (
+            <div className="divide-y divide-slate-100">
+              {filtered.map((acc) => (
+                <div
+                  key={acc.id}
+                  onClick={() => navigate(`/leads/${acc.id}`)}
+                  className="p-4 hover:bg-slate-50 transition-colors cursor-pointer flex flex-col md:flex-row md:items-center justify-between gap-4"
+                >
+                  <div className="flex items-start gap-4">
+                    <div className="w-10 h-10 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center font-black text-sm shrink-0">
+                      {acc.name?.charAt(0).toUpperCase() || 'E'}
+                    </div>
+                    <div>
+                      <h3 className="font-bold text-slate-900">{acc.name}</h3>
+                      <div className="flex flex-wrap items-center gap-3 mt-1">
+                        <span className="text-xs text-slate-500 font-medium flex items-center gap-1">
+                          <Building2 className="w-3 h-3" />{' '}
+                          {acc.segment || 'Sem segmento'}
+                        </span>
+                        <span className="text-xs text-slate-500 font-medium flex items-center gap-1">
+                          <MapPin className="w-3 h-3" />{' '}
+                          {acc.city || 'Sem local'}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
 
-            <div className="space-y-2 text-sm mt-1">
-              {acc.contactName && (
-                <div className="flex items-center gap-2 text-slate-600">
-                  <span className="font-medium">{acc.contactName}</span>
+                  <div className="flex flex-wrap items-center gap-4 md:gap-8 bg-white p-3 md:p-0 rounded-lg border md:border-none border-slate-100">
+                    <div className="space-y-1">
+                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
+                        Contato
+                      </span>
+                      <span className="text-sm font-medium text-slate-700">
+                        {acc.contactName || '-'}
+                      </span>
+                    </div>
+                    <div className="space-y-1">
+                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
+                        Telefone
+                      </span>
+                      <span className="text-sm font-medium text-slate-700 flex items-center gap-1">
+                        <Phone className="w-3 h-3 text-slate-400" />{' '}
+                        {acc.phone || '-'}
+                      </span>
+                    </div>
+                    <div className="space-y-1">
+                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
+                        E-mail
+                      </span>
+                      <span className="text-sm font-medium text-slate-700 flex items-center gap-1">
+                        <Mail className="w-3 h-3 text-slate-400" />{' '}
+                        {acc.email || '-'}
+                      </span>
+                    </div>
+                    <div className="space-y-1">
+                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
+                        Estágio
+                      </span>
+                      <span className="inline-flex px-2 py-0.5 rounded text-xs font-bold bg-slate-100 text-slate-700">
+                        {acc.status || 'Prospecção'}
+                      </span>
+                    </div>
+                  </div>
                 </div>
-              )}
-              {acc.phone && (
-                <div className="flex items-center gap-2 text-slate-500">
-                  <Phone className="w-3.5 h-3.5" />
-                  <span className="text-xs">{acc.phone}</span>
-                </div>
-              )}
-              {acc.email && (
-                <div className="flex items-center gap-2 text-slate-500">
-                  <Mail className="w-3.5 h-3.5" />
-                  <span className="text-xs truncate">{acc.email}</span>
-                </div>
-              )}
+              ))}
             </div>
-
-            <div className="mt-auto pt-4 border-t border-slate-100 flex items-center justify-between">
-              <span className="text-[11px] font-bold px-2 py-1 bg-slate-100 text-slate-600 rounded-md">
-                {acc.status || 'Prospecção'}
-              </span>
-              <span className="text-[11px] font-semibold text-slate-400">
-                Frota: {acc.fleetEstimate || 0}
-              </span>
-            </div>
-          </div>
-        ))}
-
-        {filteredAccounts.length === 0 && (
-          <div className="col-span-full py-12 flex flex-col items-center justify-center text-slate-500 bg-white rounded-xl border border-slate-200 border-dashed">
-            <Building2 className="w-12 h-12 mb-3 text-slate-300" />
-            <p className="font-medium">Nenhum lead encontrado.</p>
-          </div>
-        )}
-      </div>
+          )}
+        </CardContent>
+      </Card>
     </div>
   )
 }
