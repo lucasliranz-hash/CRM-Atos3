@@ -11,7 +11,7 @@ export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: '14.4'
+    PostgrestVersion: "14.4"
   }
   public: {
     Tables: {
@@ -19,8 +19,12 @@ export type Database = {
         Row: {
           accountPotential: string | null
           cadenceStage: string | null
+          city: string | null
+          companyName: string | null
+          contactName: string | null
           createdAt: string | null
           detailedSource: string | null
+          email: string | null
           fleetEstimate: number | null
           fleetModel: string | null
           icpFit: string | null
@@ -33,18 +37,27 @@ export type Database = {
           name: string
           nextAction: string | null
           nextActionDate: string | null
+          notes: string | null
           phone: string | null
+          pipelineStage: string | null
           priority: string
           segment: string | null
+          source: string | null
+          state: string | null
           status: string
           updatedAt: string | null
+          vehicleCount: number | null
           website: string | null
         }
         Insert: {
           accountPotential?: string | null
           cadenceStage?: string | null
+          city?: string | null
+          companyName?: string | null
+          contactName?: string | null
           createdAt?: string | null
           detailedSource?: string | null
+          email?: string | null
           fleetEstimate?: number | null
           fleetModel?: string | null
           icpFit?: string | null
@@ -57,18 +70,27 @@ export type Database = {
           name: string
           nextAction?: string | null
           nextActionDate?: string | null
+          notes?: string | null
           phone?: string | null
+          pipelineStage?: string | null
           priority: string
           segment?: string | null
+          source?: string | null
+          state?: string | null
           status: string
           updatedAt?: string | null
+          vehicleCount?: number | null
           website?: string | null
         }
         Update: {
           accountPotential?: string | null
           cadenceStage?: string | null
+          city?: string | null
+          companyName?: string | null
+          contactName?: string | null
           createdAt?: string | null
           detailedSource?: string | null
+          email?: string | null
           fleetEstimate?: number | null
           fleetModel?: string | null
           icpFit?: string | null
@@ -81,20 +103,25 @@ export type Database = {
           name?: string
           nextAction?: string | null
           nextActionDate?: string | null
+          notes?: string | null
           phone?: string | null
+          pipelineStage?: string | null
           priority?: string
           segment?: string | null
+          source?: string | null
+          state?: string | null
           status?: string
           updatedAt?: string | null
+          vehicleCount?: number | null
           website?: string | null
         }
         Relationships: [
           {
-            foreignKeyName: 'accounts_loja_id_fkey'
-            columns: ['loja_id']
+            foreignKeyName: "accounts_loja_id_fkey"
+            columns: ["loja_id"]
             isOneToOne: false
-            referencedRelation: 'lojas'
-            referencedColumns: ['id']
+            referencedRelation: "lojas"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -113,6 +140,7 @@ export type Database = {
           nextAction: string | null
           nextActionDate: string | null
           result: string | null
+          title: string | null
           type: string
         }
         Insert: {
@@ -129,6 +157,7 @@ export type Database = {
           nextAction?: string | null
           nextActionDate?: string | null
           result?: string | null
+          title?: string | null
           type: string
         }
         Update: {
@@ -145,29 +174,30 @@ export type Database = {
           nextAction?: string | null
           nextActionDate?: string | null
           result?: string | null
+          title?: string | null
           type?: string
         }
         Relationships: [
           {
-            foreignKeyName: 'activities_accountId_fkey'
-            columns: ['accountId']
+            foreignKeyName: "activities_accountId_fkey"
+            columns: ["accountId"]
             isOneToOne: false
-            referencedRelation: 'accounts'
-            referencedColumns: ['id']
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'activities_contactId_fkey'
-            columns: ['contactId']
+            foreignKeyName: "activities_contactId_fkey"
+            columns: ["contactId"]
             isOneToOne: false
-            referencedRelation: 'contacts'
-            referencedColumns: ['id']
+            referencedRelation: "contacts"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'activities_loja_id_fkey'
-            columns: ['loja_id']
+            foreignKeyName: "activities_loja_id_fkey"
+            columns: ["loja_id"]
             isOneToOne: false
-            referencedRelation: 'lojas'
-            referencedColumns: ['id']
+            referencedRelation: "lojas"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -207,11 +237,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'audit_logs_loja_id_fkey'
-            columns: ['loja_id']
+            foreignKeyName: "audit_logs_loja_id_fkey"
+            columns: ["loja_id"]
             isOneToOne: false
-            referencedRelation: 'lojas'
-            referencedColumns: ['id']
+            referencedRelation: "lojas"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -239,17 +269,19 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'company_settings_loja_id_fkey'
-            columns: ['loja_id']
+            foreignKeyName: "company_settings_loja_id_fkey"
+            columns: ["loja_id"]
             isOneToOne: true
-            referencedRelation: 'lojas'
-            referencedColumns: ['id']
+            referencedRelation: "lojas"
+            referencedColumns: ["id"]
           },
         ]
       }
       contacts: {
         Row: {
           accountId: string | null
+          city: string | null
+          companyName: string | null
           createdAt: string | null
           email: string | null
           id: string
@@ -262,11 +294,14 @@ export type Database = {
           preferredChannel: string | null
           processRole: string | null
           role: string | null
+          state: string | null
           updatedAt: string | null
           whatsapp: string | null
         }
         Insert: {
           accountId?: string | null
+          city?: string | null
+          companyName?: string | null
           createdAt?: string | null
           email?: string | null
           id?: string
@@ -279,11 +314,14 @@ export type Database = {
           preferredChannel?: string | null
           processRole?: string | null
           role?: string | null
+          state?: string | null
           updatedAt?: string | null
           whatsapp?: string | null
         }
         Update: {
           accountId?: string | null
+          city?: string | null
+          companyName?: string | null
           createdAt?: string | null
           email?: string | null
           id?: string
@@ -296,23 +334,24 @@ export type Database = {
           preferredChannel?: string | null
           processRole?: string | null
           role?: string | null
+          state?: string | null
           updatedAt?: string | null
           whatsapp?: string | null
         }
         Relationships: [
           {
-            foreignKeyName: 'contacts_accountId_fkey'
-            columns: ['accountId']
+            foreignKeyName: "contacts_accountId_fkey"
+            columns: ["accountId"]
             isOneToOne: false
-            referencedRelation: 'accounts'
-            referencedColumns: ['id']
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'contacts_loja_id_fkey'
-            columns: ['loja_id']
+            foreignKeyName: "contacts_loja_id_fkey"
+            columns: ["loja_id"]
             isOneToOne: false
-            referencedRelation: 'lojas'
-            referencedColumns: ['id']
+            referencedRelation: "lojas"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -373,11 +412,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'monthly_goals_loja_id_fkey'
-            columns: ['loja_id']
+            foreignKeyName: "monthly_goals_loja_id_fkey"
+            columns: ["loja_id"]
             isOneToOne: false
-            referencedRelation: 'lojas'
-            referencedColumns: ['id']
+            referencedRelation: "lojas"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -432,18 +471,18 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'opportunities_accountId_fkey'
-            columns: ['accountId']
+            foreignKeyName: "opportunities_accountId_fkey"
+            columns: ["accountId"]
             isOneToOne: false
-            referencedRelation: 'accounts'
-            referencedColumns: ['id']
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'opportunities_loja_id_fkey'
-            columns: ['loja_id']
+            foreignKeyName: "opportunities_loja_id_fkey"
+            columns: ["loja_id"]
             isOneToOne: false
-            referencedRelation: 'lojas'
-            referencedColumns: ['id']
+            referencedRelation: "lojas"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -480,11 +519,80 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'profiles_loja_id_fkey'
-            columns: ['loja_id']
+            foreignKeyName: "profiles_loja_id_fkey"
+            columns: ["loja_id"]
             isOneToOne: false
-            referencedRelation: 'lojas'
-            referencedColumns: ['id']
+            referencedRelation: "lojas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      proposals: {
+        Row: {
+          accountId: string | null
+          companyName: string | null
+          contactName: string | null
+          createdAt: string | null
+          id: string
+          loja_id: string | null
+          proposalNumber: string | null
+          status: string | null
+          totalEquipment: number | null
+          totalMonthly: number | null
+          totalSetup: number | null
+          travelFee: Json | null
+          updatedAt: string | null
+          value: number | null
+          vehicleQuantity: number | null
+        }
+        Insert: {
+          accountId?: string | null
+          companyName?: string | null
+          contactName?: string | null
+          createdAt?: string | null
+          id?: string
+          loja_id?: string | null
+          proposalNumber?: string | null
+          status?: string | null
+          totalEquipment?: number | null
+          totalMonthly?: number | null
+          totalSetup?: number | null
+          travelFee?: Json | null
+          updatedAt?: string | null
+          value?: number | null
+          vehicleQuantity?: number | null
+        }
+        Update: {
+          accountId?: string | null
+          companyName?: string | null
+          contactName?: string | null
+          createdAt?: string | null
+          id?: string
+          loja_id?: string | null
+          proposalNumber?: string | null
+          status?: string | null
+          totalEquipment?: number | null
+          totalMonthly?: number | null
+          totalSetup?: number | null
+          travelFee?: Json | null
+          updatedAt?: string | null
+          value?: number | null
+          vehicleQuantity?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "proposals_accountId_fkey"
+            columns: ["accountId"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "proposals_loja_id_fkey"
+            columns: ["loja_id"]
+            isOneToOne: false
+            referencedRelation: "lojas"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -538,33 +646,33 @@ export type Database = {
   }
 }
 
-type DatabaseWithoutInternals = Omit<Database, '__InternalSupabase'>
+type DatabaseWithoutInternals = Omit<Database, "__InternalSupabase">
 
-type DefaultSchema = DatabaseWithoutInternals[Extract<keyof Database, 'public'>]
+type DefaultSchema = DatabaseWithoutInternals[Extract<keyof Database, "public">]
 
 export type Tables<
   DefaultSchemaTableNameOrOptions extends
-    | keyof (DefaultSchema['Tables'] & DefaultSchema['Views'])
+    | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
     | { schema: keyof DatabaseWithoutInternals },
   TableName extends DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
-    ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables'] &
-        DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Views'])
+    ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+        DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
     : never = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
-  ? (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables'] &
-      DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Views'])[TableName] extends {
+  ? (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+      DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])[TableName] extends {
       Row: infer R
     }
     ? R
     : never
-  : DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema['Tables'] &
-        DefaultSchema['Views'])
-    ? (DefaultSchema['Tables'] &
-        DefaultSchema['Views'])[DefaultSchemaTableNameOrOptions] extends {
+  : DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema["Tables"] &
+        DefaultSchema["Views"])
+    ? (DefaultSchema["Tables"] &
+        DefaultSchema["Views"])[DefaultSchemaTableNameOrOptions] extends {
         Row: infer R
       }
       ? R
@@ -573,23 +681,23 @@ export type Tables<
 
 export type TablesInsert<
   DefaultSchemaTableNameOrOptions extends
-    | keyof DefaultSchema['Tables']
+    | keyof DefaultSchema["Tables"]
     | { schema: keyof DatabaseWithoutInternals },
   TableName extends DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
-    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables']
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
     : never = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
-  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables'][TableName] extends {
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
       Insert: infer I
     }
     ? I
     : never
-  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema['Tables']
-    ? DefaultSchema['Tables'][DefaultSchemaTableNameOrOptions] extends {
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
+    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
         Insert: infer I
       }
       ? I
@@ -598,23 +706,23 @@ export type TablesInsert<
 
 export type TablesUpdate<
   DefaultSchemaTableNameOrOptions extends
-    | keyof DefaultSchema['Tables']
+    | keyof DefaultSchema["Tables"]
     | { schema: keyof DatabaseWithoutInternals },
   TableName extends DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
-    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables']
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
     : never = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
-  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables'][TableName] extends {
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
       Update: infer U
     }
     ? U
     : never
-  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema['Tables']
-    ? DefaultSchema['Tables'][DefaultSchemaTableNameOrOptions] extends {
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
+    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
         Update: infer U
       }
       ? U
@@ -623,36 +731,36 @@ export type TablesUpdate<
 
 export type Enums<
   DefaultSchemaEnumNameOrOptions extends
-    | keyof DefaultSchema['Enums']
+    | keyof DefaultSchema["Enums"]
     | { schema: keyof DatabaseWithoutInternals },
   EnumName extends DefaultSchemaEnumNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
-    ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions['schema']]['Enums']
+    ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
     : never = never,
 > = DefaultSchemaEnumNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
-  ? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions['schema']]['Enums'][EnumName]
-  : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema['Enums']
-    ? DefaultSchema['Enums'][DefaultSchemaEnumNameOrOptions]
+  ? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"][EnumName]
+  : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema["Enums"]
+    ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
     : never
 
 export type CompositeTypes<
   PublicCompositeTypeNameOrOptions extends
-    | keyof DefaultSchema['CompositeTypes']
+    | keyof DefaultSchema["CompositeTypes"]
     | { schema: keyof DatabaseWithoutInternals },
   CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
-    ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions['schema']]['CompositeTypes']
+    ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
     : never = never,
 > = PublicCompositeTypeNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
-  ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions['schema']]['CompositeTypes'][CompositeTypeName]
-  : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema['CompositeTypes']
-    ? DefaultSchema['CompositeTypes'][PublicCompositeTypeNameOrOptions]
+  ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
+  : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema["CompositeTypes"]
+    ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
     : never
 
 export const Constants = {
@@ -660,6 +768,7 @@ export const Constants = {
     Enums: {},
   },
 } as const
+
 
 // ====== DATABASE EXTENDED CONTEXT (auto-generated) ======
 // This section contains actual PostgreSQL column types, constraints, RLS policies,
@@ -694,6 +803,15 @@ export const Constants = {
 //   loja_id: uuid (nullable)
 //   createdAt: timestamp with time zone (nullable, default: now())
 //   updatedAt: timestamp with time zone (nullable, default: now())
+//   companyName: text (nullable)
+//   contactName: text (nullable)
+//   email: text (nullable)
+//   city: text (nullable)
+//   state: text (nullable)
+//   pipelineStage: text (nullable, default: 'Prospecção'::text)
+//   vehicleCount: integer (nullable, default: 0)
+//   source: text (nullable)
+//   notes: text (nullable)
 // Table: activities
 //   id: uuid (not null, default: gen_random_uuid())
 //   accountId: uuid (nullable)
@@ -709,6 +827,7 @@ export const Constants = {
 //   createdAt: timestamp with time zone (nullable, default: now())
 //   google_event_id: text (nullable)
 //   meet_link: text (nullable)
+//   title: text (nullable)
 // Table: audit_logs
 //   id: uuid (not null, default: gen_random_uuid())
 //   table_name: text (not null)
@@ -741,6 +860,9 @@ export const Constants = {
 //   loja_id: uuid (nullable)
 //   createdAt: timestamp with time zone (nullable, default: now())
 //   updatedAt: timestamp with time zone (nullable, default: now())
+//   companyName: text (nullable)
+//   city: text (nullable)
+//   state: text (nullable)
 // Table: lojas
 //   id: uuid (not null, default: gen_random_uuid())
 //   nome: text (not null)
@@ -780,6 +902,22 @@ export const Constants = {
 //   created_at: timestamp with time zone (nullable, default: now())
 //   avatar_url: text (nullable)
 //   phone: text (nullable)
+// Table: proposals
+//   id: uuid (not null, default: gen_random_uuid())
+//   accountId: uuid (nullable)
+//   proposalNumber: text (nullable)
+//   companyName: text (nullable)
+//   contactName: text (nullable)
+//   vehicleQuantity: integer (nullable)
+//   status: text (nullable, default: 'Rascunho'::text)
+//   totalSetup: numeric (nullable, default: 0)
+//   totalEquipment: numeric (nullable, default: 0)
+//   totalMonthly: numeric (nullable, default: 0)
+//   value: numeric (nullable, default: 0)
+//   travelFee: jsonb (nullable)
+//   loja_id: uuid (nullable)
+//   createdAt: timestamp with time zone (nullable, default: now())
+//   updatedAt: timestamp with time zone (nullable, default: now())
 // Table: user_integrations
 //   id: uuid (not null, default: gen_random_uuid())
 //   user_id: uuid (not null)
@@ -826,6 +964,10 @@ export const Constants = {
 //   FOREIGN KEY profiles_loja_id_fkey: FOREIGN KEY (loja_id) REFERENCES lojas(id)
 //   PRIMARY KEY profiles_pkey: PRIMARY KEY (id)
 //   CHECK profiles_role_check: CHECK ((role = ANY (ARRAY['admin'::text, 'gerente'::text, 'vendedor'::text])))
+// Table: proposals
+//   FOREIGN KEY proposals_accountId_fkey: FOREIGN KEY ("accountId") REFERENCES accounts(id) ON DELETE CASCADE
+//   FOREIGN KEY proposals_loja_id_fkey: FOREIGN KEY (loja_id) REFERENCES lojas(id)
+//   PRIMARY KEY proposals_pkey: PRIMARY KEY (id)
 // Table: user_integrations
 //   PRIMARY KEY user_integrations_pkey: PRIMARY KEY (id)
 //   FOREIGN KEY user_integrations_user_id_fkey: FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE
@@ -861,6 +1003,9 @@ export const Constants = {
 //     USING: ((auth.uid() = id) OR (get_user_role() = 'admin'::text))
 //   Policy "profiles_update" (UPDATE, PERMISSIVE) roles={public}
 //     USING: ((auth.uid() = id) OR (get_user_role() = 'admin'::text))
+// Table: proposals
+//   Policy "proposals_all" (ALL, PERMISSIVE) roles={public}
+//     USING: ((get_user_role() = 'admin'::text) OR (loja_id = get_user_loja()))
 // Table: user_integrations
 //   Policy "Users can manage their own integrations" (ALL, PERMISSIVE) roles={authenticated}
 //     USING: (auth.uid() = user_id)
@@ -874,7 +1019,7 @@ export const Constants = {
 //   AS $function$
 //     SELECT loja_id FROM public.profiles WHERE id = auth.uid() LIMIT 1;
 //   $function$
-//
+//   
 // FUNCTION get_user_role()
 //   CREATE OR REPLACE FUNCTION public.get_user_role()
 //    RETURNS text
@@ -883,7 +1028,7 @@ export const Constants = {
 //   AS $function$
 //     SELECT role FROM public.profiles WHERE id = auth.uid() LIMIT 1;
 //   $function$
-//
+//   
 // FUNCTION handle_new_account_after_insert()
 //   CREATE OR REPLACE FUNCTION public.handle_new_account_after_insert()
 //    RETURNS trigger
@@ -906,7 +1051,7 @@ export const Constants = {
 //     RETURN NEW;
 //   END;
 //   $function$
-//
+//   
 // FUNCTION handle_new_account_auto_pipeline()
 //   CREATE OR REPLACE FUNCTION public.handle_new_account_auto_pipeline()
 //    RETURNS trigger
@@ -920,18 +1065,18 @@ export const Constants = {
 //     IF NEW."interestLevel" IS NULL OR NEW."interestLevel" = '' THEN NEW."interestLevel" := 'Frio'; END IF;
 //     IF NEW."accountPotential" IS NULL OR NEW."accountPotential" = '' THEN NEW."accountPotential" := 'Médio'; END IF;
 //     IF NEW."detailedSource" IS NULL OR NEW."detailedSource" = '' THEN NEW."detailedSource" := 'Manual'; END IF;
-//
+//     
 //     -- Próxima ação padrão
 //     IF NEW."nextAction" IS NULL OR NEW."nextAction" = '' THEN NEW."nextAction" := 'Contato inicial via WhatsApp'; END IF;
 //     IF NEW."nextActionDate" IS NULL THEN NEW."nextActionDate" := NOW(); END IF;
-//
+//     
 //     -- Sempre "Prospecção" / "Em prospecção"
 //     IF NEW.status IS NULL OR NEW.status = 'Novo' THEN NEW.status := 'Em prospecção'; END IF;
-//
+//   
 //     RETURN NEW;
 //   END;
 //   $function$
-//
+//   
 // FUNCTION handle_new_contact_auto_pipeline()
 //   CREATE OR REPLACE FUNCTION public.handle_new_contact_auto_pipeline()
 //    RETURNS trigger
@@ -946,12 +1091,12 @@ export const Constants = {
 //     SELECT EXISTS(
 //       SELECT 1 FROM public.opportunities WHERE "accountId" = NEW."accountId"
 //     ) INTO v_opp_exists;
-//
+//   
 //     IF NOT v_opp_exists THEN
 //       SELECT name INTO v_acc_name FROM public.accounts WHERE id = NEW."accountId";
-//
+//       
 //       -- Atualiza a conta com os padrões iniciais
-//       UPDATE public.accounts SET
+//       UPDATE public.accounts SET 
 //         "nextAction" = COALESCE("nextAction", 'Contato inicial via WhatsApp'),
 //         "nextActionDate" = COALESCE("nextActionDate", NOW()),
 //         "cadenceStage" = COALESCE("cadenceStage", '1º Toque'),
@@ -959,7 +1104,7 @@ export const Constants = {
 //         "accountPotential" = COALESCE("accountPotential", 'Médio'),
 //         "status" = 'Em prospecção'
 //       WHERE id = NEW."accountId";
-//
+//   
 //       -- Cria a Oportunidade na primeira etapa
 //       INSERT INTO public.opportunities (
 //         "accountId", name, stage, "nextAction", "nextActionDate", loja_id, probability
@@ -973,11 +1118,11 @@ export const Constants = {
 //         10
 //       );
 //     END IF;
-//
+//     
 //     RETURN NEW;
 //   END;
 //   $function$
-//
+//   
 // FUNCTION handle_new_user()
 //   CREATE OR REPLACE FUNCTION public.handle_new_user()
 //    RETURNS trigger
@@ -995,7 +1140,7 @@ export const Constants = {
 //     RETURN NEW;
 //   END;
 //   $function$
-//
+//   
 // FUNCTION log_contact_changes()
 //   CREATE OR REPLACE FUNCTION public.log_contact_changes()
 //    RETURNS trigger
@@ -1007,7 +1152,7 @@ export const Constants = {
 //     v_loja_id UUID;
 //   BEGIN
 //     v_user_id := auth.uid();
-//
+//     
 //     IF TG_OP = 'INSERT' THEN
 //       v_loja_id := NEW.loja_id;
 //       INSERT INTO public.audit_logs (table_name, record_id, action, new_data, changed_by, loja_id)
@@ -1027,7 +1172,7 @@ export const Constants = {
 //     RETURN NULL;
 //   END;
 //   $function$
-//
+//   
 
 // --- TRIGGERS ---
 // Table: accounts
@@ -1044,3 +1189,4 @@ export const Constants = {
 //   CREATE UNIQUE INDEX monthly_goals_month_loja_user_idx ON public.monthly_goals USING btree (month, COALESCE(loja_id, '00000000-0000-0000-0000-000000000000'::uuid), COALESCE(user_id, '00000000-0000-0000-0000-000000000000'::uuid))
 // Table: user_integrations
 //   CREATE UNIQUE INDEX user_integrations_user_id_provider_key ON public.user_integrations USING btree (user_id, provider)
+
