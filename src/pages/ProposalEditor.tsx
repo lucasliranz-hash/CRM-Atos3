@@ -13,6 +13,7 @@ import {
   Send,
   Download,
   Phone,
+  Upload,
 } from 'lucide-react'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import {
@@ -35,8 +36,6 @@ const defaultCover: ProposalCover = {
   subtitle: 'Soluções em Telemetria e Gestão de Frota',
   introduction:
     'Agradecemos a oportunidade de apresentar nossa proposta para otimização e controle da sua frota. Nosso objetivo é entregar tecnologia de ponta para reduzir custos e aumentar sua eficiência.',
-  logoUrl: 'https://img.usecurling.com/i?q=atos3&shape=outline&color=orange',
-  coverImageUrl: 'https://img.usecurling.com/p/800/300?q=trucks&color=black',
 }
 
 const defaultTerms: ProposalTerms = {
@@ -99,6 +98,96 @@ const TEMPLATES = {
       },
     ],
   },
+}
+
+const ImageUploadArea = ({
+  label,
+  value,
+  onChange,
+  onRemove,
+  aspectRatio = 'video',
+}: {
+  label: string
+  value: string | undefined
+  onChange: (base64: string) => void
+  onRemove: () => void
+  aspectRatio?: 'video' | 'square' | 'auto'
+}) => {
+  const handleFile = (file: File) => {
+    if (!file.type.startsWith('image/')) return
+    const reader = new FileReader()
+    reader.onloadend = () => {
+      onChange(reader.result as string)
+    }
+    reader.readAsDataURL(file)
+  }
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault()
+    const file = e.dataTransfer.files?.[0]
+    if (file) handleFile(file)
+  }
+
+  return (
+    <div className="space-y-1.5">
+      <label className="text-xs font-bold text-slate-500 uppercase">
+        {label}
+      </label>
+      {value ? (
+        <div
+          className={`relative group rounded-xl border border-slate-200 overflow-hidden bg-slate-50 flex items-center justify-center ${aspectRatio === 'video' ? 'aspect-video' : 'h-32'}`}
+        >
+          <img
+            src={value}
+            alt={label}
+            className={`w-full h-full ${aspectRatio === 'video' ? 'object-cover' : 'object-contain p-4'}`}
+          />
+          <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+            <label className="cursor-pointer">
+              <input
+                type="file"
+                className="hidden"
+                accept="image/*"
+                onChange={(e) => {
+                  if (e.target.files?.[0]) handleFile(e.target.files[0])
+                  e.target.value = ''
+                }}
+              />
+              <div className="bg-white text-slate-900 text-xs font-bold px-3 py-1.5 rounded-md hover:bg-slate-100 transition-colors">
+                Trocar
+              </div>
+            </label>
+            <button
+              type="button"
+              onClick={onRemove}
+              className="bg-red-500 text-white text-xs font-bold px-3 py-1.5 rounded-md hover:bg-red-600 transition-colors"
+            >
+              Remover
+            </button>
+          </div>
+        </div>
+      ) : (
+        <label
+          onDragOver={(e) => e.preventDefault()}
+          onDrop={handleDrop}
+          className={`cursor-pointer flex flex-col items-center justify-center border-2 border-dashed border-slate-300 rounded-xl bg-slate-50 hover:bg-slate-100 hover:border-slate-400 transition-colors text-slate-500 ${aspectRatio === 'video' ? 'aspect-video' : 'h-32'}`}
+        >
+          <input
+            type="file"
+            className="hidden"
+            accept="image/*"
+            onChange={(e) => {
+              if (e.target.files?.[0]) handleFile(e.target.files[0])
+              e.target.value = ''
+            }}
+          />
+          <Upload className="w-6 h-6 mb-2 text-slate-400" />
+          <span className="text-sm font-bold">Clique ou arraste</span>
+          <span className="text-xs text-slate-400">PNG, JPG, SVG</span>
+        </label>
+      )}
+    </div>
+  )
 }
 
 export default function ProposalEditor() {
@@ -443,39 +532,54 @@ export default function ProposalEditor() {
               Customização Visual
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="space-y-1.5">
-                <label className="text-xs font-bold text-slate-500 uppercase">
-                  URL do Logo da Sua Empresa
-                </label>
-                <Input
-                  value={propData.cover.logoUrl || ''}
-                  onChange={(e) =>
-                    setPropData({
-                      ...propData,
-                      cover: { ...propData.cover, logoUrl: e.target.value },
-                    })
-                  }
-                  placeholder="https://..."
-                />
-              </div>
-              <div className="space-y-1.5">
-                <label className="text-xs font-bold text-slate-500 uppercase">
-                  URL da Imagem de Capa
-                </label>
-                <Input
-                  value={propData.cover.coverImageUrl || ''}
-                  onChange={(e) =>
-                    setPropData({
-                      ...propData,
-                      cover: {
-                        ...propData.cover,
-                        coverImageUrl: e.target.value,
-                      },
-                    })
-                  }
-                  placeholder="https://..."
-                />
-              </div>
+              <ImageUploadArea
+                label="Logo da Empresa"
+                value={propData.cover.logoImage || propData.cover.logoUrl}
+                onChange={(base64) =>
+                  setPropData({
+                    ...propData,
+                    cover: {
+                      ...propData.cover,
+                      logoImage: base64,
+                      logoUrl: '',
+                    },
+                  })
+                }
+                onRemove={() =>
+                  setPropData({
+                    ...propData,
+                    cover: { ...propData.cover, logoImage: '', logoUrl: '' },
+                  })
+                }
+                aspectRatio="auto"
+              />
+              <ImageUploadArea
+                label="Imagem de Capa"
+                value={
+                  propData.cover.coverImage || propData.cover.coverImageUrl
+                }
+                onChange={(base64) =>
+                  setPropData({
+                    ...propData,
+                    cover: {
+                      ...propData.cover,
+                      coverImage: base64,
+                      coverImageUrl: '',
+                    },
+                  })
+                }
+                onRemove={() =>
+                  setPropData({
+                    ...propData,
+                    cover: {
+                      ...propData.cover,
+                      coverImage: '',
+                      coverImageUrl: '',
+                    },
+                  })
+                }
+                aspectRatio="video"
+              />
             </div>
             <div className="border-t border-slate-100 pt-6 space-y-6">
               <h3 className="font-black text-lg text-slate-900">
@@ -833,11 +937,11 @@ export default function ProposalEditor() {
         <TabsContent value="preview" className="space-y-6">
           <div className="bg-white p-8 md:p-12 border border-slate-200 shadow-md min-h-[800px] w-full mx-auto rounded-xl print:shadow-none print:border-none print:p-0 text-slate-900 relative">
             <div className="flex justify-between items-center mb-10 border-b border-slate-100 pb-6">
-              {propData.cover.logoUrl ? (
+              {propData.cover.logoImage || propData.cover.logoUrl ? (
                 <img
-                  src={propData.cover.logoUrl}
+                  src={propData.cover.logoImage || propData.cover.logoUrl}
                   alt="Logo"
-                  className="h-10 object-contain"
+                  className="h-16 w-auto object-contain"
                 />
               ) : (
                 <div className="text-2xl font-black tracking-tighter text-[#0D1B2A]">
@@ -855,25 +959,38 @@ export default function ProposalEditor() {
               </div>
             </div>
 
-            <div className="mb-12 text-center space-y-4">
-              <h1 className="text-4xl md:text-5xl font-black text-[#0D1B2A] tracking-tight">
-                {propData.cover.title}
-              </h1>
-              <h3 className="text-xl font-bold text-[#FF6A00]">
-                {propData.cover.subtitle}
-              </h3>
-              <p className="text-slate-600 max-w-2xl mx-auto leading-relaxed mt-4 text-sm md:text-base">
-                {propData.cover.introduction}
-              </p>
-            </div>
-
-            {propData.cover.coverImageUrl && (
-              <div className="mb-12 rounded-2xl overflow-hidden h-64 md:h-80 bg-slate-100 shadow-inner">
+            {propData.cover.coverImage || propData.cover.coverImageUrl ? (
+              <div className="relative mb-12 rounded-2xl overflow-hidden min-h-[320px] bg-slate-900 shadow-inner flex flex-col items-center justify-center p-8 text-center">
                 <img
-                  src={propData.cover.coverImageUrl}
-                  className="w-full h-full object-cover"
+                  src={
+                    propData.cover.coverImage || propData.cover.coverImageUrl
+                  }
+                  className="absolute inset-0 w-full h-full object-cover opacity-40 z-0"
                   alt="Capa"
                 />
+                <div className="relative z-10 space-y-4 max-w-3xl mx-auto">
+                  <h1 className="text-4xl md:text-5xl font-black text-white tracking-tight drop-shadow-sm">
+                    {propData.cover.title}
+                  </h1>
+                  <h3 className="text-xl font-bold text-orange-400 drop-shadow-sm">
+                    {propData.cover.subtitle}
+                  </h3>
+                  <p className="text-slate-200 leading-relaxed mt-4 text-sm md:text-base drop-shadow-sm">
+                    {propData.cover.introduction}
+                  </p>
+                </div>
+              </div>
+            ) : (
+              <div className="mb-12 text-center space-y-4 max-w-3xl mx-auto py-12">
+                <h1 className="text-4xl md:text-5xl font-black text-[#0D1B2A] tracking-tight">
+                  {propData.cover.title}
+                </h1>
+                <h3 className="text-xl font-bold text-[#FF6A00]">
+                  {propData.cover.subtitle}
+                </h3>
+                <p className="text-slate-600 leading-relaxed mt-4 text-sm md:text-base">
+                  {propData.cover.introduction}
+                </p>
               </div>
             )}
 

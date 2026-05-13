@@ -198,6 +198,8 @@ export interface ProposalCover {
   introduction: string
   logoUrl?: string
   coverImageUrl?: string
+  logoImage?: string
+  coverImage?: string
 }
 
 export interface Proposal {
