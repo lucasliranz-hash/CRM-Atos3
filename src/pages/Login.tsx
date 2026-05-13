@@ -69,6 +69,19 @@ export default function Login() {
               className="bg-white"
             />
           </div>
+          <div className="flex items-center space-x-2 py-2">
+            <input
+              type="checkbox"
+              id="remember"
+              className="w-4 h-4 rounded border-gray-300 text-orange-500 focus:ring-orange-500"
+            />
+            <label
+              htmlFor="remember"
+              className="text-sm font-medium text-gray-600 cursor-pointer"
+            >
+              Lembrar acesso
+            </label>
+          </div>
           <Button
             type="submit"
             className="w-full bg-black text-white font-bold h-11"

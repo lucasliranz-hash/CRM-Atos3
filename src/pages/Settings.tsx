@@ -17,12 +17,22 @@ import {
   Loader2,
   Database,
   RotateCcw,
+  FileDown,
+  FileUp,
+  AlertTriangle,
 } from 'lucide-react'
 
 export default function Settings() {
   const { profile } = useAuth()
-  const { logoUrl, setLogoUrl, backups, loadBackups, restoreBackup } =
-    useMainStore()
+  const {
+    logoUrl,
+    setLogoUrl,
+    backups,
+    loadBackups,
+    restoreBackup,
+    exportBackup,
+    importBackup,
+  } = useMainStore()
   const { toast } = useToast()
 
   useEffect(() => {
@@ -86,6 +96,20 @@ export default function Settings() {
     } finally {
       setUploading(false)
     }
+  }
+
+  const handleImportFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    const reader = new FileReader()
+    reader.onload = (ev) => {
+      const content = ev.target?.result
+      if (typeof content === 'string') {
+        importBackup(content)
+        toast({ title: 'Backup importado com sucesso!' })
+      }
+    }
+    reader.readAsText(file)
   }
 
   return (
@@ -181,6 +205,50 @@ export default function Settings() {
           </CardDescription>
         </CardHeader>
         <CardContent>
+          <div className="bg-orange-50 border border-orange-200 rounded-lg p-4 mb-6 flex items-start gap-3">
+            <AlertTriangle className="w-5 h-5 text-orange-500 shrink-0 mt-0.5" />
+            <div>
+              <h4 className="text-sm font-bold text-orange-800">
+                Antes de publicar, exporte seus dados!
+              </h4>
+              <p className="text-xs text-orange-600 mt-1">
+                Gere um arquivo JSON com o backup completo do CRM para garantir
+                que nenhuma informação se perca em atualizações ou limpeza de
+                cache.
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-3 mb-6">
+            <Button
+              onClick={exportBackup}
+              variant="outline"
+              className="flex-1 font-bold border-gray-300"
+            >
+              <FileDown className="w-4 h-4 mr-2" />
+              Exportar JSON
+            </Button>
+            <Button
+              variant="outline"
+              className="flex-1 font-bold border-gray-300"
+              onClick={() => document.getElementById('import-json')?.click()}
+            >
+              <FileUp className="w-4 h-4 mr-2" />
+              Importar JSON
+            </Button>
+            <input
+              id="import-json"
+              type="file"
+              accept=".json"
+              className="hidden"
+              onChange={handleImportFile}
+            />
+          </div>
+
+          <h4 className="text-sm font-bold text-gray-700 mb-3 border-b pb-2">
+            Histórico de Backups Locais
+          </h4>
+
           {backups.length === 0 ? (
             <p className="text-sm text-gray-500 font-medium">
               Nenhum backup encontrado.

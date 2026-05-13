@@ -15,6 +15,11 @@ import { cn } from '@/lib/utils'
 import { Progress } from '@/components/ui/progress'
 import useMainStore from '@/stores/main'
 import { SidebarGoals } from './SidebarGoals'
+import { useState } from 'react'
+import { useAuth } from '@/hooks/use-auth'
+import { LogOut } from 'lucide-react'
+import { ProfileModal } from './ProfileModal'
+import { Button } from '@/components/ui/button'
 
 const navItems = [
   { icon: LayoutDashboard, label: 'Dashboard', path: '/' },
@@ -32,6 +37,8 @@ const navItems = [
 export function Sidebar() {
   const location = useLocation()
   const { logoUrl } = useMainStore()
+  const { profile, signOut } = useAuth()
+  const [profileOpen, setProfileOpen] = useState(false)
 
   return (
     <aside className="fixed left-0 top-0 h-screen w-64 z-50 hidden md:flex flex-col bg-[#0D1B2A] border-r border-slate-800 text-slate-300">
@@ -71,16 +78,40 @@ export function Sidebar() {
 
       <SidebarGoals />
 
-      <div className="p-4 border-t border-white/10 flex items-center gap-3">
-        <img
-          src="https://img.usecurling.com/ppl/thumbnail?gender=male&seed=1"
-          alt="User"
-          className="w-10 h-10 rounded-full border-2 border-slate-700"
-        />
-        <div className="flex-1 min-w-0">
-          <p className="text-sm font-bold text-white truncate">Lucas</p>
-          <p className="text-xs text-slate-400 truncate">Atos3</p>
+      <div className="p-4 border-t border-white/10 flex items-center justify-between gap-3 bg-slate-900/50">
+        <div
+          className="flex items-center gap-3 flex-1 min-w-0 cursor-pointer hover:opacity-80 transition-opacity"
+          onClick={() => setProfileOpen(true)}
+        >
+          {profile?.avatar_url ? (
+            <img
+              src={profile.avatar_url}
+              alt="User"
+              className="w-10 h-10 rounded-full border-2 border-slate-700 object-cover"
+            />
+          ) : (
+            <div className="w-10 h-10 rounded-full border-2 border-slate-700 bg-slate-800 flex items-center justify-center text-white font-bold text-sm shrink-0">
+              {profile?.nome?.substring(0, 2).toUpperCase() || 'U'}
+            </div>
+          )}
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-bold text-white truncate">
+              {profile?.nome || 'Usuário'}
+            </p>
+            <p className="text-xs text-slate-400 truncate">
+              {profile?.role || 'Cargo'}
+            </p>
+          </div>
         </div>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="text-slate-400 hover:text-white hover:bg-white/10 shrink-0"
+          onClick={() => signOut()}
+        >
+          <LogOut className="w-4 h-4" />
+        </Button>
+        <ProfileModal open={profileOpen} onOpenChange={setProfileOpen} />
       </div>
     </aside>
   )

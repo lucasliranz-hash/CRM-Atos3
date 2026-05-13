@@ -49,6 +49,8 @@ interface MainStore {
   backups: { type: string; timestamp: string; size: number; fullKey: string }[]
   loadBackups: () => void
   restoreBackup: (fullKey: string) => void
+  exportBackup: () => void
+  importBackup: (jsonStr: string) => void
 }
 
 const MainContext = createContext<MainStore | undefined>(undefined)
@@ -166,11 +168,70 @@ export function MainProvider({ children }: { children: ReactNode }) {
       } else if (fullKey.startsWith('activities_backup_')) {
         setActivities(parsed)
         localStorage.setItem('activities', data)
+      } else if (fullKey.startsWith('crm_backup_')) {
+        if (parsed.leads) setAccounts(parsed.leads)
+        if (parsed.contacts) setContacts(parsed.contacts)
+        if (parsed.activities) setActivities(parsed.activities)
+        if (parsed.proposals) setProposals(parsed.proposals)
+        if (parsed.opportunities) setOpportunities(parsed.opportunities)
+        if (parsed.monthlyGoals)
+          localStorage.setItem('monthlyGoals', parsed.monthlyGoals)
+        if (parsed.dashboardMetrics)
+          localStorage.setItem('dashboardMetrics', parsed.dashboardMetrics)
       }
     } catch {
       /* intentionally ignored */
     }
   }, [])
+
+  const exportBackup = useCallback(() => {
+    const data = {
+      leads: accounts,
+      contacts,
+      activities,
+      proposals,
+      opportunities,
+      monthlyGoals: localStorage.getItem('monthlyGoals'),
+      dashboardMetrics: localStorage.getItem('dashboardMetrics'),
+    }
+    const str = JSON.stringify(data)
+    const ts = getTimestamp()
+    const fullKey = `crm_backup_${ts}`
+    localStorage.setItem(fullKey, str)
+
+    const blob = new Blob([str], { type: 'application/json' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `${fullKey}.json`
+    a.click()
+
+    loadBackups()
+  }, [accounts, contacts, activities, proposals, opportunities, loadBackups])
+
+  const importBackup = useCallback(
+    (jsonStr: string) => {
+      try {
+        const data = JSON.parse(jsonStr)
+        if (data.leads) setAccounts(data.leads)
+        if (data.contacts) setContacts(data.contacts)
+        if (data.activities) setActivities(data.activities)
+        if (data.proposals) setProposals(data.proposals)
+        if (data.opportunities) setOpportunities(data.opportunities)
+        if (data.monthlyGoals)
+          localStorage.setItem('monthlyGoals', data.monthlyGoals)
+        if (data.dashboardMetrics)
+          localStorage.setItem('dashboardMetrics', data.dashboardMetrics)
+
+        const ts = getTimestamp()
+        localStorage.setItem(`crm_backup_${ts}`, jsonStr)
+        loadBackups()
+      } catch (e) {
+        console.error('Erro ao importar backup', e)
+      }
+    },
+    [loadBackups],
+  )
 
   // Load from LocalStorage
   useEffect(() => {
@@ -719,6 +780,8 @@ export function MainProvider({ children }: { children: ReactNode }) {
         backups,
         loadBackups,
         restoreBackup,
+        exportBackup,
+        importBackup,
       }}
     >
       {children}

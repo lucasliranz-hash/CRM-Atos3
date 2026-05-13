@@ -11,9 +11,11 @@ import { supabase } from '@/lib/supabase/client'
 export interface Profile {
   id: string
   nome: string
-  role: 'admin' | 'gerente' | 'vendedor'
+  role: string
   loja_id: string
   ativo: boolean
+  avatar_url?: string
+  phone?: string
 }
 
 interface AuthContextType {
@@ -28,6 +30,7 @@ interface AuthContextType {
   ) => Promise<{ error: any }>
   signIn: (email: string, password: string) => Promise<{ error: any }>
   signOut: () => Promise<{ error: any }>
+  updateProfile: (updates: Partial<Profile>) => Promise<{ error: any }>
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
@@ -106,9 +109,30 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     return { error }
   }
 
+  const updateProfile = async (updates: Partial<Profile>) => {
+    if (!profile) return { error: new Error('Sem perfil carregado') }
+    const { error } = await supabase
+      .from('profiles')
+      .update(updates)
+      .eq('id', profile.id)
+    if (!error) {
+      setProfile((prev) => (prev ? { ...prev, ...updates } : null))
+    }
+    return { error }
+  }
+
   return (
     <AuthContext.Provider
-      value={{ user, session, profile, loading, signUp, signIn, signOut }}
+      value={{
+        user,
+        session,
+        profile,
+        loading,
+        signUp,
+        signIn,
+        signOut,
+        updateProfile,
+      }}
     >
       {children}
     </AuthContext.Provider>
