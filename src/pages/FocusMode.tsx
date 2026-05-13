@@ -25,7 +25,7 @@ export default function FocusMode() {
     useMainStore()
   const { toast } = useToast()
   const [modalState, setModalState] = useState<{
-    type: 'call' | 'email' | 'resolve'
+    type: 'call' | 'email' | 'resolve' | 'whatsapp'
     task: any
     account: any
   } | null>(null)
@@ -137,26 +137,10 @@ export default function FocusMode() {
     )
   }, [activities, accounts, proposals])
 
-  const handleWhatsApp = async (task: any, account: any) => {
+  const handleWhatsApp = (task: any, account: any) => {
     if (!account.phone)
       return toast({ title: 'Telefone não cadastrado', variant: 'destructive' })
-    const msg = encodeURIComponent(
-      'Olá, tudo bem? Aqui é o Lucas da ATOS3. Estou entrando em contato para dar continuidade ao nosso atendimento.',
-    )
-    window.open(
-      `https://wa.me/55${account.phone.replace(/\D/g, '')}?text=${msg}`,
-      '_blank',
-    )
-    await addActivity({
-      accountId: account.id,
-      type: 'Mensagem',
-      channel: 'WhatsApp',
-      result: 'Enviou mensagem via WhatsApp Web',
-      date: new Date().toISOString(),
-      completed: true,
-    } as any)
-    if (task.type === 'activity') await completeActivity(task.item.id)
-    toast({ title: 'Ação registrada no histórico!' })
+    setModalState({ type: 'whatsapp', task, account })
   }
 
   const handleCall = (task: any, account: any) => {

@@ -24,6 +24,11 @@ export function FocusModals({ modalState, onClose, onSuccess }: any) {
   const { addActivity, updateAccount, completeActivity } = useMainStore()
   const { toast } = useToast()
 
+  const [wppMsg, setWppMsg] = useState('')
+  const [wppSched, setWppSched] = useState(true)
+  const [wppNext, setWppNext] = useState('')
+  const [wppDate, setWppDate] = useState('')
+
   const [callAnswered, setCallAnswered] = useState('sim')
   const [callObs, setCallObs] = useState('')
   const [callSched, setCallSched] = useState(true)
@@ -32,10 +37,13 @@ export function FocusModals({ modalState, onClose, onSuccess }: any) {
 
   const [emailSubj, setEmailSubj] = useState('')
   const [emailBody, setEmailBody] = useState('')
+  const [emailSched, setEmailSched] = useState(true)
+  const [emailNext, setEmailNext] = useState('')
+  const [emailDate, setEmailDate] = useState('')
 
   const [resPipe, setResPipe] = useState('')
   const [resObs, setResObs] = useState('')
-  const [resSched, setResSched] = useState(false)
+  const [resSched, setResSched] = useState(true)
   const [resNext, setResNext] = useState('')
   const [resDate, setResDate] = useState('')
 
@@ -44,23 +52,37 @@ export function FocusModals({ modalState, onClose, onSuccess }: any) {
       const now = new Date()
       now.setMinutes(now.getMinutes() - now.getTimezoneOffset())
       const d = now.toISOString().slice(0, 16)
+      const nextActStr = modalState.account.nextAction || ''
+      const nextActDateStr = modalState.account.nextActionDate
+        ? modalState.account.nextActionDate.slice(0, 16)
+        : d
+
+      setWppMsg(
+        'Olá, tudo bem? Aqui é o Lucas da ATOS3. Estou entrando em contato para dar continuidade ao nosso atendimento.',
+      )
+      setWppSched(true)
+      setWppNext(nextActStr)
+      setWppDate(nextActDateStr)
 
       setCallAnswered('sim')
       setCallObs('')
       setCallSched(true)
-      setCallNext('')
-      setCallDate(d)
+      setCallNext(nextActStr)
+      setCallDate(nextActDateStr)
 
       setEmailSubj('Acompanhamento ATOS3')
       setEmailBody(
         'Olá,\n\nGostaria de dar continuidade ao nosso contato...\n\nAtenciosamente,',
       )
+      setEmailSched(true)
+      setEmailNext(nextActStr)
+      setEmailDate(nextActDateStr)
 
       setResPipe(modalState.account.pipelineStage || 'Prospecção')
       setResObs('')
-      setResSched(false)
-      setResNext('')
-      setResDate(d)
+      setResSched(true)
+      setResNext(nextActStr)
+      setResDate(nextActDateStr)
     }
   }, [modalState])
 
@@ -78,6 +100,38 @@ export function FocusModals({ modalState, onClose, onSuccess }: any) {
     }
   }
 
+  const handleWhatsApp = () =>
+    wrapSubmit(async () => {
+      const msg = encodeURIComponent(wppMsg)
+      window.open(
+        `https://wa.me/55${modalState.account.phone.replace(/\D/g, '')}?text=${msg}`,
+        '_blank',
+      )
+
+      await addActivity({
+        accountId: modalState.account.id,
+        type: 'Mensagem',
+        channel: 'WhatsApp',
+        result: `Enviou mensagem via WhatsApp Web:\n${wppMsg}`,
+        date: new Date().toISOString(),
+        completed: true,
+        ...(wppSched
+          ? {
+              nextAction: wppNext,
+              nextActionDate: new Date(wppDate).toISOString(),
+            }
+          : {}),
+      } as any)
+
+      if (!wppSched) {
+        await updateAccount(modalState.account.id, {
+          nextAction: null as any,
+          nextActionDate: null as any,
+          lastTouchDate: new Date().toISOString(),
+        })
+      }
+    })
+
   const handleCall = () =>
     wrapSubmit(async () => {
       await addActivity({
@@ -94,14 +148,11 @@ export function FocusModals({ modalState, onClose, onSuccess }: any) {
             }
           : {}),
       } as any)
-      if (callSched) {
+
+      if (!callSched) {
         await updateAccount(modalState.account.id, {
-          nextAction: callNext,
-          nextActionDate: new Date(callDate).toISOString(),
-          lastTouchDate: new Date().toISOString(),
-        })
-      } else {
-        await updateAccount(modalState.account.id, {
+          nextAction: null as any,
+          nextActionDate: null as any,
           lastTouchDate: new Date().toISOString(),
         })
       }
@@ -110,6 +161,7 @@ export function FocusModals({ modalState, onClose, onSuccess }: any) {
   const handleEmail = () =>
     wrapSubmit(async () => {
       window.location.href = `mailto:${modalState.account.email}?subject=${encodeURIComponent(emailSubj)}&body=${encodeURIComponent(emailBody)}`
+
       await addActivity({
         accountId: modalState.account.id,
         type: 'E-mail',
@@ -117,10 +169,21 @@ export function FocusModals({ modalState, onClose, onSuccess }: any) {
         result: `E-mail enviado.\nAssunto: ${emailSubj}\nMensagem: ${emailBody}`,
         date: new Date().toISOString(),
         completed: true,
+        ...(emailSched
+          ? {
+              nextAction: emailNext,
+              nextActionDate: new Date(emailDate).toISOString(),
+            }
+          : {}),
       } as any)
-      await updateAccount(modalState.account.id, {
-        lastTouchDate: new Date().toISOString(),
-      })
+
+      if (!emailSched) {
+        await updateAccount(modalState.account.id, {
+          nextAction: null as any,
+          nextActionDate: null as any,
+          lastTouchDate: new Date().toISOString(),
+        })
+      }
     })
 
   const handleResolve = () =>
@@ -162,6 +225,66 @@ export function FocusModals({ modalState, onClose, onSuccess }: any) {
   return (
     <Dialog open={!!modalState} onOpenChange={(o) => !o && onClose()}>
       <DialogContent className="sm:max-w-[450px]">
+        {modalState.type === 'whatsapp' && (
+          <>
+            <DialogHeader>
+              <DialogTitle>Enviar WhatsApp</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4 py-2">
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-gray-700">
+                  Mensagem
+                </label>
+                <Textarea
+                  value={wppMsg}
+                  onChange={(e) => setWppMsg(e.target.value)}
+                  className="h-24 resize-none"
+                />
+              </div>
+              <div className="flex items-center justify-between border-t pt-4">
+                <label className="text-sm font-bold text-gray-700">
+                  Agendar próxima ação?
+                </label>
+                <Switch checked={wppSched} onCheckedChange={setWppSched} />
+              </div>
+              {wppSched && (
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-bold text-gray-700">
+                      O que fazer?
+                    </label>
+                    <Input
+                      value={wppNext}
+                      onChange={(e) => setWppNext(e.target.value)}
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-bold text-gray-700">
+                      Quando?
+                    </label>
+                    <Input
+                      type="datetime-local"
+                      value={wppDate}
+                      onChange={(e) => setWppDate(e.target.value)}
+                    />
+                  </div>
+                </div>
+              )}
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={onClose}>
+                Cancelar
+              </Button>
+              <Button
+                onClick={handleWhatsApp}
+                disabled={!wppMsg || (wppSched && (!wppNext || !wppDate))}
+              >
+                Enviar e Registrar
+              </Button>
+            </DialogFooter>
+          </>
+        )}
+
         {modalState.type === 'call' && (
           <>
             <DialogHeader>
@@ -263,12 +386,48 @@ export function FocusModals({ modalState, onClose, onSuccess }: any) {
                   className="h-32 resize-none"
                 />
               </div>
+              <div className="flex items-center justify-between border-t pt-4">
+                <label className="text-sm font-bold text-gray-700">
+                  Agendar próxima ação?
+                </label>
+                <Switch checked={emailSched} onCheckedChange={setEmailSched} />
+              </div>
+              {emailSched && (
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-bold text-gray-700">
+                      O que fazer?
+                    </label>
+                    <Input
+                      value={emailNext}
+                      onChange={(e) => setEmailNext(e.target.value)}
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-bold text-gray-700">
+                      Quando?
+                    </label>
+                    <Input
+                      type="datetime-local"
+                      value={emailDate}
+                      onChange={(e) => setEmailDate(e.target.value)}
+                    />
+                  </div>
+                </div>
+              )}
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={onClose}>
                 Cancelar
               </Button>
-              <Button onClick={handleEmail} disabled={!emailSubj || !emailBody}>
+              <Button
+                onClick={handleEmail}
+                disabled={
+                  !emailSubj ||
+                  !emailBody ||
+                  (emailSched && (!emailNext || !emailDate))
+                }
+              >
                 Enviar e Registrar
               </Button>
             </DialogFooter>
