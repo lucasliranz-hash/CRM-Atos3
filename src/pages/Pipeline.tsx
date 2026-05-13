@@ -241,9 +241,12 @@ function KanbanCard({ lead, onClick, onDragStart }: any) {
         </div>
       </div>
 
-      <div className="pt-2 mt-1 border-t border-slate-100 flex justify-between items-center">
-        <div className="text-[10px] text-slate-400 font-medium">
-          Atualizado em {dateText} às {timeText}
+      <div className="pt-2 mt-1 border-t border-slate-100 flex justify-between items-center gap-2">
+        <span className="text-[10px] font-bold px-1.5 py-0.5 bg-slate-100 text-slate-600 rounded whitespace-nowrap overflow-hidden text-ellipsis">
+          {lead.status || 'Prospecção'}
+        </span>
+        <div className="text-[10px] text-slate-400 font-medium whitespace-nowrap">
+          {dateText} {timeText}
         </div>
       </div>
     </div>

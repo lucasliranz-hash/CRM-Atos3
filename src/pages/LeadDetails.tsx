@@ -288,13 +288,35 @@ export default function LeadDetails() {
                       className="bg-slate-50"
                     />
                   </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-1.5">
+                      <label className="text-sm font-bold text-slate-700">
+                        Contato
+                      </label>
+                      <Input
+                        disabled
+                        value={leadData.contactName || ''}
+                        className="bg-slate-50"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="text-sm font-bold text-slate-700">
+                        Telefone
+                      </label>
+                      <Input
+                        disabled
+                        value={leadData.phone || ''}
+                        className="bg-slate-50"
+                      />
+                    </div>
+                  </div>
                   <div className="space-y-1.5">
                     <label className="text-sm font-bold text-slate-700">
-                      Contato / E-mail
+                      E-mail
                     </label>
                     <Input
                       disabled
-                      value={`${leadData.contactName || ''} - ${leadData.email || ''}`}
+                      value={leadData.email || ''}
                       className="bg-slate-50"
                     />
                   </div>

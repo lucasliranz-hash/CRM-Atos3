@@ -62,6 +62,8 @@ export function MainProvider({ children }: { children: ReactNode }) {
     oppsRef.current = opportunities
   }, [opportunities])
 
+  const [isInitialized, setIsInitialized] = useState(false)
+
   // Load from LocalStorage
   useEffect(() => {
     const localAccounts = localStorage.getItem('crm_accounts')
@@ -80,20 +82,21 @@ export function MainProvider({ children }: { children: ReactNode }) {
         /* intentionally ignored */
       }
     }
+    setTimeout(() => setIsInitialized(true), 100)
   }, [])
 
   // Save to LocalStorage on change
   useEffect(() => {
-    if (accounts.length > 0) {
+    if (isInitialized) {
       localStorage.setItem('crm_accounts', JSON.stringify(accounts))
     }
-  }, [accounts])
+  }, [accounts, isInitialized])
 
   useEffect(() => {
-    if (proposals.length > 0) {
+    if (isInitialized) {
       localStorage.setItem('crm_proposals', JSON.stringify(proposals))
     }
-  }, [proposals])
+  }, [proposals, isInitialized])
 
   useEffect(() => {
     let mounted = true
@@ -240,7 +243,7 @@ export function MainProvider({ children }: { children: ReactNode }) {
         )
         .subscribe()
     } else {
-      setAccounts([])
+      // Do not clear accounts to preserve local storage data when no backend is connected
       setContacts([])
       setActivities([])
       setOpportunities([])
