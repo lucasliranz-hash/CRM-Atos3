@@ -11,7 +11,7 @@ export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: '14.4'
+    PostgrestVersion: "14.4"
   }
   public: {
     Tables: {
@@ -120,11 +120,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'accounts_loja_id_fkey'
-            columns: ['loja_id']
+            foreignKeyName: "accounts_loja_id_fkey"
+            columns: ["loja_id"]
             isOneToOne: false
-            referencedRelation: 'lojas'
-            referencedColumns: ['id']
+            referencedRelation: "lojas"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -185,25 +185,25 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'activities_accountId_fkey'
-            columns: ['accountId']
+            foreignKeyName: "activities_accountId_fkey"
+            columns: ["accountId"]
             isOneToOne: false
-            referencedRelation: 'accounts'
-            referencedColumns: ['id']
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'activities_contactId_fkey'
-            columns: ['contactId']
+            foreignKeyName: "activities_contactId_fkey"
+            columns: ["contactId"]
             isOneToOne: false
-            referencedRelation: 'contacts'
-            referencedColumns: ['id']
+            referencedRelation: "contacts"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'activities_loja_id_fkey'
-            columns: ['loja_id']
+            foreignKeyName: "activities_loja_id_fkey"
+            columns: ["loja_id"]
             isOneToOne: false
-            referencedRelation: 'lojas'
-            referencedColumns: ['id']
+            referencedRelation: "lojas"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -243,11 +243,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'audit_logs_loja_id_fkey'
-            columns: ['loja_id']
+            foreignKeyName: "audit_logs_loja_id_fkey"
+            columns: ["loja_id"]
             isOneToOne: false
-            referencedRelation: 'lojas'
-            referencedColumns: ['id']
+            referencedRelation: "lojas"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -275,11 +275,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'company_settings_loja_id_fkey'
-            columns: ['loja_id']
+            foreignKeyName: "company_settings_loja_id_fkey"
+            columns: ["loja_id"]
             isOneToOne: true
-            referencedRelation: 'lojas'
-            referencedColumns: ['id']
+            referencedRelation: "lojas"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -349,18 +349,18 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'contacts_accountId_fkey'
-            columns: ['accountId']
+            foreignKeyName: "contacts_accountId_fkey"
+            columns: ["accountId"]
             isOneToOne: false
-            referencedRelation: 'accounts'
-            referencedColumns: ['id']
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'contacts_loja_id_fkey'
-            columns: ['loja_id']
+            foreignKeyName: "contacts_loja_id_fkey"
+            columns: ["loja_id"]
             isOneToOne: false
-            referencedRelation: 'lojas'
-            referencedColumns: ['id']
+            referencedRelation: "lojas"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -421,11 +421,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'monthly_goals_loja_id_fkey'
-            columns: ['loja_id']
+            foreignKeyName: "monthly_goals_loja_id_fkey"
+            columns: ["loja_id"]
             isOneToOne: false
-            referencedRelation: 'lojas'
-            referencedColumns: ['id']
+            referencedRelation: "lojas"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -483,18 +483,18 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'opportunities_accountId_fkey'
-            columns: ['accountId']
+            foreignKeyName: "opportunities_accountId_fkey"
+            columns: ["accountId"]
             isOneToOne: false
-            referencedRelation: 'accounts'
-            referencedColumns: ['id']
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'opportunities_loja_id_fkey'
-            columns: ['loja_id']
+            foreignKeyName: "opportunities_loja_id_fkey"
+            columns: ["loja_id"]
             isOneToOne: false
-            referencedRelation: 'lojas'
-            referencedColumns: ['id']
+            referencedRelation: "lojas"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -531,11 +531,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'profiles_loja_id_fkey'
-            columns: ['loja_id']
+            foreignKeyName: "profiles_loja_id_fkey"
+            columns: ["loja_id"]
             isOneToOne: false
-            referencedRelation: 'lojas'
-            referencedColumns: ['id']
+            referencedRelation: "lojas"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -596,18 +596,18 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'proposals_accountId_fkey'
-            columns: ['accountId']
+            foreignKeyName: "proposals_accountId_fkey"
+            columns: ["accountId"]
             isOneToOne: false
-            referencedRelation: 'accounts'
-            referencedColumns: ['id']
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'proposals_loja_id_fkey'
-            columns: ['loja_id']
+            foreignKeyName: "proposals_loja_id_fkey"
+            columns: ["loja_id"]
             isOneToOne: false
-            referencedRelation: 'lojas'
-            referencedColumns: ['id']
+            referencedRelation: "lojas"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -661,33 +661,33 @@ export type Database = {
   }
 }
 
-type DatabaseWithoutInternals = Omit<Database, '__InternalSupabase'>
+type DatabaseWithoutInternals = Omit<Database, "__InternalSupabase">
 
-type DefaultSchema = DatabaseWithoutInternals[Extract<keyof Database, 'public'>]
+type DefaultSchema = DatabaseWithoutInternals[Extract<keyof Database, "public">]
 
 export type Tables<
   DefaultSchemaTableNameOrOptions extends
-    | keyof (DefaultSchema['Tables'] & DefaultSchema['Views'])
+    | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
     | { schema: keyof DatabaseWithoutInternals },
   TableName extends DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
-    ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables'] &
-        DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Views'])
+    ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+        DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
     : never = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
-  ? (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables'] &
-      DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Views'])[TableName] extends {
+  ? (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+      DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])[TableName] extends {
       Row: infer R
     }
     ? R
     : never
-  : DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema['Tables'] &
-        DefaultSchema['Views'])
-    ? (DefaultSchema['Tables'] &
-        DefaultSchema['Views'])[DefaultSchemaTableNameOrOptions] extends {
+  : DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema["Tables"] &
+        DefaultSchema["Views"])
+    ? (DefaultSchema["Tables"] &
+        DefaultSchema["Views"])[DefaultSchemaTableNameOrOptions] extends {
         Row: infer R
       }
       ? R
@@ -696,23 +696,23 @@ export type Tables<
 
 export type TablesInsert<
   DefaultSchemaTableNameOrOptions extends
-    | keyof DefaultSchema['Tables']
+    | keyof DefaultSchema["Tables"]
     | { schema: keyof DatabaseWithoutInternals },
   TableName extends DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
-    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables']
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
     : never = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
-  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables'][TableName] extends {
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
       Insert: infer I
     }
     ? I
     : never
-  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema['Tables']
-    ? DefaultSchema['Tables'][DefaultSchemaTableNameOrOptions] extends {
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
+    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
         Insert: infer I
       }
       ? I
@@ -721,23 +721,23 @@ export type TablesInsert<
 
 export type TablesUpdate<
   DefaultSchemaTableNameOrOptions extends
-    | keyof DefaultSchema['Tables']
+    | keyof DefaultSchema["Tables"]
     | { schema: keyof DatabaseWithoutInternals },
   TableName extends DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
-    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables']
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
     : never = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
-  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables'][TableName] extends {
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
       Update: infer U
     }
     ? U
     : never
-  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema['Tables']
-    ? DefaultSchema['Tables'][DefaultSchemaTableNameOrOptions] extends {
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
+    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
         Update: infer U
       }
       ? U
@@ -746,36 +746,36 @@ export type TablesUpdate<
 
 export type Enums<
   DefaultSchemaEnumNameOrOptions extends
-    | keyof DefaultSchema['Enums']
+    | keyof DefaultSchema["Enums"]
     | { schema: keyof DatabaseWithoutInternals },
   EnumName extends DefaultSchemaEnumNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
-    ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions['schema']]['Enums']
+    ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
     : never = never,
 > = DefaultSchemaEnumNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
-  ? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions['schema']]['Enums'][EnumName]
-  : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema['Enums']
-    ? DefaultSchema['Enums'][DefaultSchemaEnumNameOrOptions]
+  ? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"][EnumName]
+  : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema["Enums"]
+    ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
     : never
 
 export type CompositeTypes<
   PublicCompositeTypeNameOrOptions extends
-    | keyof DefaultSchema['CompositeTypes']
+    | keyof DefaultSchema["CompositeTypes"]
     | { schema: keyof DatabaseWithoutInternals },
   CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
-    ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions['schema']]['CompositeTypes']
+    ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
     : never = never,
 > = PublicCompositeTypeNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
-  ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions['schema']]['CompositeTypes'][CompositeTypeName]
-  : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema['CompositeTypes']
-    ? DefaultSchema['CompositeTypes'][PublicCompositeTypeNameOrOptions]
+  ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
+  : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema["CompositeTypes"]
+    ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
     : never
 
 export const Constants = {
@@ -783,6 +783,7 @@ export const Constants = {
     Enums: {},
   },
 } as const
+
 
 // ====== DATABASE EXTENDED CONTEXT (auto-generated) ======
 // This section contains actual PostgreSQL column types, constraints, RLS policies,
@@ -1000,24 +1001,24 @@ export const Constants = {
 // --- ROW LEVEL SECURITY POLICIES ---
 // Table: accounts
 //   Policy "accounts_delete" (DELETE, PERMISSIVE) roles={authenticated}
-//     USING: ((get_user_role() = ANY (ARRAY['admin'::text, 'gestor'::text])) OR (user_id = auth.uid()) OR ((user_id IS NULL) AND (loja_id = get_user_loja())))
+//     USING: ((get_user_role() = ANY (ARRAY['admin'::text, 'gerente'::text, 'gestor'::text])) OR (user_id = auth.uid()) OR (user_id IS NULL))
 //   Policy "accounts_insert" (INSERT, PERMISSIVE) roles={authenticated}
-//     WITH CHECK: ((get_user_role() = ANY (ARRAY['admin'::text, 'gestor'::text])) OR (user_id = auth.uid()) OR (user_id IS NULL))
+//     WITH CHECK: ((get_user_role() = ANY (ARRAY['admin'::text, 'gerente'::text, 'gestor'::text])) OR (user_id = auth.uid()) OR (user_id IS NULL))
 //   Policy "accounts_select" (SELECT, PERMISSIVE) roles={authenticated}
-//     USING: ((get_user_role() = ANY (ARRAY['admin'::text, 'gestor'::text])) OR (user_id = auth.uid()) OR ((user_id IS NULL) AND (loja_id = get_user_loja())))
+//     USING: ((get_user_role() = ANY (ARRAY['admin'::text, 'gerente'::text, 'gestor'::text])) OR (user_id = auth.uid()) OR (user_id IS NULL))
 //   Policy "accounts_update" (UPDATE, PERMISSIVE) roles={authenticated}
-//     USING: ((get_user_role() = ANY (ARRAY['admin'::text, 'gestor'::text])) OR (user_id = auth.uid()) OR ((user_id IS NULL) AND (loja_id = get_user_loja())))
-//     WITH CHECK: ((get_user_role() = ANY (ARRAY['admin'::text, 'gestor'::text])) OR (user_id = auth.uid()) OR ((user_id IS NULL) AND (loja_id = get_user_loja())))
+//     USING: ((get_user_role() = ANY (ARRAY['admin'::text, 'gerente'::text, 'gestor'::text])) OR (user_id = auth.uid()) OR (user_id IS NULL))
+//     WITH CHECK: ((get_user_role() = ANY (ARRAY['admin'::text, 'gerente'::text, 'gestor'::text])) OR (user_id = auth.uid()) OR (user_id IS NULL))
 // Table: activities
 //   Policy "activities_delete" (DELETE, PERMISSIVE) roles={authenticated}
-//     USING: ((get_user_role() = ANY (ARRAY['admin'::text, 'gestor'::text])) OR (user_id = auth.uid()) OR ((user_id IS NULL) AND (loja_id = get_user_loja())))
+//     USING: ((get_user_role() = ANY (ARRAY['admin'::text, 'gerente'::text, 'gestor'::text])) OR (user_id = auth.uid()) OR (user_id IS NULL))
 //   Policy "activities_insert" (INSERT, PERMISSIVE) roles={authenticated}
-//     WITH CHECK: ((get_user_role() = ANY (ARRAY['admin'::text, 'gestor'::text])) OR (user_id = auth.uid()) OR (user_id IS NULL))
+//     WITH CHECK: ((get_user_role() = ANY (ARRAY['admin'::text, 'gerente'::text, 'gestor'::text])) OR (user_id = auth.uid()) OR (user_id IS NULL))
 //   Policy "activities_select" (SELECT, PERMISSIVE) roles={authenticated}
-//     USING: ((get_user_role() = ANY (ARRAY['admin'::text, 'gestor'::text])) OR (user_id = auth.uid()) OR ((user_id IS NULL) AND (loja_id = get_user_loja())))
+//     USING: ((get_user_role() = ANY (ARRAY['admin'::text, 'gerente'::text, 'gestor'::text])) OR (user_id = auth.uid()) OR (user_id IS NULL))
 //   Policy "activities_update" (UPDATE, PERMISSIVE) roles={authenticated}
-//     USING: ((get_user_role() = ANY (ARRAY['admin'::text, 'gestor'::text])) OR (user_id = auth.uid()) OR ((user_id IS NULL) AND (loja_id = get_user_loja())))
-//     WITH CHECK: ((get_user_role() = ANY (ARRAY['admin'::text, 'gestor'::text])) OR (user_id = auth.uid()) OR ((user_id IS NULL) AND (loja_id = get_user_loja())))
+//     USING: ((get_user_role() = ANY (ARRAY['admin'::text, 'gerente'::text, 'gestor'::text])) OR (user_id = auth.uid()) OR (user_id IS NULL))
+//     WITH CHECK: ((get_user_role() = ANY (ARRAY['admin'::text, 'gerente'::text, 'gestor'::text])) OR (user_id = auth.uid()) OR (user_id IS NULL))
 // Table: audit_logs
 //   Policy "audit_logs_insert" (INSERT, PERMISSIVE) roles={authenticated}
 //     WITH CHECK: ((get_user_role() = ANY (ARRAY['admin'::text, 'gestor'::text])) OR (changed_by = auth.uid()) OR (changed_by IS NULL))
@@ -1028,14 +1029,14 @@ export const Constants = {
 //     USING: ((loja_id = get_user_loja()) OR (get_user_role() = 'admin'::text))
 // Table: contacts
 //   Policy "contacts_delete" (DELETE, PERMISSIVE) roles={authenticated}
-//     USING: ((get_user_role() = ANY (ARRAY['admin'::text, 'gestor'::text])) OR (user_id = auth.uid()) OR ((user_id IS NULL) AND (loja_id = get_user_loja())))
+//     USING: ((get_user_role() = ANY (ARRAY['admin'::text, 'gerente'::text, 'gestor'::text])) OR (user_id = auth.uid()) OR (user_id IS NULL))
 //   Policy "contacts_insert" (INSERT, PERMISSIVE) roles={authenticated}
-//     WITH CHECK: ((get_user_role() = ANY (ARRAY['admin'::text, 'gestor'::text])) OR (user_id = auth.uid()) OR (user_id IS NULL))
+//     WITH CHECK: ((get_user_role() = ANY (ARRAY['admin'::text, 'gerente'::text, 'gestor'::text])) OR (user_id = auth.uid()) OR (user_id IS NULL))
 //   Policy "contacts_select" (SELECT, PERMISSIVE) roles={authenticated}
-//     USING: ((get_user_role() = ANY (ARRAY['admin'::text, 'gestor'::text])) OR (user_id = auth.uid()) OR ((user_id IS NULL) AND (loja_id = get_user_loja())))
+//     USING: ((get_user_role() = ANY (ARRAY['admin'::text, 'gerente'::text, 'gestor'::text])) OR (user_id = auth.uid()) OR (user_id IS NULL))
 //   Policy "contacts_update" (UPDATE, PERMISSIVE) roles={authenticated}
-//     USING: ((get_user_role() = ANY (ARRAY['admin'::text, 'gestor'::text])) OR (user_id = auth.uid()) OR ((user_id IS NULL) AND (loja_id = get_user_loja())))
-//     WITH CHECK: ((get_user_role() = ANY (ARRAY['admin'::text, 'gestor'::text])) OR (user_id = auth.uid()) OR ((user_id IS NULL) AND (loja_id = get_user_loja())))
+//     USING: ((get_user_role() = ANY (ARRAY['admin'::text, 'gerente'::text, 'gestor'::text])) OR (user_id = auth.uid()) OR (user_id IS NULL))
+//     WITH CHECK: ((get_user_role() = ANY (ARRAY['admin'::text, 'gerente'::text, 'gestor'::text])) OR (user_id = auth.uid()) OR (user_id IS NULL))
 // Table: lojas
 //   Policy "lojas_read" (SELECT, PERMISSIVE) roles={public}
 //     USING: true
@@ -1044,14 +1045,14 @@ export const Constants = {
 //     USING: ((get_user_role() = 'admin'::text) OR (loja_id = get_user_loja()))
 // Table: opportunities
 //   Policy "opportunities_delete" (DELETE, PERMISSIVE) roles={authenticated}
-//     USING: ((get_user_role() = ANY (ARRAY['admin'::text, 'gestor'::text])) OR (user_id = auth.uid()) OR ((user_id IS NULL) AND (loja_id = get_user_loja())))
+//     USING: ((get_user_role() = ANY (ARRAY['admin'::text, 'gerente'::text, 'gestor'::text])) OR (user_id = auth.uid()) OR (user_id IS NULL))
 //   Policy "opportunities_insert" (INSERT, PERMISSIVE) roles={authenticated}
-//     WITH CHECK: ((get_user_role() = ANY (ARRAY['admin'::text, 'gestor'::text])) OR (user_id = auth.uid()) OR (user_id IS NULL))
+//     WITH CHECK: ((get_user_role() = ANY (ARRAY['admin'::text, 'gerente'::text, 'gestor'::text])) OR (user_id = auth.uid()) OR (user_id IS NULL))
 //   Policy "opportunities_select" (SELECT, PERMISSIVE) roles={authenticated}
-//     USING: ((get_user_role() = ANY (ARRAY['admin'::text, 'gestor'::text])) OR (user_id = auth.uid()) OR ((user_id IS NULL) AND (loja_id = get_user_loja())))
+//     USING: ((get_user_role() = ANY (ARRAY['admin'::text, 'gerente'::text, 'gestor'::text])) OR (user_id = auth.uid()) OR (user_id IS NULL))
 //   Policy "opportunities_update" (UPDATE, PERMISSIVE) roles={authenticated}
-//     USING: ((get_user_role() = ANY (ARRAY['admin'::text, 'gestor'::text])) OR (user_id = auth.uid()) OR ((user_id IS NULL) AND (loja_id = get_user_loja())))
-//     WITH CHECK: ((get_user_role() = ANY (ARRAY['admin'::text, 'gestor'::text])) OR (user_id = auth.uid()) OR ((user_id IS NULL) AND (loja_id = get_user_loja())))
+//     USING: ((get_user_role() = ANY (ARRAY['admin'::text, 'gerente'::text, 'gestor'::text])) OR (user_id = auth.uid()) OR (user_id IS NULL))
+//     WITH CHECK: ((get_user_role() = ANY (ARRAY['admin'::text, 'gerente'::text, 'gestor'::text])) OR (user_id = auth.uid()) OR (user_id IS NULL))
 // Table: profiles
 //   Policy "profiles_read" (SELECT, PERMISSIVE) roles={public}
 //     USING: ((auth.uid() = id) OR (get_user_role() = 'admin'::text))
@@ -1059,14 +1060,14 @@ export const Constants = {
 //     USING: ((auth.uid() = id) OR (get_user_role() = 'admin'::text))
 // Table: proposals
 //   Policy "proposals_delete" (DELETE, PERMISSIVE) roles={authenticated}
-//     USING: ((get_user_role() = ANY (ARRAY['admin'::text, 'gestor'::text])) OR (user_id = auth.uid()) OR ((user_id IS NULL) AND (loja_id = get_user_loja())))
+//     USING: ((get_user_role() = ANY (ARRAY['admin'::text, 'gerente'::text, 'gestor'::text])) OR (user_id = auth.uid()) OR (user_id IS NULL))
 //   Policy "proposals_insert" (INSERT, PERMISSIVE) roles={authenticated}
-//     WITH CHECK: ((get_user_role() = ANY (ARRAY['admin'::text, 'gestor'::text])) OR (user_id = auth.uid()) OR (user_id IS NULL))
+//     WITH CHECK: ((get_user_role() = ANY (ARRAY['admin'::text, 'gerente'::text, 'gestor'::text])) OR (user_id = auth.uid()) OR (user_id IS NULL))
 //   Policy "proposals_select" (SELECT, PERMISSIVE) roles={authenticated}
-//     USING: ((get_user_role() = ANY (ARRAY['admin'::text, 'gestor'::text])) OR (user_id = auth.uid()) OR ((user_id IS NULL) AND (loja_id = get_user_loja())))
+//     USING: ((get_user_role() = ANY (ARRAY['admin'::text, 'gerente'::text, 'gestor'::text])) OR (user_id = auth.uid()) OR (user_id IS NULL))
 //   Policy "proposals_update" (UPDATE, PERMISSIVE) roles={authenticated}
-//     USING: ((get_user_role() = ANY (ARRAY['admin'::text, 'gestor'::text])) OR (user_id = auth.uid()) OR ((user_id IS NULL) AND (loja_id = get_user_loja())))
-//     WITH CHECK: ((get_user_role() = ANY (ARRAY['admin'::text, 'gestor'::text])) OR (user_id = auth.uid()) OR ((user_id IS NULL) AND (loja_id = get_user_loja())))
+//     USING: ((get_user_role() = ANY (ARRAY['admin'::text, 'gerente'::text, 'gestor'::text])) OR (user_id = auth.uid()) OR (user_id IS NULL))
+//     WITH CHECK: ((get_user_role() = ANY (ARRAY['admin'::text, 'gerente'::text, 'gestor'::text])) OR (user_id = auth.uid()) OR (user_id IS NULL))
 // Table: user_integrations
 //   Policy "Users can manage their own integrations" (ALL, PERMISSIVE) roles={authenticated}
 //     USING: (auth.uid() = user_id)
@@ -1088,7 +1089,7 @@ export const Constants = {
 //     RETURN NEW;
 //   END;
 //   $function$
-//
+//   
 // FUNCTION get_user_loja()
 //   CREATE OR REPLACE FUNCTION public.get_user_loja()
 //    RETURNS uuid
@@ -1097,7 +1098,7 @@ export const Constants = {
 //   AS $function$
 //     SELECT loja_id FROM public.profiles WHERE id = auth.uid() LIMIT 1;
 //   $function$
-//
+//   
 // FUNCTION get_user_role()
 //   CREATE OR REPLACE FUNCTION public.get_user_role()
 //    RETURNS text
@@ -1106,7 +1107,7 @@ export const Constants = {
 //   AS $function$
 //     SELECT role FROM public.profiles WHERE id = auth.uid() LIMIT 1;
 //   $function$
-//
+//   
 // FUNCTION handle_new_account_after_insert()
 //   CREATE OR REPLACE FUNCTION public.handle_new_account_after_insert()
 //    RETURNS trigger
@@ -1129,7 +1130,7 @@ export const Constants = {
 //     RETURN NEW;
 //   END;
 //   $function$
-//
+//   
 // FUNCTION handle_new_account_auto_pipeline()
 //   CREATE OR REPLACE FUNCTION public.handle_new_account_auto_pipeline()
 //    RETURNS trigger
@@ -1143,18 +1144,18 @@ export const Constants = {
 //     IF NEW."interestLevel" IS NULL OR NEW."interestLevel" = '' THEN NEW."interestLevel" := 'Frio'; END IF;
 //     IF NEW."accountPotential" IS NULL OR NEW."accountPotential" = '' THEN NEW."accountPotential" := 'Médio'; END IF;
 //     IF NEW."detailedSource" IS NULL OR NEW."detailedSource" = '' THEN NEW."detailedSource" := 'Manual'; END IF;
-//
+//     
 //     -- Próxima ação padrão
 //     IF NEW."nextAction" IS NULL OR NEW."nextAction" = '' THEN NEW."nextAction" := 'Contato inicial via WhatsApp'; END IF;
 //     IF NEW."nextActionDate" IS NULL THEN NEW."nextActionDate" := NOW(); END IF;
-//
+//     
 //     -- Sempre "Prospecção" / "Em prospecção"
 //     IF NEW.status IS NULL OR NEW.status = 'Novo' THEN NEW.status := 'Em prospecção'; END IF;
-//
+//   
 //     RETURN NEW;
 //   END;
 //   $function$
-//
+//   
 // FUNCTION handle_new_contact_auto_pipeline()
 //   CREATE OR REPLACE FUNCTION public.handle_new_contact_auto_pipeline()
 //    RETURNS trigger
@@ -1169,12 +1170,12 @@ export const Constants = {
 //     SELECT EXISTS(
 //       SELECT 1 FROM public.opportunities WHERE "accountId" = NEW."accountId"
 //     ) INTO v_opp_exists;
-//
+//   
 //     IF NOT v_opp_exists THEN
 //       SELECT name INTO v_acc_name FROM public.accounts WHERE id = NEW."accountId";
-//
+//       
 //       -- Atualiza a conta com os padrões iniciais
-//       UPDATE public.accounts SET
+//       UPDATE public.accounts SET 
 //         "nextAction" = COALESCE("nextAction", 'Contato inicial via WhatsApp'),
 //         "nextActionDate" = COALESCE("nextActionDate", NOW()),
 //         "cadenceStage" = COALESCE("cadenceStage", '1º Toque'),
@@ -1182,7 +1183,7 @@ export const Constants = {
 //         "accountPotential" = COALESCE("accountPotential", 'Médio'),
 //         "status" = 'Em prospecção'
 //       WHERE id = NEW."accountId";
-//
+//   
 //       -- Cria a Oportunidade na primeira etapa
 //       INSERT INTO public.opportunities (
 //         "accountId", name, stage, "nextAction", "nextActionDate", loja_id, probability
@@ -1196,11 +1197,11 @@ export const Constants = {
 //         10
 //       );
 //     END IF;
-//
+//     
 //     RETURN NEW;
 //   END;
 //   $function$
-//
+//   
 // FUNCTION handle_new_user()
 //   CREATE OR REPLACE FUNCTION public.handle_new_user()
 //    RETURNS trigger
@@ -1218,7 +1219,7 @@ export const Constants = {
 //     RETURN NEW;
 //   END;
 //   $function$
-//
+//   
 // FUNCTION log_contact_changes()
 //   CREATE OR REPLACE FUNCTION public.log_contact_changes()
 //    RETURNS trigger
@@ -1230,7 +1231,7 @@ export const Constants = {
 //     v_loja_id UUID;
 //   BEGIN
 //     v_user_id := auth.uid();
-//
+//     
 //     IF TG_OP = 'INSERT' THEN
 //       v_loja_id := NEW.loja_id;
 //       INSERT INTO public.audit_logs (table_name, record_id, action, new_data, changed_by, loja_id)
@@ -1250,7 +1251,7 @@ export const Constants = {
 //     RETURN NULL;
 //   END;
 //   $function$
-//
+//   
 // FUNCTION set_account_user_id()
 //   CREATE OR REPLACE FUNCTION public.set_account_user_id()
 //    RETURNS trigger
@@ -1264,7 +1265,7 @@ export const Constants = {
 //     RETURN NEW;
 //   END;
 //   $function$
-//
+//   
 // FUNCTION set_dependent_user_id()
 //   CREATE OR REPLACE FUNCTION public.set_dependent_user_id()
 //    RETURNS trigger
@@ -1287,7 +1288,7 @@ export const Constants = {
 //     RETURN NEW;
 //   END;
 //   $function$
-//
+//   
 
 // --- TRIGGERS ---
 // Table: accounts
@@ -1313,3 +1314,4 @@ export const Constants = {
 //   CREATE UNIQUE INDEX monthly_goals_month_loja_user_idx ON public.monthly_goals USING btree (month, COALESCE(loja_id, '00000000-0000-0000-0000-000000000000'::uuid), COALESCE(user_id, '00000000-0000-0000-0000-000000000000'::uuid))
 // Table: user_integrations
 //   CREATE UNIQUE INDEX user_integrations_user_id_provider_key ON public.user_integrations USING btree (user_id, provider)
+
