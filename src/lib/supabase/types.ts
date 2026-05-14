@@ -11,7 +11,7 @@ export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: '14.4'
+    PostgrestVersion: "14.4"
   }
   public: {
     Tables: {
@@ -120,11 +120,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'accounts_loja_id_fkey'
-            columns: ['loja_id']
+            foreignKeyName: "accounts_loja_id_fkey"
+            columns: ["loja_id"]
             isOneToOne: false
-            referencedRelation: 'lojas'
-            referencedColumns: ['id']
+            referencedRelation: "lojas"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -185,25 +185,25 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'activities_accountId_fkey'
-            columns: ['accountId']
+            foreignKeyName: "activities_accountId_fkey"
+            columns: ["accountId"]
             isOneToOne: false
-            referencedRelation: 'accounts'
-            referencedColumns: ['id']
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'activities_contactId_fkey'
-            columns: ['contactId']
+            foreignKeyName: "activities_contactId_fkey"
+            columns: ["contactId"]
             isOneToOne: false
-            referencedRelation: 'contacts'
-            referencedColumns: ['id']
+            referencedRelation: "contacts"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'activities_loja_id_fkey'
-            columns: ['loja_id']
+            foreignKeyName: "activities_loja_id_fkey"
+            columns: ["loja_id"]
             isOneToOne: false
-            referencedRelation: 'lojas'
-            referencedColumns: ['id']
+            referencedRelation: "lojas"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -243,11 +243,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'audit_logs_loja_id_fkey'
-            columns: ['loja_id']
+            foreignKeyName: "audit_logs_loja_id_fkey"
+            columns: ["loja_id"]
             isOneToOne: false
-            referencedRelation: 'lojas'
-            referencedColumns: ['id']
+            referencedRelation: "lojas"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -275,11 +275,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'company_settings_loja_id_fkey'
-            columns: ['loja_id']
+            foreignKeyName: "company_settings_loja_id_fkey"
+            columns: ["loja_id"]
             isOneToOne: true
-            referencedRelation: 'lojas'
-            referencedColumns: ['id']
+            referencedRelation: "lojas"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -349,18 +349,18 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'contacts_accountId_fkey'
-            columns: ['accountId']
+            foreignKeyName: "contacts_accountId_fkey"
+            columns: ["accountId"]
             isOneToOne: false
-            referencedRelation: 'accounts'
-            referencedColumns: ['id']
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'contacts_loja_id_fkey'
-            columns: ['loja_id']
+            foreignKeyName: "contacts_loja_id_fkey"
+            columns: ["loja_id"]
             isOneToOne: false
-            referencedRelation: 'lojas'
-            referencedColumns: ['id']
+            referencedRelation: "lojas"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -421,11 +421,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'monthly_goals_loja_id_fkey'
-            columns: ['loja_id']
+            foreignKeyName: "monthly_goals_loja_id_fkey"
+            columns: ["loja_id"]
             isOneToOne: false
-            referencedRelation: 'lojas'
-            referencedColumns: ['id']
+            referencedRelation: "lojas"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -483,18 +483,174 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'opportunities_accountId_fkey'
-            columns: ['accountId']
+            foreignKeyName: "opportunities_accountId_fkey"
+            columns: ["accountId"]
             isOneToOne: false
-            referencedRelation: 'accounts'
-            referencedColumns: ['id']
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'opportunities_loja_id_fkey'
-            columns: ['loja_id']
+            foreignKeyName: "opportunities_loja_id_fkey"
+            columns: ["loja_id"]
             isOneToOne: false
-            referencedRelation: 'lojas'
-            referencedColumns: ['id']
+            referencedRelation: "lojas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      order_form_items: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          id: string
+          notes: string | null
+          order_form_id: string
+          product_name: string
+          quantity: number | null
+          total_price: number | null
+          unit: string | null
+          unit_price: number | null
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          notes?: string | null
+          order_form_id: string
+          product_name: string
+          quantity?: number | null
+          total_price?: number | null
+          unit?: string | null
+          unit_price?: number | null
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          notes?: string | null
+          order_form_id?: string
+          product_name?: string
+          quantity?: number | null
+          total_price?: number | null
+          unit?: string | null
+          unit_price?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "order_form_items_order_form_id_fkey"
+            columns: ["order_form_id"]
+            isOneToOne: false
+            referencedRelation: "order_forms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      order_forms: {
+        Row: {
+          account_id: string | null
+          address: string | null
+          city: string | null
+          contact_id: string | null
+          contact_name: string | null
+          created_at: string | null
+          created_by: string | null
+          customer_cnpj: string | null
+          customer_name: string | null
+          discount: number | null
+          email: string | null
+          id: string
+          is_manual_customer: boolean | null
+          logo_url: string | null
+          loja_id: string | null
+          notes: string | null
+          order_number: string
+          phone: string | null
+          responsible: string | null
+          save_customer_to_crm: boolean | null
+          state: string | null
+          status: string | null
+          subtotal: number | null
+          total_amount: number | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          account_id?: string | null
+          address?: string | null
+          city?: string | null
+          contact_id?: string | null
+          contact_name?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          customer_cnpj?: string | null
+          customer_name?: string | null
+          discount?: number | null
+          email?: string | null
+          id?: string
+          is_manual_customer?: boolean | null
+          logo_url?: string | null
+          loja_id?: string | null
+          notes?: string | null
+          order_number?: string
+          phone?: string | null
+          responsible?: string | null
+          save_customer_to_crm?: boolean | null
+          state?: string | null
+          status?: string | null
+          subtotal?: number | null
+          total_amount?: number | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          account_id?: string | null
+          address?: string | null
+          city?: string | null
+          contact_id?: string | null
+          contact_name?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          customer_cnpj?: string | null
+          customer_name?: string | null
+          discount?: number | null
+          email?: string | null
+          id?: string
+          is_manual_customer?: boolean | null
+          logo_url?: string | null
+          loja_id?: string | null
+          notes?: string | null
+          order_number?: string
+          phone?: string | null
+          responsible?: string | null
+          save_customer_to_crm?: boolean | null
+          state?: string | null
+          status?: string | null
+          subtotal?: number | null
+          total_amount?: number | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "order_forms_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "order_forms_contact_id_fkey"
+            columns: ["contact_id"]
+            isOneToOne: false
+            referencedRelation: "contacts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "order_forms_loja_id_fkey"
+            columns: ["loja_id"]
+            isOneToOne: false
+            referencedRelation: "lojas"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -531,11 +687,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'profiles_loja_id_fkey'
-            columns: ['loja_id']
+            foreignKeyName: "profiles_loja_id_fkey"
+            columns: ["loja_id"]
             isOneToOne: false
-            referencedRelation: 'lojas'
-            referencedColumns: ['id']
+            referencedRelation: "lojas"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -596,18 +752,18 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'proposals_accountId_fkey'
-            columns: ['accountId']
+            foreignKeyName: "proposals_accountId_fkey"
+            columns: ["accountId"]
             isOneToOne: false
-            referencedRelation: 'accounts'
-            referencedColumns: ['id']
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'proposals_loja_id_fkey'
-            columns: ['loja_id']
+            foreignKeyName: "proposals_loja_id_fkey"
+            columns: ["loja_id"]
             isOneToOne: false
-            referencedRelation: 'lojas'
-            referencedColumns: ['id']
+            referencedRelation: "lojas"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -661,33 +817,33 @@ export type Database = {
   }
 }
 
-type DatabaseWithoutInternals = Omit<Database, '__InternalSupabase'>
+type DatabaseWithoutInternals = Omit<Database, "__InternalSupabase">
 
-type DefaultSchema = DatabaseWithoutInternals[Extract<keyof Database, 'public'>]
+type DefaultSchema = DatabaseWithoutInternals[Extract<keyof Database, "public">]
 
 export type Tables<
   DefaultSchemaTableNameOrOptions extends
-    | keyof (DefaultSchema['Tables'] & DefaultSchema['Views'])
+    | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
     | { schema: keyof DatabaseWithoutInternals },
   TableName extends DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
-    ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables'] &
-        DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Views'])
+    ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+        DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
     : never = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
-  ? (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables'] &
-      DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Views'])[TableName] extends {
+  ? (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+      DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])[TableName] extends {
       Row: infer R
     }
     ? R
     : never
-  : DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema['Tables'] &
-        DefaultSchema['Views'])
-    ? (DefaultSchema['Tables'] &
-        DefaultSchema['Views'])[DefaultSchemaTableNameOrOptions] extends {
+  : DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema["Tables"] &
+        DefaultSchema["Views"])
+    ? (DefaultSchema["Tables"] &
+        DefaultSchema["Views"])[DefaultSchemaTableNameOrOptions] extends {
         Row: infer R
       }
       ? R
@@ -696,23 +852,23 @@ export type Tables<
 
 export type TablesInsert<
   DefaultSchemaTableNameOrOptions extends
-    | keyof DefaultSchema['Tables']
+    | keyof DefaultSchema["Tables"]
     | { schema: keyof DatabaseWithoutInternals },
   TableName extends DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
-    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables']
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
     : never = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
-  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables'][TableName] extends {
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
       Insert: infer I
     }
     ? I
     : never
-  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema['Tables']
-    ? DefaultSchema['Tables'][DefaultSchemaTableNameOrOptions] extends {
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
+    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
         Insert: infer I
       }
       ? I
@@ -721,23 +877,23 @@ export type TablesInsert<
 
 export type TablesUpdate<
   DefaultSchemaTableNameOrOptions extends
-    | keyof DefaultSchema['Tables']
+    | keyof DefaultSchema["Tables"]
     | { schema: keyof DatabaseWithoutInternals },
   TableName extends DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
-    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables']
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
     : never = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
-  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables'][TableName] extends {
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
       Update: infer U
     }
     ? U
     : never
-  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema['Tables']
-    ? DefaultSchema['Tables'][DefaultSchemaTableNameOrOptions] extends {
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
+    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
         Update: infer U
       }
       ? U
@@ -746,36 +902,36 @@ export type TablesUpdate<
 
 export type Enums<
   DefaultSchemaEnumNameOrOptions extends
-    | keyof DefaultSchema['Enums']
+    | keyof DefaultSchema["Enums"]
     | { schema: keyof DatabaseWithoutInternals },
   EnumName extends DefaultSchemaEnumNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
-    ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions['schema']]['Enums']
+    ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
     : never = never,
 > = DefaultSchemaEnumNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
-  ? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions['schema']]['Enums'][EnumName]
-  : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema['Enums']
-    ? DefaultSchema['Enums'][DefaultSchemaEnumNameOrOptions]
+  ? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"][EnumName]
+  : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema["Enums"]
+    ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
     : never
 
 export type CompositeTypes<
   PublicCompositeTypeNameOrOptions extends
-    | keyof DefaultSchema['CompositeTypes']
+    | keyof DefaultSchema["CompositeTypes"]
     | { schema: keyof DatabaseWithoutInternals },
   CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
-    ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions['schema']]['CompositeTypes']
+    ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
     : never = never,
 > = PublicCompositeTypeNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
-  ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions['schema']]['CompositeTypes'][CompositeTypeName]
-  : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema['CompositeTypes']
-    ? DefaultSchema['CompositeTypes'][PublicCompositeTypeNameOrOptions]
+  ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
+  : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema["CompositeTypes"]
+    ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
     : never
 
 export const Constants = {
@@ -783,6 +939,7 @@ export const Constants = {
     Enums: {},
   },
 } as const
+
 
 // ====== DATABASE EXTENDED CONTEXT (auto-generated) ======
 // This section contains actual PostgreSQL column types, constraints, RLS policies,
@@ -911,6 +1068,44 @@ export const Constants = {
 //   loja_id: uuid (nullable)
 //   createdAt: timestamp with time zone (nullable, default: now())
 //   user_id: uuid (nullable)
+// Table: order_form_items
+//   id: uuid (not null, default: gen_random_uuid())
+//   order_form_id: uuid (not null)
+//   product_name: text (not null)
+//   description: text (nullable)
+//   quantity: numeric (nullable, default: 1)
+//   unit: text (nullable, default: 'Unidade'::text)
+//   unit_price: numeric (nullable, default: 0)
+//   total_price: numeric (nullable, default: 0)
+//   notes: text (nullable)
+//   created_at: timestamp with time zone (nullable, default: now())
+// Table: order_forms
+//   id: uuid (not null, default: gen_random_uuid())
+//   order_number: text (not null, default: ('PED-'::text || (nextval('order_number_seq'::regclass))::text))
+//   account_id: uuid (nullable)
+//   contact_id: uuid (nullable)
+//   is_manual_customer: boolean (nullable, default: false)
+//   save_customer_to_crm: boolean (nullable, default: false)
+//   customer_name: text (nullable)
+//   customer_cnpj: text (nullable)
+//   contact_name: text (nullable)
+//   phone: text (nullable)
+//   email: text (nullable)
+//   city: text (nullable)
+//   state: text (nullable)
+//   address: text (nullable)
+//   responsible: text (nullable)
+//   status: text (nullable, default: 'Rascunho'::text)
+//   notes: text (nullable)
+//   logo_url: text (nullable)
+//   subtotal: numeric (nullable, default: 0)
+//   discount: numeric (nullable, default: 0)
+//   total_amount: numeric (nullable, default: 0)
+//   created_by: uuid (nullable)
+//   user_id: uuid (nullable)
+//   loja_id: uuid (nullable)
+//   created_at: timestamp with time zone (nullable, default: now())
+//   updated_at: timestamp with time zone (nullable, default: now())
 // Table: profiles
 //   id: uuid (not null)
 //   nome: text (not null)
@@ -982,6 +1177,16 @@ export const Constants = {
 //   FOREIGN KEY opportunities_loja_id_fkey: FOREIGN KEY (loja_id) REFERENCES lojas(id)
 //   PRIMARY KEY opportunities_pkey: PRIMARY KEY (id)
 //   FOREIGN KEY opportunities_user_id_fkey: FOREIGN KEY (user_id) REFERENCES auth.users(id)
+// Table: order_form_items
+//   FOREIGN KEY order_form_items_order_form_id_fkey: FOREIGN KEY (order_form_id) REFERENCES order_forms(id) ON DELETE CASCADE
+//   PRIMARY KEY order_form_items_pkey: PRIMARY KEY (id)
+// Table: order_forms
+//   FOREIGN KEY order_forms_account_id_fkey: FOREIGN KEY (account_id) REFERENCES accounts(id) ON DELETE SET NULL
+//   FOREIGN KEY order_forms_contact_id_fkey: FOREIGN KEY (contact_id) REFERENCES contacts(id) ON DELETE SET NULL
+//   FOREIGN KEY order_forms_created_by_fkey: FOREIGN KEY (created_by) REFERENCES auth.users(id)
+//   FOREIGN KEY order_forms_loja_id_fkey: FOREIGN KEY (loja_id) REFERENCES lojas(id)
+//   PRIMARY KEY order_forms_pkey: PRIMARY KEY (id)
+//   FOREIGN KEY order_forms_user_id_fkey: FOREIGN KEY (user_id) REFERENCES auth.users(id)
 // Table: profiles
 //   FOREIGN KEY profiles_id_fkey: FOREIGN KEY (id) REFERENCES auth.users(id) ON DELETE CASCADE
 //   FOREIGN KEY profiles_loja_id_fkey: FOREIGN KEY (loja_id) REFERENCES lojas(id)
@@ -1052,6 +1257,19 @@ export const Constants = {
 //   Policy "opportunities_update" (UPDATE, PERMISSIVE) roles={authenticated}
 //     USING: ((get_user_role() = ANY (ARRAY['admin'::text, 'gerente'::text, 'gestor'::text])) OR (user_id = auth.uid()) OR (user_id IS NULL))
 //     WITH CHECK: ((get_user_role() = ANY (ARRAY['admin'::text, 'gerente'::text, 'gestor'::text])) OR (user_id = auth.uid()) OR (user_id IS NULL))
+// Table: order_form_items
+//   Policy "order_form_items_all" (ALL, PERMISSIVE) roles={authenticated}
+//     USING: true
+//     WITH CHECK: true
+// Table: order_forms
+//   Policy "order_forms_delete" (DELETE, PERMISSIVE) roles={authenticated}
+//     USING: ((get_user_role() = ANY (ARRAY['admin'::text, 'gerente'::text, 'gestor'::text])) OR (user_id = auth.uid()) OR (user_id IS NULL))
+//   Policy "order_forms_insert" (INSERT, PERMISSIVE) roles={authenticated}
+//     WITH CHECK: ((get_user_role() = ANY (ARRAY['admin'::text, 'gerente'::text, 'gestor'::text])) OR (user_id = auth.uid()) OR (user_id IS NULL))
+//   Policy "order_forms_select" (SELECT, PERMISSIVE) roles={authenticated}
+//     USING: ((get_user_role() = ANY (ARRAY['admin'::text, 'gerente'::text, 'gestor'::text])) OR (user_id = auth.uid()) OR (user_id IS NULL))
+//   Policy "order_forms_update" (UPDATE, PERMISSIVE) roles={authenticated}
+//     USING: ((get_user_role() = ANY (ARRAY['admin'::text, 'gerente'::text, 'gestor'::text])) OR (user_id = auth.uid()) OR (user_id IS NULL))
 // Table: profiles
 //   Policy "profiles_read" (SELECT, PERMISSIVE) roles={public}
 //     USING: ((auth.uid() = id) OR (get_user_role() = 'admin'::text))
@@ -1088,7 +1306,7 @@ export const Constants = {
 //     RETURN NEW;
 //   END;
 //   $function$
-//
+//   
 // FUNCTION get_user_loja()
 //   CREATE OR REPLACE FUNCTION public.get_user_loja()
 //    RETURNS uuid
@@ -1097,7 +1315,7 @@ export const Constants = {
 //   AS $function$
 //     SELECT loja_id FROM public.profiles WHERE id = auth.uid() LIMIT 1;
 //   $function$
-//
+//   
 // FUNCTION get_user_role()
 //   CREATE OR REPLACE FUNCTION public.get_user_role()
 //    RETURNS text
@@ -1106,7 +1324,7 @@ export const Constants = {
 //   AS $function$
 //     SELECT lower(role) FROM public.profiles WHERE id = auth.uid() LIMIT 1;
 //   $function$
-//
+//   
 // FUNCTION handle_new_account_after_insert()
 //   CREATE OR REPLACE FUNCTION public.handle_new_account_after_insert()
 //    RETURNS trigger
@@ -1129,7 +1347,7 @@ export const Constants = {
 //     RETURN NEW;
 //   END;
 //   $function$
-//
+//   
 // FUNCTION handle_new_account_auto_pipeline()
 //   CREATE OR REPLACE FUNCTION public.handle_new_account_auto_pipeline()
 //    RETURNS trigger
@@ -1143,18 +1361,18 @@ export const Constants = {
 //     IF NEW."interestLevel" IS NULL OR NEW."interestLevel" = '' THEN NEW."interestLevel" := 'Frio'; END IF;
 //     IF NEW."accountPotential" IS NULL OR NEW."accountPotential" = '' THEN NEW."accountPotential" := 'Médio'; END IF;
 //     IF NEW."detailedSource" IS NULL OR NEW."detailedSource" = '' THEN NEW."detailedSource" := 'Manual'; END IF;
-//
+//     
 //     -- Próxima ação padrão
 //     IF NEW."nextAction" IS NULL OR NEW."nextAction" = '' THEN NEW."nextAction" := 'Contato inicial via WhatsApp'; END IF;
 //     IF NEW."nextActionDate" IS NULL THEN NEW."nextActionDate" := NOW(); END IF;
-//
+//     
 //     -- Sempre "Prospecção" / "Em prospecção"
 //     IF NEW.status IS NULL OR NEW.status = 'Novo' THEN NEW.status := 'Em prospecção'; END IF;
-//
+//   
 //     RETURN NEW;
 //   END;
 //   $function$
-//
+//   
 // FUNCTION handle_new_contact_auto_pipeline()
 //   CREATE OR REPLACE FUNCTION public.handle_new_contact_auto_pipeline()
 //    RETURNS trigger
@@ -1169,12 +1387,12 @@ export const Constants = {
 //     SELECT EXISTS(
 //       SELECT 1 FROM public.opportunities WHERE "accountId" = NEW."accountId"
 //     ) INTO v_opp_exists;
-//
+//   
 //     IF NOT v_opp_exists THEN
 //       SELECT name INTO v_acc_name FROM public.accounts WHERE id = NEW."accountId";
-//
+//       
 //       -- Atualiza a conta com os padrões iniciais
-//       UPDATE public.accounts SET
+//       UPDATE public.accounts SET 
 //         "nextAction" = COALESCE("nextAction", 'Contato inicial via WhatsApp'),
 //         "nextActionDate" = COALESCE("nextActionDate", NOW()),
 //         "cadenceStage" = COALESCE("cadenceStage", '1º Toque'),
@@ -1182,7 +1400,7 @@ export const Constants = {
 //         "accountPotential" = COALESCE("accountPotential", 'Médio'),
 //         "status" = 'Em prospecção'
 //       WHERE id = NEW."accountId";
-//
+//   
 //       -- Cria a Oportunidade na primeira etapa
 //       INSERT INTO public.opportunities (
 //         "accountId", name, stage, "nextAction", "nextActionDate", loja_id, probability
@@ -1196,11 +1414,11 @@ export const Constants = {
 //         10
 //       );
 //     END IF;
-//
+//     
 //     RETURN NEW;
 //   END;
 //   $function$
-//
+//   
 // FUNCTION handle_new_user()
 //   CREATE OR REPLACE FUNCTION public.handle_new_user()
 //    RETURNS trigger
@@ -1218,7 +1436,7 @@ export const Constants = {
 //     RETURN NEW;
 //   END;
 //   $function$
-//
+//   
 // FUNCTION log_contact_changes()
 //   CREATE OR REPLACE FUNCTION public.log_contact_changes()
 //    RETURNS trigger
@@ -1230,7 +1448,7 @@ export const Constants = {
 //     v_loja_id UUID;
 //   BEGIN
 //     v_user_id := auth.uid();
-//
+//     
 //     IF TG_OP = 'INSERT' THEN
 //       v_loja_id := NEW.loja_id;
 //       INSERT INTO public.audit_logs (table_name, record_id, action, new_data, changed_by, loja_id)
@@ -1250,7 +1468,7 @@ export const Constants = {
 //     RETURN NULL;
 //   END;
 //   $function$
-//
+//   
 // FUNCTION set_account_user_id()
 //   CREATE OR REPLACE FUNCTION public.set_account_user_id()
 //    RETURNS trigger
@@ -1264,7 +1482,18 @@ export const Constants = {
 //     RETURN NEW;
 //   END;
 //   $function$
-//
+//   
+// FUNCTION set_current_timestamp_updated_at()
+//   CREATE OR REPLACE FUNCTION public.set_current_timestamp_updated_at()
+//    RETURNS trigger
+//    LANGUAGE plpgsql
+//   AS $function$
+//   BEGIN
+//     NEW.updated_at = NOW();
+//     RETURN NEW;
+//   END;
+//   $function$
+//   
 // FUNCTION set_dependent_user_id()
 //   CREATE OR REPLACE FUNCTION public.set_dependent_user_id()
 //    RETURNS trigger
@@ -1287,7 +1516,7 @@ export const Constants = {
 //     RETURN NEW;
 //   END;
 //   $function$
-//
+//   
 
 // --- TRIGGERS ---
 // Table: accounts
@@ -1303,6 +1532,9 @@ export const Constants = {
 //   set_contacts_user_id: CREATE TRIGGER set_contacts_user_id BEFORE INSERT OR UPDATE ON public.contacts FOR EACH ROW EXECUTE FUNCTION set_dependent_user_id()
 // Table: opportunities
 //   set_opportunities_user_id: CREATE TRIGGER set_opportunities_user_id BEFORE INSERT OR UPDATE ON public.opportunities FOR EACH ROW EXECUTE FUNCTION set_dependent_user_id()
+// Table: order_forms
+//   set_order_forms_updated_at: CREATE TRIGGER set_order_forms_updated_at BEFORE UPDATE ON public.order_forms FOR EACH ROW EXECUTE FUNCTION set_current_timestamp_updated_at()
+//   set_order_forms_user_id: CREATE TRIGGER set_order_forms_user_id BEFORE INSERT ON public.order_forms FOR EACH ROW EXECUTE FUNCTION set_account_user_id()
 // Table: proposals
 //   set_proposals_user_id: CREATE TRIGGER set_proposals_user_id BEFORE INSERT OR UPDATE ON public.proposals FOR EACH ROW EXECUTE FUNCTION set_dependent_user_id()
 
@@ -1313,3 +1545,4 @@ export const Constants = {
 //   CREATE UNIQUE INDEX monthly_goals_month_loja_user_idx ON public.monthly_goals USING btree (month, COALESCE(loja_id, '00000000-0000-0000-0000-000000000000'::uuid), COALESCE(user_id, '00000000-0000-0000-0000-000000000000'::uuid))
 // Table: user_integrations
 //   CREATE UNIQUE INDEX user_integrations_user_id_provider_key ON public.user_integrations USING btree (user_id, provider)
+
