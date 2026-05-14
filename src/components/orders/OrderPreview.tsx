@@ -6,10 +6,11 @@ import { forwardRef } from 'react'
 interface Props {
   order: Partial<OrderForm>
   items: Partial<OrderFormItem>[]
+  company?: any
 }
 
 export const OrderPreview = forwardRef<HTMLDivElement, Props>(
-  ({ order, items }, ref) => {
+  ({ order, items, company }, ref) => {
     const { logoUrl } = useMainStore()
 
     const formatCurrency = (val: number) =>
@@ -25,23 +26,54 @@ export const OrderPreview = forwardRef<HTMLDivElement, Props>(
       >
         <div className="flex justify-between items-start mb-8 pb-6 border-b border-slate-200">
           <div>
-            {logoUrl ? (
-              <img
-                src={logoUrl}
-                alt="Logo"
-                className="h-16 object-contain mb-4"
-              />
-            ) : (
-              <h1 className="text-2xl font-black mb-4">ATOS3</h1>
+            <div className="flex items-center gap-4 mb-4">
+              {logoUrl && (
+                <img src={logoUrl} alt="Logo" className="h-16 object-contain" />
+              )}
+              <div>
+                {company?.company_name ? (
+                  <h1 className="text-xl font-black text-slate-900">
+                    {company.company_name}
+                  </h1>
+                ) : !logoUrl ? (
+                  <h1 className="text-xl font-black text-slate-900">ATOS3</h1>
+                ) : null}
+                {company?.fantasy_name && (
+                  <p className="text-sm font-bold text-slate-700">
+                    {company.fantasy_name}
+                  </p>
+                )}
+              </div>
+            </div>
+
+            {company && (
+              <div className="text-xs text-slate-500 mb-6 space-y-1">
+                {company.cnpj && <p>CNPJ: {company.cnpj}</p>}
+                {(company.city || company.state) && (
+                  <p>
+                    {company.address ? `${company.address}, ` : ''}
+                    {company.number ? `${company.number} - ` : ''}
+                    {company.city}/{company.state}
+                  </p>
+                )}
+                {company.phone && (
+                  <p>
+                    Tel: {company.phone}{' '}
+                    {company.whatsapp ? `| WhatsApp: ${company.whatsapp}` : ''}
+                  </p>
+                )}
+                {company.email && <p>E-mail: {company.email}</p>}
+              </div>
             )}
-            <h2 className="text-xl font-bold text-slate-800">
+
+            <h2 className="text-2xl font-black text-slate-800">
               FICHA DE PEDIDO
             </h2>
-            <p className="text-slate-500 mt-1">
+            <p className="text-slate-500 mt-1 font-medium">
               Nº: {order.order_number || 'Novo'}
             </p>
           </div>
-          <div className="text-right text-slate-600">
+          <div className="text-right text-slate-600 space-y-1">
             <p>
               Data:{' '}
               {order.created_at
@@ -166,8 +198,13 @@ export const OrderPreview = forwardRef<HTMLDivElement, Props>(
         <div className="grid grid-cols-2 gap-8 mt-16 pt-16 break-inside-avoid">
           <div className="text-center">
             <div className="border-t border-slate-400 w-3/4 mx-auto mb-2"></div>
-            <p className="font-bold text-slate-800">ATOS3 / Responsável</p>
-            <p className="text-slate-500 text-xs">{order.responsible}</p>
+            <p className="font-bold text-slate-800">
+              {company?.fantasy_name || company?.company_name || 'ATOS3'} /
+              Responsável
+            </p>
+            <p className="text-slate-500 text-xs">
+              {order.responsible || company?.responsible_name || '-'}
+            </p>
           </div>
           <div className="text-center">
             <div className="border-t border-slate-400 w-3/4 mx-auto mb-2"></div>

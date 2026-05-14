@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom'
+import { useAuth } from '@/hooks/use-auth'
 import { ArrowLeft, Save, FileText, Printer, Download } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
@@ -31,12 +32,30 @@ export default function OrderEditor() {
   const [items, setItems] = useState<Partial<OrderFormItem>[]>([])
   const [loading, setLoading] = useState(false)
   const [showPreview, setShowPreview] = useState(showPreviewParam)
+  const [companySettings, setCompanySettings] = useState<any>(null)
+  const { profile } = useAuth()
 
   const printRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     if (id && id !== 'new') fetchOrder()
   }, [id])
+
+  useEffect(() => {
+    if (profile?.loja_id) {
+      fetchCompanySettings()
+    }
+  }, [profile?.loja_id])
+
+  const fetchCompanySettings = async () => {
+    if (!profile?.loja_id) return
+    const { data } = await supabase
+      .from('company_settings' as any)
+      .select('*')
+      .eq('loja_id', profile.loja_id)
+      .maybeSingle()
+    if (data) setCompanySettings(data)
+  }
 
   useEffect(() => {
     const sub = items.reduce((acc, it) => acc + Number(it.total_price || 0), 0)
@@ -166,7 +185,7 @@ export default function OrderEditor() {
               </Button>
               <Button
                 variant="outline"
-                onClick={() => exportOrderExcel(order, items)}
+                onClick={() => exportOrderExcel(order, items, companySettings)}
               >
                 <Download className="w-4 h-4 mr-2" /> Excel
               </Button>
@@ -186,7 +205,12 @@ export default function OrderEditor() {
 
       {showPreview ? (
         <div className="print:m-0 print:p-0">
-          <OrderPreview order={order} items={items} ref={printRef} />
+          <OrderPreview
+            order={order}
+            items={items}
+            company={companySettings}
+            ref={printRef}
+          />
         </div>
       ) : (
         <div className="space-y-6">

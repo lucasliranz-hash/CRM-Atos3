@@ -39,12 +39,28 @@ export const exportExcelReport = (tables: any) => {
   a.click()
 }
 
-export const exportOrderExcel = (order: any, items: any[] = []) => {
+export const exportOrderExcel = (
+  order: any,
+  items: any[] = [],
+  company: any = null,
+) => {
   let html =
     '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40"><head><meta charset="utf-8"></head><body>'
-  html += `<h2>Ficha de Pedido - ${order.order_number}</h2>`
+
+  if (company) {
+    html += `<h2>${company.fantasy_name || company.company_name || 'Emissor'}</h2>`
+    html += `<table>
+      <tr><td><b>CNPJ:</b></td><td>${company.cnpj || ''}</td></tr>
+      <tr><td><b>Telefone:</b></td><td>${company.phone || ''}</td></tr>
+      <tr><td><b>E-mail:</b></td><td>${company.email || ''}</td></tr>
+      <tr><td><b>Endereço:</b></td><td>${company.address || ''}, ${company.number || ''} - ${company.city || ''}/${company.state || ''}</td></tr>
+    </table><br/>`
+  }
+
+  html += `<h2>Ficha de Pedido - ${order.order_number || 'Novo'}</h2>`
   html += `<table>
-    <tr><td><b>Empresa:</b></td><td>${order.customer_name || ''}</td></tr>
+    <tr><td><b>Data:</b></td><td>${new Date().toLocaleDateString('pt-BR')}</td></tr>
+    <tr><td><b>Empresa Cliente:</b></td><td>${order.customer_name || ''}</td></tr>
     <tr><td><b>CNPJ:</b></td><td>${order.customer_cnpj || ''}</td></tr>
     <tr><td><b>Contato:</b></td><td>${order.contact_name || ''}</td></tr>
     <tr><td><b>Telefone:</b></td><td>${order.phone || ''}</td></tr>

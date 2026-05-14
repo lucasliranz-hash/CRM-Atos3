@@ -265,6 +265,30 @@ export interface OrderFormItem {
   created_at: string
 }
 
+export interface CompanySettings {
+  id: string
+  loja_id?: string
+  company_name?: string
+  fantasy_name?: string
+  cnpj?: string
+  state_registration?: string
+  address?: string
+  number?: string
+  district?: string
+  city?: string
+  state?: string
+  zip_code?: string
+  phone?: string
+  whatsapp?: string
+  email?: string
+  website?: string
+  responsible_name?: string
+  responsible_role?: string
+  logo_url?: string
+  created_at?: string
+  updated_at?: string
+}
+
 export interface Proposal {
   id: string
   accountId: string
