@@ -1,18 +1,14 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase/client'
 import { useAuth } from '@/hooks/use-auth'
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-} from '@/components/ui/card'
+import useMainStore from '@/stores/main'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Loader2, Database, AlertCircle, CheckCircle2 } from 'lucide-react'
+import { Loader2, Database, CheckCircle2, AlertCircle } from 'lucide-react'
 
 export function DatabaseDiagnostic() {
   const { user, profile } = useAuth()
+  const { accounts, contacts } = useMainStore() as any
   const [loading, setLoading] = useState(false)
   const [results, setResults] = useState<any>(null)
 
@@ -22,10 +18,7 @@ export function DatabaseDiagnostic() {
       const diag: any = {
         user: {
           uid: user?.id,
-          email: user?.email,
-          role: user?.role,
-          profileId: profile?.id,
-          profileRole: profile?.role,
+          role: profile?.role || user?.role,
         },
         counts: {},
         errors: {},
@@ -44,50 +37,18 @@ export function DatabaseDiagnostic() {
         const { data, error, count } = await supabase
           .from(table as any)
           .select('id, user_id', { count: 'exact' })
-          .limit(10)
 
         if (error) {
           diag.errors[table] = error.message
           diag.counts[table] = 0
         } else {
           diag.counts[table] = count || 0
-          diag.sample[table] = data
+          diag.sample[table] = data?.slice(0, 5) || []
         }
       }
 
       setResults(diag)
-
-      console.log('--- DIAGNÓSTICO DO BANCO (TESTES) ---')
-      console.log('1. Quantidade de registros:')
-      tables.forEach((t) => console.log(`- ${t}: ${diag.counts[t]}`))
-
-      console.log('\n2. Verificando user_id (10 primeiros registros):')
-      tables.forEach((t) => {
-        if (diag.sample[t] && diag.sample[t].length > 0) {
-          console.log(`${t}:`, diag.sample[t])
-        }
-      })
-
-      console.log('\n3. Usuário logado no frontend:')
-      console.log('- auth.uid():', diag.user.uid)
-      console.log('- email:', diag.user.email)
-      console.log('- role (auth):', diag.user.role)
-      console.log('- profile.id:', diag.user.profileId)
-      console.log('- profile.role:', diag.user.profileRole)
-
-      console.log('\n5. Erros de query no Supabase:')
-      const errorKeys = Object.keys(diag.errors)
-      if (errorKeys.length > 0) {
-        errorKeys.forEach((t) => console.log(`- ${t} error:`, diag.errors[t]))
-      } else {
-        console.log('- Nenhum erro de query retornado.')
-      }
-
-      console.log('\n6. RLS na prática:')
-      console.log(
-        'Se os arrays de amostra acima retornaram vazio [] mesmo havendo contagem real no banco, o problema é RLS ou user_id não correspondente.',
-      )
-      console.log('-------------------------------------')
+      console.log('--- DEBUG SUPABASE (VISIBILIDADE DOS DADOS) ---', diag)
     } catch (err: any) {
       console.error('Erro geral no diagnóstico:', err)
     } finally {
@@ -95,92 +56,163 @@ export function DatabaseDiagnostic() {
     }
   }
 
-  return (
-    <Card className="max-w-xl shadow-sm border-gray-200 bg-white mb-6">
-      <CardHeader className="bg-slate-50 border-b border-slate-100 rounded-t-xl">
-        <CardTitle className="text-lg font-bold flex items-center gap-2 text-slate-800">
-          <Database className="w-5 h-5 text-indigo-500" />
-          Diagnóstico do Banco
-        </CardTitle>
-        <CardDescription className="text-slate-600">
-          Validação técnica real das queries, RLS e propriedade dos dados
-          (user_id).
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-4 pt-6">
-        <Button
-          onClick={runDiagnostic}
-          disabled={loading}
-          className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold"
-        >
-          {loading ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
-          Executar Validação Técnica
-        </Button>
+  useEffect(() => {
+    if (user) {
+      runDiagnostic()
+    }
+  }, [user])
 
-        {results && (
-          <div className="space-y-4 text-sm mt-4">
-            <div className="p-4 bg-slate-50 rounded-lg border border-slate-200">
-              <h4 className="font-bold text-slate-800 mb-2 border-b border-slate-200 pb-1">
-                3. Usuário Logado
+  return (
+    <Card className="w-full shadow-sm border-orange-200 bg-orange-50/50 mb-6 relative overflow-hidden">
+      <div className="absolute top-0 left-0 w-1 h-full bg-orange-500" />
+      <CardHeader className="bg-orange-100/40 border-b border-orange-100 rounded-t-xl py-3 px-5">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+          <div>
+            <CardTitle className="text-[13px] font-black flex items-center gap-2 text-orange-900 uppercase tracking-widest">
+              <Database className="w-4 h-4 text-orange-600" />
+              Diagnóstico e Restauração de Dados
+            </CardTitle>
+          </div>
+          <Button
+            onClick={runDiagnostic}
+            disabled={loading}
+            size="sm"
+            variant="outline"
+            className="h-8 bg-white border-orange-200 text-orange-700 hover:bg-orange-50 font-bold text-xs shadow-sm"
+          >
+            {loading ? (
+              <Loader2 className="w-3.5 h-3.5 mr-2 animate-spin" />
+            ) : null}
+            Recarregar Diagnóstico
+          </Button>
+        </div>
+      </CardHeader>
+      <CardContent className="p-5">
+        {results ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 text-sm">
+            <div className="p-3.5 bg-white rounded-lg border border-slate-200 shadow-sm transition-all hover:border-orange-300">
+              <h4 className="font-bold text-slate-500 text-[11px] uppercase tracking-wider mb-2.5">
+                1. Usuário Atual
               </h4>
-              <ul className="space-y-1 text-slate-600 mt-2">
-                <li>
-                  <strong>UID:</strong>{' '}
-                  <span className="font-mono text-xs bg-white px-1 border rounded">
+              <div className="space-y-2.5">
+                <div className="flex flex-col">
+                  <span className="text-[10px] text-slate-400 font-bold uppercase">
+                    auth.uid()
+                  </span>
+                  <span className="font-mono text-[11px] truncate font-bold text-slate-800 bg-slate-50 px-1.5 py-0.5 rounded border border-slate-100 mt-1">
                     {results.user.uid || 'Não logado'}
                   </span>
-                </li>
-                <li>
-                  <strong>E-mail:</strong> {results.user.email || '-'}
-                </li>
-                <li>
-                  <strong>Profile Role:</strong>{' '}
-                  <span className="font-bold text-indigo-600">
-                    {results.user.profileRole || '-'}
+                </div>
+                <div className="flex justify-between items-center pt-1.5 border-t border-slate-100">
+                  <span className="text-[10px] text-slate-400 font-bold uppercase">
+                    Role Acesso
                   </span>
-                </li>
-              </ul>
-            </div>
-
-            <div className="p-4 bg-slate-50 rounded-lg border border-slate-200">
-              <h4 className="font-bold text-slate-800 mb-2 border-b border-slate-200 pb-1">
-                1 e 6. Tabelas (Contagem & RLS)
-              </h4>
-              <div className="mt-2 space-y-2">
-                {Object.keys(results.counts).map((table) => {
-                  const err = results.errors[table]
-                  const count = results.counts[table]
-                  return (
-                    <div
-                      key={table}
-                      className="flex items-center justify-between"
-                    >
-                      <span className="font-medium text-slate-700 capitalize">
-                        {table}
-                      </span>
-                      {err ? (
-                        <span className="flex items-center gap-1 text-red-600 text-xs font-bold bg-red-50 px-2 py-0.5 rounded">
-                          <AlertCircle className="w-3 h-3" /> {err}
-                        </span>
-                      ) : (
-                        <span className="flex items-center gap-1 text-emerald-600 text-xs font-bold bg-emerald-50 px-2 py-0.5 rounded border border-emerald-100">
-                          <CheckCircle2 className="w-3 h-3" /> {count}{' '}
-                          encontrados
-                        </span>
-                      )}
-                    </div>
-                  )
-                })}
+                  <span className="font-bold text-blue-600 text-xs bg-blue-50 px-2 py-0.5 rounded uppercase">
+                    {results.user.role || 'Sem role'}
+                  </span>
+                </div>
               </div>
             </div>
 
-            <div className="p-4 bg-amber-50 rounded-lg border border-amber-200 text-amber-800 text-xs font-medium">
-              Abra o console do navegador (
-              <kbd className="bg-amber-100 px-1 rounded">F12</kbd> ou{' '}
-              <kbd className="bg-amber-100 px-1 rounded">Ctrl+Shift+I</kbd>)
-              para ver os detalhes completos das queries, erros e a listagem de{' '}
-              <strong>user_id</strong> de cada registro (Testes solicitados).
+            <div className="p-3.5 bg-white rounded-lg border border-slate-200 shadow-sm transition-all hover:border-orange-300">
+              <h4 className="font-bold text-slate-500 text-[11px] uppercase tracking-wider mb-2.5">
+                2. Banco Supabase
+              </h4>
+              <div className="space-y-2">
+                <div className="flex justify-between items-center">
+                  <span className="text-slate-600 font-bold text-[11px] uppercase">
+                    Total Accounts:
+                  </span>
+                  <span className="font-black text-slate-900 text-sm bg-slate-100 px-2 py-0.5 rounded">
+                    {results.counts['accounts'] ?? 0}
+                  </span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-slate-600 font-bold text-[11px] uppercase">
+                    Total Contacts:
+                  </span>
+                  <span className="font-black text-slate-900 text-sm bg-slate-100 px-2 py-0.5 rounded">
+                    {results.counts['contacts'] ?? 0}
+                  </span>
+                </div>
+                <div className="flex justify-between items-center pt-1.5 border-t border-slate-100">
+                  <span className="text-slate-400 font-bold text-[10px] uppercase">
+                    Amostra user_id:
+                  </span>
+                  <span
+                    className="font-mono text-[10px] text-slate-500 truncate w-24 text-right"
+                    title={results.sample['accounts']?.[0]?.user_id}
+                  >
+                    {results.sample['accounts']?.[0]?.user_id || 'NULL'}
+                  </span>
+                </div>
+              </div>
             </div>
+
+            <div className="p-3.5 bg-white rounded-lg border border-slate-200 shadow-sm transition-all hover:border-emerald-300">
+              <h4 className="font-bold text-slate-500 text-[11px] uppercase tracking-wider mb-2.5">
+                3. Store (Frontend)
+              </h4>
+              <div className="space-y-2">
+                <div className="flex justify-between items-center">
+                  <span className="text-slate-600 font-bold text-[11px] uppercase">
+                    Contas Carregadas:
+                  </span>
+                  <span className="font-black text-emerald-600 text-sm bg-emerald-50 px-2 py-0.5 rounded border border-emerald-100">
+                    {accounts?.length || 0}
+                  </span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-slate-600 font-bold text-[11px] uppercase">
+                    Contatos Carregados:
+                  </span>
+                  <span className="font-black text-emerald-600 text-sm bg-emerald-50 px-2 py-0.5 rounded border border-emerald-100">
+                    {contacts?.length || 0}
+                  </span>
+                </div>
+                <div className="flex justify-between items-center pt-1.5 border-t border-slate-100">
+                  <span className="text-slate-400 font-bold text-[10px] uppercase">
+                    Tabela Pipeline:
+                  </span>
+                  <span className="font-bold text-[10px] text-indigo-600 uppercase bg-indigo-50 px-1.5 py-0.5 rounded border border-indigo-100">
+                    accounts
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <div className="p-3.5 bg-white rounded-lg border border-slate-200 shadow-sm flex flex-col transition-all hover:border-red-300">
+              <h4 className="font-bold text-slate-500 text-[11px] uppercase tracking-wider mb-2.5">
+                4. Erros (Block/RLS)
+              </h4>
+              <div className="flex-1 overflow-auto custom-scrollbar">
+                {Object.keys(results.errors).length > 0 ? (
+                  <div className="space-y-1.5">
+                    {Object.entries(results.errors).map(([t, e]: any) => (
+                      <div
+                        key={t}
+                        className="flex flex-col gap-1 text-[10px] text-red-700 bg-red-50 p-2 rounded font-mono border border-red-100"
+                      >
+                        <span className="font-bold border-b border-red-100/50 pb-1 flex items-center">
+                          <AlertCircle className="w-3.5 h-3.5 mr-1" /> {t}
+                        </span>
+                        <span className="break-words leading-relaxed">{e}</span>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-1.5 text-emerald-700 text-xs font-bold mt-1 bg-emerald-50 p-2.5 rounded-md border border-emerald-200">
+                    <CheckCircle2 className="w-4 h-4" /> Sem bloqueios (RLS
+                    Livre)
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div className="py-8 text-center text-sm font-medium text-slate-500 flex items-center justify-center gap-2">
+            <Loader2 className="w-5 h-5 animate-spin text-orange-500" />{' '}
+            Analisando sincronização entre Frontend e Banco...
           </div>
         )}
       </CardContent>

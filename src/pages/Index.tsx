@@ -35,6 +35,7 @@ import {
 } from 'recharts'
 import { ChartContainer, ChartTooltipContent } from '@/components/ui/chart'
 import LeadHistorySheet from '@/components/LeadHistorySheet'
+import { DatabaseDiagnostic } from '@/components/DatabaseDiagnostic'
 
 export default function Index() {
   const navigate = useNavigate()
@@ -233,6 +234,7 @@ export default function Index() {
   return (
     <div className="flex flex-col lg:flex-row gap-6 pb-10 animate-in fade-in duration-500 min-h-[calc(100vh-6rem)]">
       <div className="flex-1 space-y-6">
+        <DatabaseDiagnostic />
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4">
           <div>
             <h1 className="text-3xl font-black text-slate-900 tracking-tight">
