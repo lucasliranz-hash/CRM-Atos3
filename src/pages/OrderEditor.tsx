@@ -1,7 +1,14 @@
 import { useState, useEffect, useRef } from 'react'
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom'
 import { useAuth } from '@/hooks/use-auth'
-import { ArrowLeft, Save, FileText, Printer, Download } from 'lucide-react'
+import {
+  ArrowLeft,
+  Save,
+  FileText,
+  Printer,
+  Download,
+  Building2,
+} from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { supabase } from '@/lib/supabase/client'
@@ -214,6 +221,38 @@ export default function OrderEditor() {
         </div>
       ) : (
         <div className="space-y-6">
+          {companySettings && (
+            <Card className="bg-slate-50 border-slate-200">
+              <CardContent className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div>
+                  <h3 className="text-sm font-bold text-slate-800 flex items-center gap-2">
+                    <Building2 className="w-4 h-4" />
+                    Emitente:{' '}
+                    {companySettings.fantasy_name ||
+                      companySettings.company_name ||
+                      'Empresa não configurada'}
+                  </h3>
+                  <p className="text-xs text-slate-500 mt-1">
+                    {companySettings.cnpj
+                      ? `CNPJ: ${companySettings.cnpj}`
+                      : ''}
+                    {companySettings.city
+                      ? ` | ${companySettings.city}/${companySettings.state}`
+                      : ''}
+                  </p>
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => navigate('/settings')}
+                  className="shrink-0"
+                >
+                  Configurar Emitente
+                </Button>
+              </CardContent>
+            </Card>
+          )}
+
           <Card>
             <CardContent className="p-6">
               <OrderCustomerForm

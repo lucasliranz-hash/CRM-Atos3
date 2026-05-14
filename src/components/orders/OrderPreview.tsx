@@ -11,7 +11,8 @@ interface Props {
 
 export const OrderPreview = forwardRef<HTMLDivElement, Props>(
   ({ order, items, company }, ref) => {
-    const { logoUrl } = useMainStore()
+    const { logoUrl: storeLogo } = useMainStore()
+    const logoUrl = company?.logo_url || storeLogo
 
     const formatCurrency = (val: number) =>
       new Intl.NumberFormat('pt-BR', {
@@ -28,7 +29,11 @@ export const OrderPreview = forwardRef<HTMLDivElement, Props>(
           <div>
             <div className="flex items-center gap-4 mb-4">
               {logoUrl && (
-                <img src={logoUrl} alt="Logo" className="h-16 object-contain" />
+                <img
+                  src={logoUrl}
+                  alt="Logo"
+                  className="h-16 object-contain max-w-[200px]"
+                />
               )}
               <div>
                 {company?.company_name ? (

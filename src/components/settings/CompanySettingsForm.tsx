@@ -119,16 +119,15 @@ export function CompanySettingsForm() {
       } = supabase.storage.from('company_logos').getPublicUrl(fileName)
 
       if (profile?.loja_id) {
-        await supabase
-          .from('company_settings' as any)
-          .upsert(
-            {
-              loja_id: profile.loja_id,
-              logo_url: publicUrl,
-              updated_at: new Date().toISOString(),
-            },
-            { onConflict: 'loja_id' },
-          )
+        await supabase.from('company_settings' as any).upsert(
+          {
+            loja_id: profile.loja_id,
+            ...formData,
+            logo_url: publicUrl,
+            updated_at: new Date().toISOString(),
+          },
+          { onConflict: 'loja_id' },
+        )
       }
       setLogoUrl(publicUrl)
       toast({ title: 'Logo atualizada com sucesso!' })
