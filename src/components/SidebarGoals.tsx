@@ -26,7 +26,8 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 
 export function SidebarGoals() {
-  const { accounts, activities, proposals, opportunities } = useMainStore()
+  const { accounts, activities, proposals, opportunities } =
+    useMainStore() as any
   const { goals, updateGoal } = useMonthlyGoals()
   const navigate = useNavigate()
 
@@ -98,11 +99,11 @@ export function SidebarGoals() {
 
     const salesCount =
       opportunities.filter(
-        (o) =>
+        (o: any) =>
           isInMonth(o.closeDate || o.createdAt) && o.stage === 'Fechado Ganho',
       ).length +
       accounts.filter(
-        (a) =>
+        (a: any) =>
           isInMonth(a.updatedAt) &&
           (a.pipelineStage === 'Fechado' ||
             a.status === 'Cliente' ||

@@ -47,8 +47,9 @@ export default function LeadDetails() {
     deleteLeadCascade,
     proposals,
     activities,
+    orders,
     addActivity,
-  } = useMainStore()
+  } = useMainStore() as any
   const { toast } = useToast()
 
   const [isEditing, setIsEditing] = useState(false)
@@ -173,8 +174,8 @@ export default function LeadDetails() {
       completed: true,
     } as any)
     await updateAccount(leadData.id, {
-      nextAction: null as any,
-      nextActionDate: null as any,
+      nextAction: null,
+      nextActionDate: null,
     })
     toast({ title: 'Ação marcada como concluída!' })
   }
@@ -192,6 +193,9 @@ export default function LeadDetails() {
   const leadProposals = proposals.filter(
     (p: any) => p.accountId === leadData.id,
   )
+
+  const leadOrders =
+    orders?.filter((o: any) => o.account_id === leadData.id) || []
 
   const lastActivity = leadActivities.find((a) => a.completed)
   const daysStalled = lastActivity
@@ -605,7 +609,7 @@ export default function LeadDetails() {
             </div>
           </div>
 
-          <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden flex flex-col">
+          <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden flex flex-col mb-6">
             <div className="p-4 bg-slate-50 border-b border-slate-200 flex justify-between items-center">
               <h4 className="font-bold text-slate-900 text-sm flex items-center gap-2">
                 <FileText className="w-4 h-4 text-slate-400" /> Propostas
@@ -669,6 +673,52 @@ export default function LeadDetails() {
                     </div>
                   )
                 })
+              )}
+            </div>
+          </div>
+
+          <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden flex flex-col">
+            <div className="p-4 bg-slate-50 border-b border-slate-200 flex justify-between items-center">
+              <h4 className="font-bold text-slate-900 text-sm flex items-center gap-2">
+                <FileText className="w-4 h-4 text-slate-400" /> Pedidos
+              </h4>
+              <Button
+                onClick={() => navigate(`/orders/new?leadId=${leadData.id}`)}
+                variant="outline"
+                size="sm"
+                className="h-7 text-[10px] font-bold px-2 bg-white"
+              >
+                <Plus className="w-3 h-3 mr-1" /> Novo
+              </Button>
+            </div>
+            <div className="p-4 space-y-3 flex-1 overflow-y-auto custom-scrollbar max-h-[300px]">
+              {leadOrders.length === 0 ? (
+                <p className="text-xs text-slate-500 text-center py-4 font-medium">
+                  Nenhum pedido criado.
+                </p>
+              ) : (
+                leadOrders.map((ord: any) => (
+                  <div
+                    key={ord.id}
+                    onClick={() => navigate(`/orders/${ord.id}`)}
+                    className="p-3 border border-slate-100 bg-white rounded-lg shadow-sm hover:shadow-md hover:border-orange-200 cursor-pointer transition-all"
+                  >
+                    <div className="flex justify-between items-start mb-1.5">
+                      <span className="text-[10px] font-bold text-slate-900 bg-slate-100 px-1.5 py-0.5 rounded">
+                        {ord.order_number}
+                      </span>
+                      <span className="text-[9px] font-bold px-1.5 py-0.5 rounded uppercase bg-slate-100 text-slate-600">
+                        {ord.status}
+                      </span>
+                    </div>
+                    <div className="text-sm font-black text-slate-800 mb-1">
+                      {formatCurrency(ord.total_amount || 0)}
+                    </div>
+                    <div className="text-[10px] text-slate-500 font-bold">
+                      {new Date(ord.created_at).toLocaleDateString('pt-BR')}
+                    </div>
+                  </div>
+                ))
               )}
             </div>
           </div>

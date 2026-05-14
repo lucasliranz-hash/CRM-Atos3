@@ -20,7 +20,7 @@ import { ptBR } from 'date-fns/locale'
 import LeadHistorySheet from '@/components/LeadHistorySheet'
 
 export default function CalendarView() {
-  const { activities, accounts } = useMainStore()
+  const { activities, accounts, orders } = useMainStore() as any
   const [currentDate, setCurrentDate] = useState(new Date())
   const [detailsAccountId, setDetailsAccountId] = useState<string | null>(null)
 
@@ -43,7 +43,7 @@ export default function CalendarView() {
       }
     })
 
-    accounts.forEach((acc) => {
+    accounts.forEach((acc: any) => {
       if (acc.nextActionDate) {
         events.push({
           id: `acc-next-${acc.id}`,
@@ -56,8 +56,19 @@ export default function CalendarView() {
       }
     })
 
+    orders?.forEach((ord: any) => {
+      events.push({
+        id: `ord-${ord.id}`,
+        title: `Pedido: ${ord.order_number}`,
+        date: new Date(ord.created_at),
+        type: 'order',
+        color: 'bg-emerald-100 text-emerald-700 border-emerald-200',
+        acc: accounts.find((a: any) => a.id === ord.account_id),
+      })
+    })
+
     return events.sort((a, b) => a.date.getTime() - b.date.getTime())
-  }, [activities, accounts])
+  }, [activities, accounts, orders])
 
   const monthStart = startOfMonth(currentDate)
   const monthEnd = endOfMonth(monthStart)

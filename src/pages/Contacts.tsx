@@ -18,6 +18,7 @@ import {
 } from '@/components/ui/dialog'
 import { Plus, Pencil } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
+import { useNavigate } from 'react-router-dom'
 import { supabase } from '@/lib/supabase/client'
 import { Contact } from '@/types/crm'
 import { ContactForm } from '@/components/contacts/ContactForm'
@@ -26,8 +27,28 @@ export default function Contacts() {
   const { contacts, accounts, addContact, updateContact } =
     useMainStore() as any
   const { toast } = useToast()
+  const navigate = useNavigate()
   const [isOpen, setIsOpen] = useState(false)
   const [editContact, setEditContact] = useState<Contact | null>(null)
+
+  const accountsWithoutContacts = accounts.filter(
+    (acc: any) => !contacts.some((c: any) => c.accountId === acc.id),
+  )
+
+  const allList = [
+    ...contacts,
+    ...accountsWithoutContacts.map((acc: any) => ({
+      id: `acc-no-contact-${acc.id}`,
+      accountId: acc.id,
+      name: 'Sem contato',
+      role: '-',
+      processRole: '-',
+      email: acc.email,
+      whatsapp: acc.phone,
+      isDecisionMaker: false,
+      isPseudoContact: true,
+    })),
+  ]
 
   const handleUpdate = async (payload: any) => {
     if (!editContact) return
@@ -52,8 +73,8 @@ export default function Contacts() {
     }
   }
 
-  const handleCreate = (payload: any) => {
-    addContact(payload)
+  const handleCreate = async (payload: any) => {
+    await addContact(payload)
     setIsOpen(false)
     toast({ title: 'Contato adicionado com sucesso!' })
   }
@@ -120,7 +141,7 @@ export default function Contacts() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {contacts.map((c: any) => {
+            {allList.map((c: any) => {
               const acc = accounts.find((a: any) => a.id === c.accountId)
               return (
                 <TableRow key={c.id} className="hover:bg-gray-50/50">
@@ -130,8 +151,11 @@ export default function Contacts() {
                       {c.role || '-'}
                     </div>
                   </TableCell>
-                  <TableCell className="text-sm font-semibold text-gray-700">
-                    {acc?.name}
+                  <TableCell
+                    className="text-sm font-semibold text-blue-600 hover:underline cursor-pointer"
+                    onClick={() => navigate(`/leads/${c.accountId}`)}
+                  >
+                    {acc?.companyName || acc?.name}
                   </TableCell>
                   <TableCell>
                     <span
@@ -147,19 +171,21 @@ export default function Contacts() {
                     </div>
                   </TableCell>
                   <TableCell>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => setEditContact(c)}
-                      className="h-8 w-8 text-gray-500 hover:text-black hover:bg-gray-100"
-                    >
-                      <Pencil className="w-4 h-4" />
-                    </Button>
+                    {!c.isPseudoContact && (
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => setEditContact(c)}
+                        className="h-8 w-8 text-gray-500 hover:text-black hover:bg-gray-100"
+                      >
+                        <Pencil className="w-4 h-4" />
+                      </Button>
+                    )}
                   </TableCell>
                 </TableRow>
               )
             })}
-            {contacts.length === 0 && (
+            {allList.length === 0 && (
               <TableRow>
                 <TableCell
                   colSpan={5}

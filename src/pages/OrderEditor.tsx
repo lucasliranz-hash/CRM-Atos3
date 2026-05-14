@@ -20,6 +20,7 @@ import { OrderPreview } from '@/components/orders/OrderPreview'
 import { exportOrderExcel } from '@/lib/export-utils'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import useMainStore from '@/stores/main'
 
 export default function OrderEditor() {
   const { id } = useParams()
@@ -42,6 +43,7 @@ export default function OrderEditor() {
   const [companySettings, setCompanySettings] = useState<any>(null)
   const [loadingSettings, setLoadingSettings] = useState(true)
   const { profile } = useAuth()
+  const { fetchData } = useMainStore() as any
 
   const printRef = useRef<HTMLDivElement>(null)
 
@@ -155,6 +157,7 @@ export default function OrderEditor() {
       }
 
       toast({ title: 'Pedido salvo com sucesso!' })
+      await fetchData()
       if (id === 'new') navigate(`/orders/${newOrderId}`, { replace: true })
     } catch (e: any) {
       toast({

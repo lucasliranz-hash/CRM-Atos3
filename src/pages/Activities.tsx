@@ -76,8 +76,8 @@ export default function Activities() {
       } as any)
 
       await updateAccount(task.accountId, {
-        nextAction: null as any,
-        nextActionDate: null as any,
+        nextAction: null,
+        nextActionDate: null,
       })
     }
     toast({ title: 'Tarefa concluída!' })

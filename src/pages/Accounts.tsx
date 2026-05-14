@@ -91,11 +91,11 @@ export default function Accounts() {
                       <div className="flex flex-wrap items-center gap-3 mt-1">
                         <span className="text-xs text-slate-500 font-medium flex items-center gap-1">
                           <Building2 className="w-3 h-3" />{' '}
-                          {acc.segment || 'Sem segmento'}
+                          {acc.segment || 'Não informado'}
                         </span>
                         <span className="text-xs text-slate-500 font-medium flex items-center gap-1">
                           <MapPin className="w-3 h-3" />{' '}
-                          {acc.city || 'Sem local'}
+                          {acc.city || 'Não informado'}
                         </span>
                       </div>
                     </div>
@@ -107,7 +107,7 @@ export default function Accounts() {
                         Contato
                       </span>
                       <span className="text-sm font-medium text-slate-700">
-                        {acc.contactName || '-'}
+                        {acc.contactName || 'Não informado'}
                       </span>
                     </div>
                     <div className="space-y-1">
@@ -116,7 +116,7 @@ export default function Accounts() {
                       </span>
                       <span className="text-sm font-medium text-slate-700 flex items-center gap-1">
                         <Phone className="w-3 h-3 text-slate-400" />{' '}
-                        {acc.phone || '-'}
+                        {acc.phone || 'Não informado'}
                       </span>
                     </div>
                     <div className="space-y-1">
@@ -125,7 +125,7 @@ export default function Accounts() {
                       </span>
                       <span className="text-sm font-medium text-slate-700 flex items-center gap-1">
                         <Mail className="w-3 h-3 text-slate-400" />{' '}
-                        {acc.email || '-'}
+                        {acc.email || 'Não informado'}
                       </span>
                     </div>
                     <div className="space-y-1">

@@ -286,7 +286,7 @@ export default function ProposalEditor() {
     return { setup, monthly, equipment, travel }
   }, [propData?.items, propData?.travelFee])
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!propData) return
     const finalProp = {
       ...propData,
@@ -302,11 +302,13 @@ export default function ProposalEditor() {
     }
 
     if (id === 'new') {
-      const saved = addProposalToLead(finalProp)
+      const payload = { ...finalProp }
+      delete (payload as any).id
+      const saved = await addProposalToLead(payload)
       toast({ title: 'Proposta criada com sucesso!' })
       navigate(`/proposals/${saved.id}`, { replace: true })
     } else {
-      updateProposal(finalProp.id, finalProp)
+      await updateProposal(finalProp.id, finalProp)
       toast({ title: 'Proposta salva com sucesso!' })
     }
   }
@@ -378,8 +380,8 @@ export default function ProposalEditor() {
     )
   }
 
-  const simulateExport = (type: 'pdf' | 'whatsapp' | 'email') => {
-    handleSave()
+  const simulateExport = async (type: 'pdf' | 'whatsapp' | 'email') => {
+    await handleSave()
     if (type === 'pdf')
       toast({
         title: 'PDF gerado com sucesso! (Simulação)',

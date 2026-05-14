@@ -57,23 +57,23 @@ export default function Proposals() {
       )
   }, [proposals])
 
-  const handleDuplicate = (prop: any) => {
+  const handleDuplicate = async (prop: any) => {
     const dup = {
       ...prop,
-      id: crypto.randomUUID(),
       proposalNumber: `PRO-${Math.floor(Math.random() * 10000)}`,
       status: 'Rascunho',
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
       travelFee: prop.travelFee ? { ...prop.travelFee } : undefined,
     }
-    addProposalToLead(dup)
+    delete dup.id
+    await addProposalToLead(dup)
     toast({ title: 'Proposta duplicada com sucesso!' })
   }
 
-  const handleDelete = (id: string) => {
+  const handleDelete = async (id: string) => {
     if (window.confirm('Tem certeza que deseja excluir esta proposta?')) {
-      deleteProposal(id)
+      await deleteProposal(id)
       toast({ title: 'Proposta excluída.' })
     }
   }

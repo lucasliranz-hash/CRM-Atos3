@@ -47,13 +47,13 @@ export default function Index() {
     dateFilter,
     setDateFilter,
     setKpiFilter,
-  } = useMainStore()
+  } = useMainStore() as any
 
   const [detailsAccountId, setDetailsAccountId] = useState<string | null>(null)
 
   const getDashboardMetrics = () => {
     const totalLeads = accounts.length
-    const newLeadsThisMonth = accounts.filter((a) => {
+    const newLeadsThisMonth = accounts.filter((a: any) => {
       const d = new Date(a.createdAt)
       const now = new Date()
       return (
@@ -62,28 +62,30 @@ export default function Index() {
     }).length
 
     const sentProposalsCount = proposals.filter(
-      (p) => p.status === 'Enviada' || p.status === 'Aprovada',
+      (p: any) => p.status === 'Enviada' || p.status === 'Aprovada',
     ).length
-    const pendingActivitiesCount = activities.filter((a) => !a.completed).length
+    const pendingActivitiesCount = activities.filter(
+      (a: any) => !a.completed,
+    ).length
     const scheduledMeetingsCount = activities.filter(
-      (a) => a.type.includes('Reunião') && !a.completed,
+      (a: any) => a.type.includes('Reunião') && !a.completed,
     ).length
 
     const closedWon = accounts.filter(
-      (a) => a.pipelineStage === 'Fechado',
+      (a: any) => a.pipelineStage === 'Fechado',
     ).length
     const closedLost = accounts.filter(
-      (a) => a.pipelineStage === 'Perdido',
+      (a: any) => a.pipelineStage === 'Perdido',
     ).length
     const conversionRate =
       totalLeads > 0 ? ((closedWon / totalLeads) * 100).toFixed(1) : '0.0'
 
     const closedWonTotal = proposals
-      .filter((p) => {
-        const a = accounts.find((acc) => acc.id === p.accountId)
+      .filter((p: any) => {
+        const a = accounts.find((acc: any) => acc.id === p.accountId)
         return a?.pipelineStage === 'Fechado' && p.status === 'Aprovada'
       })
-      .reduce((s, p) => {
+      .reduce((s: number, p: any) => {
         const val =
           p.value || p.totalSetup + p.totalEquipment + p.totalMonthly * 12 || 0
         return s + val
@@ -118,17 +120,19 @@ export default function Index() {
       const d = new Date(start)
       d.setDate(start.getDate() + i)
       const isDay = (dateStr: string) => {
+        if (!dateStr) return false
         const d2 = new Date(dateStr)
         return d2.getDate() === d.getDate() && d2.getMonth() === d.getMonth()
       }
-      const acts = activities.filter((a) => isDay(a.date))
+      const acts = activities.filter((a: any) => isDay(a.date))
       return {
         name: day,
-        Contatos: acts.filter((a) =>
+        Contatos: acts.filter((a: any) =>
           ['Ligação', 'Mensagem', 'E-mail', 'Follow-up'].includes(a.type),
         ).length,
-        Reuniões: acts.filter((a) => a.type.includes('Reunião')).length,
-        Propostas: acts.filter((a) => a.type === 'Proposta enviada').length,
+        Reuniões: acts.filter((a: any) => a.type.includes('Reunião')).length,
+        Propostas: acts.filter((a: any) => a.type === 'Proposta enviada')
+          .length,
       }
     })
   }, [activities])
@@ -138,7 +142,7 @@ export default function Index() {
       { name: 'Leads', value: accounts.length || 1, fill: '#3b82f6' },
       {
         name: 'Em Conversa',
-        value: accounts.filter((a) =>
+        value: accounts.filter((a: any) =>
           ['Contato realizado', 'Em Conversa', 'Negociação'].includes(
             a.pipelineStage,
           ),
@@ -147,7 +151,7 @@ export default function Index() {
       },
       {
         name: 'Propostas',
-        value: proposals.filter((p) => p.status === 'Enviada').length,
+        value: proposals.filter((p: any) => p.status === 'Enviada').length,
         fill: '#f59e0b',
       },
       { name: 'Fechados', value: metrics.closedWon, fill: '#10b981' },
@@ -156,9 +160,9 @@ export default function Index() {
 
   const tasks = useMemo(() => {
     const t: any[] = []
-    activities.forEach((act) => {
+    activities.forEach((act: any) => {
       if (!act.completed && (isToday(act.date) || isOverdue(act.date))) {
-        const acc = accounts.find((a) => a.id === act.accountId)
+        const acc = accounts.find((a: any) => a.id === act.accountId)
         t.push({
           id: `act-${act.id}`,
           text: `${act.type} - ${act.title || act.result || ''}`,
@@ -169,13 +173,13 @@ export default function Index() {
         })
       }
     })
-    accounts.forEach((a) => {
+    accounts.forEach((a: any) => {
       if (
         a.nextAction &&
         a.nextActionDate &&
         (isToday(a.nextActionDate) || isOverdue(a.nextActionDate))
       ) {
-        if (!t.find((task) => task.accountId === a.id)) {
+        if (!t.find((task: any) => task.accountId === a.id)) {
           t.push({
             id: `acc-${a.id}`,
             text: a.nextAction,
@@ -188,12 +192,13 @@ export default function Index() {
       }
     })
     return t.sort(
-      (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime(),
+      (a: any, b: any) =>
+        new Date(a.date).getTime() - new Date(b.date).getTime(),
     )
   }, [activities, accounts])
 
-  const overdue = tasks.filter((t) => isOverdue(t.date))
-  const today = tasks.filter((t) => isToday(t.date))
+  const overdue = tasks.filter((t: any) => isOverdue(t.date))
+  const today = tasks.filter((t: any) => isToday(t.date))
 
   const handleKpiClick = (filterName: string) => {
     setKpiFilter(filterName)
@@ -416,42 +421,43 @@ export default function Index() {
                 {
                   label: 'Prospecção',
                   count: accounts.filter(
-                    (a) => a.pipelineStage === 'Prospecção',
+                    (a: any) => a.pipelineStage === 'Prospecção',
                   ).length,
                   color: 'bg-blue-500',
                 },
                 {
                   label: 'Contato realizado',
                   count: accounts.filter(
-                    (a) => a.pipelineStage === 'Contato realizado',
+                    (a: any) => a.pipelineStage === 'Contato realizado',
                   ).length,
                   color: 'bg-indigo-400',
                 },
                 {
                   label: 'Reunião agendada',
                   count: accounts.filter(
-                    (a) => a.pipelineStage === 'Reunião agendada',
+                    (a: any) => a.pipelineStage === 'Reunião agendada',
                   ).length,
                   color: 'bg-purple-400',
                 },
                 {
                   label: 'Proposta enviada',
                   count: accounts.filter(
-                    (a) => a.pipelineStage === 'Proposta enviada',
+                    (a: any) => a.pipelineStage === 'Proposta enviada',
                   ).length,
                   color: 'bg-orange-500',
                 },
                 {
                   label: 'Negociação',
                   count: accounts.filter(
-                    (a) => a.pipelineStage === 'Negociação',
+                    (a: any) => a.pipelineStage === 'Negociação',
                   ).length,
                   color: 'bg-pink-400',
                 },
                 {
                   label: 'Fechado',
-                  count: accounts.filter((a) => a.pipelineStage === 'Fechado')
-                    .length,
+                  count: accounts.filter(
+                    (a: any) => a.pipelineStage === 'Fechado',
+                  ).length,
                   color: 'bg-emerald-500',
                 },
               ].map((stage) => {
@@ -553,7 +559,7 @@ export default function Index() {
       </div>
 
       <LeadHistorySheet
-        account={accounts.find((a) => a.id === detailsAccountId) || null}
+        account={accounts.find((a: any) => a.id === detailsAccountId) || null}
         open={!!detailsAccountId}
         onOpenChange={(open) => !open && setDetailsAccountId(null)}
       />

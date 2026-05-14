@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { Plus, Search, FileText, Download } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -11,40 +11,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { supabase } from '@/lib/supabase/client'
-import { OrderForm } from '@/types/crm'
+import useMainStore from '@/stores/main'
 import { exportOrderExcel } from '@/lib/export-utils'
 import { format } from 'date-fns'
 
 export default function Orders() {
   const navigate = useNavigate()
-  const [orders, setOrders] = useState<OrderForm[]>([])
+  const { orders, loading } = useMainStore() as any
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState('Todos')
-  const [loading, setLoading] = useState(true)
-
-  const fetchOrders = async () => {
-    setLoading(true)
-    const { data, error } = await supabase
-      .from('order_forms' as any)
-      .select('*, accounts(name)')
-      .order('created_at', { ascending: false })
-
-    if (data) {
-      const mapped = data.map((d: any) => ({
-        ...d,
-        customer_name: d.is_manual_customer
-          ? d.customer_name
-          : d.accounts?.name || d.customer_name,
-      }))
-      setOrders(mapped)
-    }
-    setLoading(false)
-  }
-
-  useEffect(() => {
-    fetchOrders()
-  }, [])
 
   const filtered = orders.filter((o) => {
     const matchSearch =

@@ -18,7 +18,8 @@ export interface ReportFilters {
 }
 
 export function useReportsData(filters: ReportFilters) {
-  const { accounts, opportunities, activities, proposals } = useMainStore()
+  const { accounts, opportunities, activities, proposals } =
+    useMainStore() as any
 
   return useMemo(() => {
     const now = new Date()
@@ -88,11 +89,11 @@ export function useReportsData(filters: ReportFilters) {
       (o) => o.stage === 'Proposta' || o.stage === 'Em Conversa',
     ).length
     const delayedLeads = accounts.filter(
-      (a) =>
+      (a: any) =>
         a.nextActionDate &&
         new Date(a.nextActionDate) < now &&
-        a.status !== 'Fechado' &&
-        a.status !== 'Perdido',
+        a.pipelineStage !== 'Fechado' &&
+        a.pipelineStage !== 'Perdido',
     ).length
 
     // Funnel Data
