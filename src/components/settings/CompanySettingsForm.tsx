@@ -27,11 +27,14 @@ export function CompanySettingsForm() {
   const { logoUrl, setLogoUrl } = useMainStore()
   const [loading, setLoading] = useState(false)
   const [uploading, setUploading] = useState(false)
-  const [debugInfo, setDebugInfo] = useState<{
-    payload?: any
-    response?: any
-    error?: any
-  } | null>(null)
+  const [debugState, setDebugState] = useState({
+    clicked: false,
+    saving: false,
+    lastError: null as string | null,
+    lastSuccess: null as string | null,
+    payload: null as any,
+    response: null as any,
+  })
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const [formData, setFormData] = useState<any>({
@@ -54,17 +57,23 @@ export function CompanySettingsForm() {
   })
 
   useEffect(() => {
-    if (profile?.loja_id) {
-      fetchSettings()
-    }
+    fetchSettings()
   }, [profile?.loja_id])
 
   const fetchSettings = async () => {
-    if (!profile?.loja_id) return
+    let targetLojaId = profile?.loja_id
+    if (!targetLojaId) {
+      const { data: lojas } = await supabase.from('lojas').select('id').limit(1)
+      if (lojas && lojas.length > 0) {
+        targetLojaId = lojas[0].id
+      }
+    }
+    if (!targetLojaId) return
+
     const { data } = await supabase
       .from('company_settings' as any)
       .select('*')
-      .eq('loja_id', profile.loja_id)
+      .eq('loja_id', targetLojaId)
       .maybeSingle()
 
     if (data) {
@@ -79,21 +88,53 @@ export function CompanySettingsForm() {
     setFormData((prev: any) => ({ ...prev, [name]: value }))
   }
 
-  const handleSave = async () => {
-    if (!profile?.loja_id) return
+  const handleSave = async (e?: React.FormEvent | React.MouseEvent) => {
+    if (e) {
+      e.preventDefault()
+    }
+
+    setDebugState((prev) => ({
+      ...prev,
+      clicked: true,
+      saving: true,
+      lastError: null,
+      lastSuccess: null,
+    }))
     setLoading(true)
 
+    let targetLojaId = profile?.loja_id
+    if (!targetLojaId) {
+      const { data: lojas } = await supabase.from('lojas').select('id').limit(1)
+      if (lojas && lojas.length > 0) {
+        targetLojaId = lojas[0].id
+      }
+    }
+
+    if (!targetLojaId) {
+      const err =
+        'Sua conta não possui uma Loja vinculada. É necessário ter uma loja para salvar as configurações.'
+      setDebugState((prev) => ({ ...prev, saving: false, lastError: err }))
+      toast({
+        title: 'Erro de Vínculo',
+        description: err,
+        variant: 'destructive',
+      })
+      setLoading(false)
+      return
+    }
+
     const payload = {
-      loja_id: profile.loja_id,
-      user_id: user?.id,
       ...formData,
-      logo_url: logoUrl, // Garantir que a logo também seja enviada sempre
+      loja_id: targetLojaId,
+      user_id: user?.id,
+      logo_url: logoUrl,
       updated_at: new Date().toISOString(),
     }
 
-    // Remover campos que não devem ser incluídos no upsert para evitar conflitos de restrição
     if (payload.id) delete payload.id
     if (payload.created_at) delete payload.created_at
+
+    setDebugState((prev) => ({ ...prev, payload }))
 
     try {
       console.log('--- SALVAR DADOS DA EMPRESA ---')
@@ -105,19 +146,27 @@ export function CompanySettingsForm() {
         .select()
 
       console.log('Resposta do Supabase:', data)
-      if (error) console.error('Erro do Supabase:', error)
-
-      setDebugInfo({ payload, response: data, error })
 
       if (error) throw error
 
+      setDebugState((prev) => ({
+        ...prev,
+        response: data,
+        saving: false,
+        lastSuccess: 'Dados da empresa salvos no Supabase com sucesso!',
+      }))
+
       toast({ title: 'Dados da empresa salvos com sucesso' })
-      await fetchSettings() // Recarrega os dados do banco após salvar
+      await fetchSettings()
     } catch (e: any) {
       console.error('Exception ao salvar:', e)
-      setDebugInfo({ payload, error: e })
+      setDebugState((prev) => ({
+        ...prev,
+        saving: false,
+        lastError: e.message || JSON.stringify(e),
+      }))
       toast({
-        title: 'Erro ao salvar',
+        title: 'Erro ao salvar dados da empresa',
         description: e.message,
         variant: 'destructive',
       })
@@ -153,11 +202,20 @@ export function CompanySettingsForm() {
         data: { publicUrl },
       } = supabase.storage.from('company-assets').getPublicUrl(filePath)
 
-      if (profile?.loja_id) {
+      let targetLojaId = profile?.loja_id
+      if (!targetLojaId) {
+        const { data: lojas } = await supabase
+          .from('lojas')
+          .select('id')
+          .limit(1)
+        if (lojas && lojas.length > 0) targetLojaId = lojas[0].id
+      }
+
+      if (targetLojaId) {
         const logoPayload = {
-          loja_id: profile.loja_id,
-          user_id: user?.id,
           ...formData,
+          loja_id: targetLojaId,
+          user_id: user?.id,
           logo_url: publicUrl,
           updated_at: new Date().toISOString(),
         }
@@ -165,22 +223,22 @@ export function CompanySettingsForm() {
         if (logoPayload.id) delete logoPayload.id
         if (logoPayload.created_at) delete logoPayload.created_at
 
-        console.log('--- UPLOAD LOGO ---')
-        console.log('Payload Enviado:', logoPayload)
-
         const { data, error } = await supabase
           .from('company_settings' as any)
           .upsert(logoPayload, { onConflict: 'loja_id' })
           .select()
 
-        console.log('Resposta do Supabase (Upload Logo):', data)
-        if (error) console.error('Erro do Supabase (Upload Logo):', error)
-
-        setDebugInfo({ payload: logoPayload, response: data, error })
+        setDebugState((prev) => ({
+          ...prev,
+          payload: logoPayload,
+          response: data,
+          lastError: error ? error.message : null,
+          lastSuccess: error ? null : 'Logo salva no Supabase.',
+        }))
       }
       setLogoUrl(publicUrl)
       toast({ title: 'Logo atualizada com sucesso!' })
-      await fetchSettings() // Sincronizar o formulário
+      await fetchSettings()
     } catch (error: any) {
       toast({
         title: 'Erro no upload',
@@ -196,12 +254,18 @@ export function CompanySettingsForm() {
   }
 
   const handleRemoveLogo = async () => {
-    if (!profile?.loja_id) return
+    let targetLojaId = profile?.loja_id
+    if (!targetLojaId) {
+      const { data: lojas } = await supabase.from('lojas').select('id').limit(1)
+      if (lojas && lojas.length > 0) targetLojaId = lojas[0].id
+    }
+
+    if (!targetLojaId) return
     try {
       const payload = {
-        loja_id: profile.loja_id,
-        user_id: user?.id,
         ...formData,
+        loja_id: targetLojaId,
+        user_id: user?.id,
         logo_url: null,
         updated_at: new Date().toISOString(),
       }
@@ -209,14 +273,18 @@ export function CompanySettingsForm() {
       if (payload.id) delete payload.id
       if (payload.created_at) delete payload.created_at
 
-      console.log('--- REMOVER LOGO ---', payload)
-
       const { data, error } = await supabase
         .from('company_settings' as any)
         .upsert(payload, { onConflict: 'loja_id' })
         .select()
 
-      setDebugInfo({ payload, response: data, error })
+      setDebugState((prev) => ({
+        ...prev,
+        payload,
+        response: data,
+        lastError: error ? error.message : null,
+        lastSuccess: error ? null : 'Logo removida com sucesso no Supabase.',
+      }))
 
       if (error) throw error
       setLogoUrl(null)
@@ -486,48 +554,66 @@ export function CompanySettingsForm() {
           </div>
         </div>
 
-        <div className="flex justify-end pt-8 border-t">
+        <form onSubmit={handleSave} className="flex justify-end pt-8 border-t">
           <Button
-            onClick={handleSave}
+            type="submit"
             disabled={loading}
             className="bg-blue-600 hover:bg-blue-700 text-white font-black px-10 py-6 text-lg"
           >
-            {loading ? <Loader2 className="w-5 h-5 mr-2 animate-spin" /> : null}
-            SALVAR DADOS DA EMPRESA
+            {loading ? (
+              <>
+                <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                Salvando...
+              </>
+            ) : (
+              'SALVAR DADOS DA EMPRESA'
+            )}
           </Button>
-        </div>
+        </form>
 
-        {debugInfo && (
-          <div className="mt-8 p-4 bg-slate-900 text-green-400 rounded-lg overflow-auto text-xs font-mono">
-            <h4 className="text-white font-bold mb-2">
-              DEBUG INFO OBRIGATÓRIO:
-            </h4>
-            <div className="space-y-4">
-              <div>
-                <strong className="text-white">Payload Enviado:</strong>
-                <pre className="mt-1 whitespace-pre-wrap">
-                  {JSON.stringify(debugInfo.payload, null, 2)}
-                </pre>
-              </div>
-              {debugInfo.response && (
-                <div>
-                  <strong className="text-white">Resposta Supabase:</strong>
-                  <pre className="mt-1 whitespace-pre-wrap">
-                    {JSON.stringify(debugInfo.response, null, 2)}
-                  </pre>
-                </div>
-              )}
-              {debugInfo.error && (
-                <div>
-                  <strong className="text-red-400">Erro:</strong>
-                  <pre className="mt-1 text-red-400 whitespace-pre-wrap">
-                    {JSON.stringify(debugInfo.error, null, 2)}
-                  </pre>
-                </div>
+        <div className="mt-8 p-4 bg-slate-900 text-green-400 rounded-lg overflow-auto text-xs font-mono">
+          <h4 className="text-white font-bold mb-2 border-b border-green-800 pb-2">
+            DEBUG SALVAMENTO:
+          </h4>
+          <div className="space-y-2">
+            <div>
+              <strong className="text-white">Botão clicado:</strong>{' '}
+              {debugState.clicked ? 'Sim' : 'Não'}
+            </div>
+            <div>
+              <strong className="text-white">Salvando:</strong>{' '}
+              {debugState.saving ? 'Sim' : 'Não'}
+            </div>
+            <div>
+              <strong className="text-white">Último erro:</strong>{' '}
+              {debugState.lastError ? (
+                <span className="text-red-400">{debugState.lastError}</span>
+              ) : (
+                'Nenhum'
               )}
             </div>
+            <div>
+              <strong className="text-white">Último sucesso:</strong>{' '}
+              {debugState.lastSuccess || 'Nenhum'}
+            </div>
+            {debugState.payload && (
+              <div className="pt-2 border-t border-green-900 mt-2">
+                <strong className="text-white">Payload Enviado:</strong>
+                <pre className="mt-1 whitespace-pre-wrap text-green-300 bg-black bg-opacity-30 p-2 rounded">
+                  {JSON.stringify(debugState.payload, null, 2)}
+                </pre>
+              </div>
+            )}
+            {debugState.response && (
+              <div className="pt-2">
+                <strong className="text-white">Resposta Supabase:</strong>
+                <pre className="mt-1 whitespace-pre-wrap text-green-300 bg-black bg-opacity-30 p-2 rounded">
+                  {JSON.stringify(debugState.response, null, 2)}
+                </pre>
+              </div>
+            )}
           </div>
-        )}
+        </div>
       </CardContent>
     </Card>
   )
