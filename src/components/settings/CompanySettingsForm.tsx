@@ -87,7 +87,7 @@ export function CompanySettingsForm() {
       )
 
       if (error) throw error
-      toast({ title: 'Dados da empresa salvos com sucesso!' })
+      toast({ title: 'Dados da empresa salvos com sucesso' })
     } catch (e: any) {
       toast({
         title: 'Erro ao salvar',
@@ -224,30 +224,45 @@ export function CompanySettingsForm() {
                   accept="image/png, image/jpeg, image/jpg, image/svg+xml"
                   className="hidden"
                 />
-                <Button
-                  onClick={() => fileInputRef.current?.click()}
-                  disabled={uploading}
-                  variant="default"
-                  className="bg-slate-900 text-white hover:bg-slate-800"
-                >
-                  {uploading ? (
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  ) : (
-                    <Upload className="w-4 h-4 mr-2" />
-                  )}
-                  {logoUrl ? 'Trocar logo' : 'Enviar logo'}
-                </Button>
-
-                {logoUrl && (
+                {!logoUrl ? (
                   <Button
-                    onClick={handleRemoveLogo}
+                    onClick={() => fileInputRef.current?.click()}
                     disabled={uploading}
-                    variant="outline"
-                    className="text-red-600 hover:bg-red-50 hover:text-red-700 border-red-200"
+                    variant="default"
+                    className="bg-slate-900 text-white hover:bg-slate-800"
                   >
-                    <Trash2 className="w-4 h-4 mr-2" />
-                    Remover logo
+                    {uploading ? (
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    ) : (
+                      <Upload className="w-4 h-4 mr-2" />
+                    )}
+                    Enviar logo
                   </Button>
+                ) : (
+                  <>
+                    <Button
+                      onClick={() => fileInputRef.current?.click()}
+                      disabled={uploading}
+                      variant="default"
+                      className="bg-slate-900 text-white hover:bg-slate-800"
+                    >
+                      {uploading ? (
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      ) : (
+                        <Upload className="w-4 h-4 mr-2" />
+                      )}
+                      Trocar logo
+                    </Button>
+                    <Button
+                      onClick={handleRemoveLogo}
+                      disabled={uploading}
+                      variant="outline"
+                      className="text-red-600 hover:bg-red-50 hover:text-red-700 border-red-200"
+                    >
+                      <Trash2 className="w-4 h-4 mr-2" />
+                      Remover logo
+                    </Button>
+                  </>
                 )}
               </div>
             </div>

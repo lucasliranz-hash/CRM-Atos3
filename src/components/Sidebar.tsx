@@ -11,6 +11,7 @@ import {
   KanbanSquare,
   FileText,
   ClipboardList,
+  Store,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Progress } from '@/components/ui/progress'
@@ -34,6 +35,7 @@ const navItems = [
   { icon: Calendar, label: 'Calendário', path: '/calendar' },
   { icon: BarChart, label: 'Relatórios', path: '/reports' },
   { icon: SettingsIcon, label: 'Configurações', path: '/settings' },
+  { icon: Store, label: 'Empresa Emitente', path: '/settings/company' },
 ]
 
 export function Sidebar() {

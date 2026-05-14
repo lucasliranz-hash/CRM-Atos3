@@ -174,12 +174,11 @@ export default function OrderEditor() {
           <div className="space-y-2">
             <h2 className="text-2xl font-black">Aviso Importante</h2>
             <p className="text-lg">
-              Preencha os dados da empresa emitente antes de gerar a ficha de
-              pedido.
+              Configure os dados da empresa emitente antes de gerar o pedido
             </p>
           </div>
           <Button
-            onClick={() => navigate('/settings')}
+            onClick={() => navigate('/settings/company')}
             className="bg-yellow-600 hover:bg-yellow-700 text-white font-bold px-8 py-6 text-lg"
           >
             Configurar empresa agora
@@ -272,7 +271,7 @@ export default function OrderEditor() {
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => navigate('/settings')}
+                  onClick={() => navigate('/settings/company')}
                   className="shrink-0"
                 >
                   Configurar Emitente
