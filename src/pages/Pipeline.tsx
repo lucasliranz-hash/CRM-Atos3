@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect } from 'react'
 import useMainStore from '@/stores/main'
-import { Search, Phone, Trash2, AlertCircle, RefreshCw } from 'lucide-react'
+import { Search, Phone, Trash2, RefreshCw } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { cn } from '@/lib/utils'
 import { useNavigate } from 'react-router-dom'
@@ -152,39 +152,6 @@ export default function Pipeline() {
     return leads
   }, [mappedAccounts, search, segmentFilter, cityFilter])
 
-  // Debug Panel Info
-  const debugInfo = useMemo(() => {
-    const totalSupabase = dbAccounts.length
-
-    let totalRendered = 0
-    let totalIgnored = 0
-    let ignoredList: any[] = []
-
-    const validColumnIds = COLUMNS_CONFIG.map((c) => c.id)
-
-    dbAccounts.forEach((account) => {
-      const stage =
-        account.pipelineStage ||
-        account.stage ||
-        account.status_pipeline ||
-        'Prospecção'
-
-      if (validColumnIds.includes(stage)) {
-        totalRendered++
-      } else {
-        totalIgnored++
-        ignoredList.push({
-          id: account.id,
-          name: account.companyName || account.name,
-          stage: stage,
-          reason: `Etapa '${stage}' não existe nas colunas. Forçado para 'Prospecção'.`,
-        })
-      }
-    })
-
-    return { totalSupabase, totalRendered, totalIgnored, ignoredList }
-  }, [dbAccounts])
-
   const onDragStart = (e: React.DragEvent, leadId: string) =>
     e.dataTransfer.setData('leadId', leadId)
 
@@ -283,60 +250,7 @@ export default function Pipeline() {
         </div>
       </div>
 
-      {/* DEBUG PANEL */}
-      <div className="shrink-0 bg-red-50 border border-red-200 p-4 rounded-xl text-sm mb-2 shadow-sm">
-        <h3 className="font-bold text-red-800 flex items-center gap-2 mb-2">
-          <AlertCircle className="w-4 h-4" /> DEBUG SALVAMENTO E VISIBILIDADE
-          PIPELINE
-        </h3>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-red-800 mb-3">
-          <div className="bg-white/50 p-2 rounded border border-red-100">
-            <div className="text-[10px] font-bold uppercase mb-1">
-              Total Supabase
-            </div>
-            <div className="text-xl font-black">{debugInfo.totalSupabase}</div>
-          </div>
-          <div className="bg-white/50 p-2 rounded border border-red-100">
-            <div className="text-[10px] font-bold uppercase mb-1">
-              Total Renderizados
-            </div>
-            <div className="text-xl font-black">{mappedAccounts.length}</div>
-          </div>
-          <div className="bg-white/50 p-2 rounded border border-red-100">
-            <div className="text-[10px] font-bold uppercase mb-1">
-              Total Forçados (Sem etapa)
-            </div>
-            <div className="text-xl font-black">{debugInfo.totalIgnored}</div>
-          </div>
-          <div className="bg-white/50 p-2 rounded border border-red-100">
-            <div className="text-[10px] font-bold uppercase mb-1">
-              Erro Supabase
-            </div>
-            <div className="text-xs font-bold text-red-600 truncate">
-              {errorMsg || 'Sem erros'}
-            </div>
-          </div>
-        </div>
-
-        {debugInfo.ignoredList.length > 0 && (
-          <div className="mt-2 text-red-700 bg-white/60 p-3 rounded border border-red-100 max-h-32 overflow-y-auto custom-scrollbar">
-            <strong className="text-xs uppercase tracking-wider block mb-2">
-              Lista dos registros forçados para "Prospecção":
-            </strong>
-            <ul className="list-decimal list-inside text-xs space-y-1">
-              {debugInfo.ignoredList.map((ign, idx) => (
-                <li key={idx} className="border-b border-red-100/50 pb-1">
-                  <span className="font-bold">{ign.name}</span> (ID:{' '}
-                  <span className="font-mono">{ign.id?.split('-')[0]}</span>) -
-                  Motivo: {ign.reason}
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
-      </div>
-
-      <div className="flex gap-6 overflow-x-auto pb-4 custom-scrollbar items-start flex-1">
+      <div className="flex gap-6 overflow-x-auto pb-4 custom-scrollbar items-start flex-1 mt-2">
         {COLUMNS_CONFIG.map((col) => {
           const leadsInStage = filteredLeads.filter(
             (a: any) => a.pipelineStage === col.id,

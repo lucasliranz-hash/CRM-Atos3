@@ -27,14 +27,6 @@ export function CompanySettingsForm() {
   const { logoUrl, setLogoUrl } = useMainStore()
   const [loading, setLoading] = useState(false)
   const [uploading, setUploading] = useState(false)
-  const [debugState, setDebugState] = useState({
-    clicked: false,
-    saving: false,
-    lastError: null as string | null,
-    lastSuccess: null as string | null,
-    payload: null as any,
-    response: null as any,
-  })
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const [formData, setFormData] = useState<any>({
@@ -93,13 +85,6 @@ export function CompanySettingsForm() {
       e.preventDefault()
     }
 
-    setDebugState((prev) => ({
-      ...prev,
-      clicked: true,
-      saving: true,
-      lastError: null,
-      lastSuccess: null,
-    }))
     setLoading(true)
 
     let targetLojaId = profile?.loja_id
@@ -113,7 +98,6 @@ export function CompanySettingsForm() {
     if (!targetLojaId) {
       const err =
         'Sua conta não possui uma Loja vinculada. É necessário ter uma loja para salvar as configurações.'
-      setDebugState((prev) => ({ ...prev, saving: false, lastError: err }))
       toast({
         title: 'Erro de Vínculo',
         description: err,
@@ -134,37 +118,17 @@ export function CompanySettingsForm() {
     if (payload.id) delete payload.id
     if (payload.created_at) delete payload.created_at
 
-    setDebugState((prev) => ({ ...prev, payload }))
-
     try {
-      console.log('--- SALVAR DADOS DA EMPRESA ---')
-      console.log('Payload Enviado:', payload)
-
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from('company_settings' as any)
         .upsert(payload, { onConflict: 'loja_id' })
-        .select()
-
-      console.log('Resposta do Supabase:', data)
 
       if (error) throw error
-
-      setDebugState((prev) => ({
-        ...prev,
-        response: data,
-        saving: false,
-        lastSuccess: 'Dados da empresa salvos no Supabase com sucesso!',
-      }))
 
       toast({ title: 'Dados da empresa salvos com sucesso' })
       await fetchSettings()
     } catch (e: any) {
       console.error('Exception ao salvar:', e)
-      setDebugState((prev) => ({
-        ...prev,
-        saving: false,
-        lastError: e.message || JSON.stringify(e),
-      }))
       toast({
         title: 'Erro ao salvar dados da empresa',
         description: e.message,
@@ -223,18 +187,9 @@ export function CompanySettingsForm() {
         if (logoPayload.id) delete logoPayload.id
         if (logoPayload.created_at) delete logoPayload.created_at
 
-        const { data, error } = await supabase
+        const { error } = await supabase
           .from('company_settings' as any)
           .upsert(logoPayload, { onConflict: 'loja_id' })
-          .select()
-
-        setDebugState((prev) => ({
-          ...prev,
-          payload: logoPayload,
-          response: data,
-          lastError: error ? error.message : null,
-          lastSuccess: error ? null : 'Logo salva no Supabase.',
-        }))
       }
       setLogoUrl(publicUrl)
       toast({ title: 'Logo atualizada com sucesso!' })
@@ -273,18 +228,9 @@ export function CompanySettingsForm() {
       if (payload.id) delete payload.id
       if (payload.created_at) delete payload.created_at
 
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from('company_settings' as any)
         .upsert(payload, { onConflict: 'loja_id' })
-        .select()
-
-      setDebugState((prev) => ({
-        ...prev,
-        payload,
-        response: data,
-        lastError: error ? error.message : null,
-        lastSuccess: error ? null : 'Logo removida com sucesso no Supabase.',
-      }))
 
       if (error) throw error
       setLogoUrl(null)
@@ -570,50 +516,6 @@ export function CompanySettingsForm() {
             )}
           </Button>
         </form>
-
-        <div className="mt-8 p-4 bg-slate-900 text-green-400 rounded-lg overflow-auto text-xs font-mono">
-          <h4 className="text-white font-bold mb-2 border-b border-green-800 pb-2">
-            DEBUG SALVAMENTO:
-          </h4>
-          <div className="space-y-2">
-            <div>
-              <strong className="text-white">Botão clicado:</strong>{' '}
-              {debugState.clicked ? 'Sim' : 'Não'}
-            </div>
-            <div>
-              <strong className="text-white">Salvando:</strong>{' '}
-              {debugState.saving ? 'Sim' : 'Não'}
-            </div>
-            <div>
-              <strong className="text-white">Último erro:</strong>{' '}
-              {debugState.lastError ? (
-                <span className="text-red-400">{debugState.lastError}</span>
-              ) : (
-                'Nenhum'
-              )}
-            </div>
-            <div>
-              <strong className="text-white">Último sucesso:</strong>{' '}
-              {debugState.lastSuccess || 'Nenhum'}
-            </div>
-            {debugState.payload && (
-              <div className="pt-2 border-t border-green-900 mt-2">
-                <strong className="text-white">Payload Enviado:</strong>
-                <pre className="mt-1 whitespace-pre-wrap text-green-300 bg-black bg-opacity-30 p-2 rounded">
-                  {JSON.stringify(debugState.payload, null, 2)}
-                </pre>
-              </div>
-            )}
-            {debugState.response && (
-              <div className="pt-2">
-                <strong className="text-white">Resposta Supabase:</strong>
-                <pre className="mt-1 whitespace-pre-wrap text-green-300 bg-black bg-opacity-30 p-2 rounded">
-                  {JSON.stringify(debugState.response, null, 2)}
-                </pre>
-              </div>
-            )}
-          </div>
-        </div>
       </CardContent>
     </Card>
   )
