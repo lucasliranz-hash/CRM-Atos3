@@ -13,10 +13,16 @@ import {
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Building2, Upload, Loader2, Image as ImageIcon } from 'lucide-react'
+import {
+  Building2,
+  Upload,
+  Loader2,
+  Image as ImageIcon,
+  Trash2,
+} from 'lucide-react'
 
 export function CompanySettingsForm() {
-  const { profile } = useAuth()
+  const { user, profile } = useAuth()
   const { toast } = useToast()
   const { logoUrl, setLogoUrl } = useMainStore()
   const [loading, setLoading] = useState(false)
@@ -73,6 +79,7 @@ export function CompanySettingsForm() {
       const { error } = await supabase.from('company_settings' as any).upsert(
         {
           loja_id: profile.loja_id,
+          user_id: user?.id,
           ...formData,
           updated_at: new Date().toISOString(),
         },
@@ -98,7 +105,7 @@ export function CompanySettingsForm() {
     if (!file.type.startsWith('image/')) {
       toast({
         title: 'Formato inválido',
-        description: 'Apenas imagens são permitidas.',
+        description: 'Apenas imagens são permitidas (PNG, JPG, SVG).',
         variant: 'destructive',
       })
       return
@@ -106,22 +113,24 @@ export function CompanySettingsForm() {
     setUploading(true)
     try {
       const fileExt = file.name.split('.').pop()
-      const fileName = `${profile?.loja_id || 'default'}-${Math.random()}.${fileExt}`
+      const fileName = `company-logo-${Date.now()}.${fileExt}`
+      const filePath = `logos/${fileName}`
 
       const { error: uploadError } = await supabase.storage
-        .from('company_logos')
-        .upload(fileName, file, { upsert: true })
+        .from('company-assets')
+        .upload(filePath, file, { upsert: true })
 
       if (uploadError) throw uploadError
 
       const {
         data: { publicUrl },
-      } = supabase.storage.from('company_logos').getPublicUrl(fileName)
+      } = supabase.storage.from('company-assets').getPublicUrl(filePath)
 
       if (profile?.loja_id) {
         await supabase.from('company_settings' as any).upsert(
           {
             loja_id: profile.loja_id,
+            user_id: user?.id,
             ...formData,
             logo_url: publicUrl,
             updated_at: new Date().toISOString(),
@@ -139,216 +148,284 @@ export function CompanySettingsForm() {
       })
     } finally {
       setUploading(false)
+      if (fileInputRef.current) {
+        fileInputRef.current.value = ''
+      }
+    }
+  }
+
+  const handleRemoveLogo = async () => {
+    if (!profile?.loja_id) return
+    try {
+      const { error } = await supabase.from('company_settings' as any).upsert(
+        {
+          loja_id: profile.loja_id,
+          user_id: user?.id,
+          ...formData,
+          logo_url: null,
+          updated_at: new Date().toISOString(),
+        },
+        { onConflict: 'loja_id' },
+      )
+      if (error) throw error
+      setLogoUrl(null)
+      toast({ title: 'Logo removida com sucesso!' })
+    } catch (error: any) {
+      toast({
+        title: 'Erro ao remover logo',
+        description: error.message,
+        variant: 'destructive',
+      })
     }
   }
 
   return (
     <Card className="shadow-sm border-gray-200 bg-white mb-6 animate-in fade-in duration-300">
       <CardHeader>
-        <CardTitle className="text-lg font-bold flex items-center gap-2">
-          <Building2 className="w-5 h-5 text-gray-500" />
+        <CardTitle className="text-xl font-black text-slate-900 flex items-center gap-2">
+          <Building2 className="w-6 h-6 text-slate-500" />
           Dados da Empresa Emitente
         </CardTitle>
-        <CardDescription>
+        <CardDescription className="text-base text-slate-500">
           Configurações da sua empresa que aparecerão automaticamente nas fichas
           de pedidos, propostas e PDFs.
         </CardDescription>
       </CardHeader>
-      <CardContent className="space-y-8">
-        <div className="flex flex-col sm:flex-row items-center gap-6 p-6 border rounded-xl bg-slate-50">
-          <div className="w-32 h-32 bg-white rounded-lg border-2 border-dashed flex flex-col items-center justify-center p-2 relative overflow-hidden shrink-0">
-            {logoUrl ? (
-              <img
-                src={logoUrl}
-                alt="Logo"
-                className="w-full h-full object-contain"
-              />
-            ) : (
-              <ImageIcon className="w-8 h-8 text-slate-300" />
-            )}
-          </div>
-          <div className="flex-1 text-center sm:text-left space-y-2">
-            <h4 className="font-bold text-slate-800">Logo da Empresa</h4>
-            <p className="text-sm text-slate-500">
-              Recomendado: PNG ou SVG com fundo transparente. Aparecerá no topo
-              de todas as Fichas de Pedido.
-            </p>
-            <div className="pt-2">
-              <input
-                type="file"
-                ref={fileInputRef}
-                onChange={handleFileChange}
-                accept="image/*"
-                className="hidden"
-              />
-              <Button
-                onClick={() => fileInputRef.current?.click()}
-                disabled={uploading}
-                variant="outline"
-                className="bg-white"
-              >
-                {uploading ? (
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                ) : (
-                  <Upload className="w-4 h-4 mr-2" />
+      <CardContent className="space-y-10">
+        <div className="space-y-4">
+          <h3 className="text-lg font-bold text-slate-800 border-b pb-2">
+            Logo da empresa
+          </h3>
+          <div className="flex flex-col sm:flex-row items-center gap-6 p-6 border rounded-xl bg-slate-50">
+            <div className="w-40 h-40 bg-white rounded-lg border-2 border-dashed flex flex-col items-center justify-center p-2 relative overflow-hidden shrink-0">
+              {logoUrl ? (
+                <img
+                  src={logoUrl}
+                  alt="Logo"
+                  className="w-full h-full object-contain"
+                />
+              ) : (
+                <div className="text-center text-slate-400">
+                  <ImageIcon className="w-8 h-8 mx-auto mb-2 opacity-50" />
+                  <span className="text-xs font-medium">Sem logo</span>
+                </div>
+              )}
+            </div>
+            <div className="flex-1 text-center sm:text-left space-y-3">
+              <p className="text-sm text-slate-500">
+                Aceita PNG, JPG, JPEG e SVG. Essa logo aparecerá automaticamente
+                no cabeçalho das suas Fichas de Pedido.
+              </p>
+              <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2 pt-2">
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  onChange={handleFileChange}
+                  accept="image/png, image/jpeg, image/jpg, image/svg+xml"
+                  className="hidden"
+                />
+                <Button
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={uploading}
+                  variant="default"
+                  className="bg-slate-900 text-white hover:bg-slate-800"
+                >
+                  {uploading ? (
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  ) : (
+                    <Upload className="w-4 h-4 mr-2" />
+                  )}
+                  {logoUrl ? 'Trocar logo' : 'Enviar logo'}
+                </Button>
+
+                {logoUrl && (
+                  <Button
+                    onClick={handleRemoveLogo}
+                    disabled={uploading}
+                    variant="outline"
+                    className="text-red-600 hover:bg-red-50 hover:text-red-700 border-red-200"
+                  >
+                    <Trash2 className="w-4 h-4 mr-2" />
+                    Remover logo
+                  </Button>
                 )}
-                {logoUrl ? 'Trocar Logo' : 'Enviar Logo'}
-              </Button>
-            </div>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <Label>Razão Social</Label>
-            <Input
-              name="company_name"
-              value={formData.company_name || ''}
-              onChange={handleChange}
-            />
-          </div>
-          <div className="space-y-2">
-            <Label>Nome Fantasia</Label>
-            <Input
-              name="fantasy_name"
-              value={formData.fantasy_name || ''}
-              onChange={handleChange}
-            />
-          </div>
-          <div className="space-y-2">
-            <Label>CNPJ</Label>
-            <Input
-              name="cnpj"
-              value={formData.cnpj || ''}
-              onChange={handleChange}
-            />
-          </div>
-          <div className="space-y-2">
-            <Label>Inscrição Estadual</Label>
-            <Input
-              name="state_registration"
-              value={formData.state_registration || ''}
-              onChange={handleChange}
-            />
-          </div>
-          <div className="space-y-2">
-            <Label>Telefone</Label>
-            <Input
-              name="phone"
-              value={formData.phone || ''}
-              onChange={handleChange}
-            />
-          </div>
-          <div className="space-y-2">
-            <Label>WhatsApp</Label>
-            <Input
-              name="whatsapp"
-              value={formData.whatsapp || ''}
-              onChange={handleChange}
-            />
-          </div>
-          <div className="space-y-2">
-            <Label>E-mail</Label>
-            <Input
-              name="email"
-              value={formData.email || ''}
-              onChange={handleChange}
-            />
-          </div>
-          <div className="space-y-2">
-            <Label>Site</Label>
-            <Input
-              name="website"
-              value={formData.website || ''}
-              onChange={handleChange}
-            />
-          </div>
-
-          <div className="md:col-span-2 border-t pt-4 mt-2">
-            <h4 className="font-semibold text-slate-800 mb-4">Endereço</h4>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="space-y-2">
-                <Label>CEP</Label>
-                <Input
-                  name="zip_code"
-                  value={formData.zip_code || ''}
-                  onChange={handleChange}
-                />
-              </div>
-              <div className="space-y-2 md:col-span-2">
-                <Label>Endereço</Label>
-                <Input
-                  name="address"
-                  value={formData.address || ''}
-                  onChange={handleChange}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>Número</Label>
-                <Input
-                  name="number"
-                  value={formData.number || ''}
-                  onChange={handleChange}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>Bairro</Label>
-                <Input
-                  name="district"
-                  value={formData.district || ''}
-                  onChange={handleChange}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>Cidade</Label>
-                <Input
-                  name="city"
-                  value={formData.city || ''}
-                  onChange={handleChange}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>Estado</Label>
-                <Input
-                  name="state"
-                  value={formData.state || ''}
-                  onChange={handleChange}
-                />
-              </div>
-            </div>
-          </div>
-
-          <div className="md:col-span-2 border-t pt-4 mt-2">
-            <h4 className="font-semibold text-slate-800 mb-4">Responsável</h4>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label>Nome do Responsável</Label>
-                <Input
-                  name="responsible_name"
-                  value={formData.responsible_name || ''}
-                  onChange={handleChange}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>Cargo do Responsável</Label>
-                <Input
-                  name="responsible_role"
-                  value={formData.responsible_role || ''}
-                  onChange={handleChange}
-                />
               </div>
             </div>
           </div>
         </div>
 
-        <div className="flex justify-end pt-4 border-t">
+        <div className="space-y-6">
+          <h3 className="text-lg font-bold text-slate-800 border-b pb-2">
+            Informações Cadastrais
+          </h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label>Razão Social</Label>
+              <Input
+                name="company_name"
+                value={formData.company_name || ''}
+                onChange={handleChange}
+                placeholder="Ex: Minha Empresa LTDA"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Nome Fantasia</Label>
+              <Input
+                name="fantasy_name"
+                value={formData.fantasy_name || ''}
+                onChange={handleChange}
+                placeholder="Ex: Nome da Marca"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>CNPJ</Label>
+              <Input
+                name="cnpj"
+                value={formData.cnpj || ''}
+                onChange={handleChange}
+                placeholder="00.000.000/0000-00"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Inscrição Estadual</Label>
+              <Input
+                name="state_registration"
+                value={formData.state_registration || ''}
+                onChange={handleChange}
+                placeholder="000.000.000.000"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Telefone</Label>
+              <Input
+                name="phone"
+                value={formData.phone || ''}
+                onChange={handleChange}
+                placeholder="(00) 0000-0000"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>WhatsApp</Label>
+              <Input
+                name="whatsapp"
+                value={formData.whatsapp || ''}
+                onChange={handleChange}
+                placeholder="(00) 00000-0000"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>E-mail</Label>
+              <Input
+                name="email"
+                type="email"
+                value={formData.email || ''}
+                onChange={handleChange}
+                placeholder="contato@empresa.com.br"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Site</Label>
+              <Input
+                name="website"
+                value={formData.website || ''}
+                onChange={handleChange}
+                placeholder="www.empresa.com.br"
+              />
+            </div>
+          </div>
+        </div>
+
+        <div className="space-y-6">
+          <h3 className="text-lg font-bold text-slate-800 border-b pb-2">
+            Endereço
+          </h3>
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div className="space-y-2">
+              <Label>CEP</Label>
+              <Input
+                name="zip_code"
+                value={formData.zip_code || ''}
+                onChange={handleChange}
+                placeholder="00000-000"
+              />
+            </div>
+            <div className="space-y-2 md:col-span-2">
+              <Label>Endereço</Label>
+              <Input
+                name="address"
+                value={formData.address || ''}
+                onChange={handleChange}
+                placeholder="Rua, Avenida..."
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Número</Label>
+              <Input
+                name="number"
+                value={formData.number || ''}
+                onChange={handleChange}
+              />
+            </div>
+            <div className="space-y-2 md:col-span-2">
+              <Label>Bairro</Label>
+              <Input
+                name="district"
+                value={formData.district || ''}
+                onChange={handleChange}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Cidade</Label>
+              <Input
+                name="city"
+                value={formData.city || ''}
+                onChange={handleChange}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Estado</Label>
+              <Input
+                name="state"
+                value={formData.state || ''}
+                onChange={handleChange}
+                placeholder="UF"
+              />
+            </div>
+          </div>
+        </div>
+
+        <div className="space-y-6">
+          <h3 className="text-lg font-bold text-slate-800 border-b pb-2">
+            Responsável
+          </h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label>Nome do Responsável</Label>
+              <Input
+                name="responsible_name"
+                value={formData.responsible_name || ''}
+                onChange={handleChange}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Cargo do Responsável</Label>
+              <Input
+                name="responsible_role"
+                value={formData.responsible_role || ''}
+                onChange={handleChange}
+              />
+            </div>
+          </div>
+        </div>
+
+        <div className="flex justify-end pt-8 border-t">
           <Button
             onClick={handleSave}
             disabled={loading}
-            className="bg-black text-white px-8"
+            className="bg-blue-600 hover:bg-blue-700 text-white font-black px-10 py-6 text-lg"
           >
-            {loading ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
-            Salvar Dados da Empresa
+            {loading ? <Loader2 className="w-5 h-5 mr-2 animate-spin" /> : null}
+            SALVAR DADOS DA EMPRESA
           </Button>
         </div>
       </CardContent>

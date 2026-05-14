@@ -40,6 +40,7 @@ export default function OrderEditor() {
   const [loading, setLoading] = useState(false)
   const [showPreview, setShowPreview] = useState(showPreviewParam)
   const [companySettings, setCompanySettings] = useState<any>(null)
+  const [loadingSettings, setLoadingSettings] = useState(true)
   const { profile } = useAuth()
 
   const printRef = useRef<HTMLDivElement>(null)
@@ -55,13 +56,17 @@ export default function OrderEditor() {
   }, [profile?.loja_id])
 
   const fetchCompanySettings = async () => {
-    if (!profile?.loja_id) return
+    if (!profile?.loja_id) {
+      setLoadingSettings(false)
+      return
+    }
     const { data } = await supabase
       .from('company_settings' as any)
       .select('*')
       .eq('loja_id', profile.loja_id)
       .maybeSingle()
     if (data) setCompanySettings(data)
+    setLoadingSettings(false)
   }
 
   useEffect(() => {
@@ -159,6 +164,29 @@ export default function OrderEditor() {
       })
     }
     setLoading(false)
+  }
+
+  if (!loadingSettings && (!companySettings || !companySettings.company_name)) {
+    return (
+      <div className="p-8 max-w-2xl mx-auto mt-20">
+        <div className="bg-yellow-50 border border-yellow-200 text-yellow-800 p-8 rounded-xl text-center space-y-6 shadow-sm">
+          <Building2 className="w-16 h-16 mx-auto text-yellow-600" />
+          <div className="space-y-2">
+            <h2 className="text-2xl font-black">Aviso Importante</h2>
+            <p className="text-lg">
+              Preencha os dados da empresa emitente antes de gerar a ficha de
+              pedido.
+            </p>
+          </div>
+          <Button
+            onClick={() => navigate('/settings')}
+            className="bg-yellow-600 hover:bg-yellow-700 text-white font-bold px-8 py-6 text-lg"
+          >
+            Configurar empresa agora
+          </Button>
+        </div>
+      </div>
+    )
   }
 
   return (
