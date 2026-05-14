@@ -34,6 +34,7 @@ import {
 import { formatCurrency, isOverdue } from '@/lib/crm-utils'
 import { cn } from '@/lib/utils'
 import LeadInteractionForm from '@/components/LeadInteractionForm'
+import { ManualActionModal } from '@/components/ManualActionModal'
 import { format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import { supabase } from '@/lib/supabase/client'
@@ -57,6 +58,7 @@ export default function LeadDetails() {
   const [isProposalOpen, setIsProposalOpen] = useState(false)
 
   const [interactionModalOpen, setInteractionModalOpen] = useState(false)
+  const [manualActionOpen, setManualActionOpen] = useState(false)
   const [interactionDefaults, setInteractionDefaults] = useState<{
     channel: any
     type: any
@@ -351,16 +353,26 @@ export default function LeadDetails() {
                 />
                 Próxima Ação
               </h2>
-              {isActionOverdue && (
-                <span className="px-2.5 py-1 bg-red-100 text-red-700 text-[10px] font-bold uppercase rounded-full flex items-center">
-                  <AlertCircle className="w-3 h-3 mr-1" /> Atrasada
-                </span>
-              )}
-              {!isActionOverdue && leadData.nextAction && (
-                <span className="px-2.5 py-1 bg-orange-100 text-orange-700 text-[10px] font-bold uppercase rounded-full">
-                  Pendente
-                </span>
-              )}
+              <div className="flex items-center gap-2">
+                <Button
+                  onClick={() => setManualActionOpen(true)}
+                  variant="outline"
+                  size="sm"
+                  className="h-7 text-[10px] font-bold px-2 bg-white"
+                >
+                  <Plus className="w-3 h-3 mr-1" /> Adicionar ação
+                </Button>
+                {isActionOverdue && (
+                  <span className="px-2.5 py-1 bg-red-100 text-red-700 text-[10px] font-bold uppercase rounded-full flex items-center">
+                    <AlertCircle className="w-3 h-3 mr-1" /> Atrasada
+                  </span>
+                )}
+                {!isActionOverdue && leadData.nextAction && (
+                  <span className="px-2.5 py-1 bg-orange-100 text-orange-700 text-[10px] font-bold uppercase rounded-full">
+                    Pendente
+                  </span>
+                )}
+              </div>
             </div>
 
             {leadData.nextAction ? (
@@ -407,9 +419,20 @@ export default function LeadDetails() {
           </div>
 
           <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
-            <h2 className="text-lg font-black text-slate-900 flex items-center gap-2 mb-6">
-              <History className="w-5 h-5 text-slate-400" /> Histórico de Ações
-            </h2>
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-lg font-black text-slate-900 flex items-center gap-2">
+                <History className="w-5 h-5 text-slate-400" /> Histórico de
+                Ações
+              </h2>
+              <Button
+                onClick={() => setManualActionOpen(true)}
+                variant="outline"
+                size="sm"
+                className="h-7 text-[10px] font-bold px-2 bg-white"
+              >
+                <Plus className="w-3 h-3 mr-1" /> Adicionar ação
+              </Button>
+            </div>
 
             <div className="relative before:absolute before:inset-y-0 before:left-[19px] before:w-px before:bg-slate-200 space-y-6">
               {leadActivities.length === 0 ? (
@@ -438,14 +461,27 @@ export default function LeadDetails() {
                       </div>
                       <div className="bg-slate-50 rounded-lg p-4 border border-slate-100 w-full group-hover:border-slate-200 transition-colors">
                         <div className="flex justify-between items-start mb-2">
-                          <h4 className="font-bold text-slate-900 text-sm">
-                            {act.type}
+                          <h4 className="font-bold text-slate-900 text-sm flex items-center flex-wrap gap-2">
+                            {act.type === 'Outro'
+                              ? (act as any).custom_type
+                              : act.type}
+                            {(act as any).status &&
+                              (act as any).status !== 'Pendente' && (
+                                <span className="text-[10px] font-bold px-1.5 py-0.5 rounded uppercase tracking-wider bg-slate-100 text-slate-600">
+                                  {(act as any).status}
+                                </span>
+                              )}
                           </h4>
                           <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">
                             {format(new Date(act.date), 'dd/MM/yyyy HH:mm')}
                           </span>
                         </div>
                         <p className="text-sm text-slate-600 whitespace-pre-wrap">
+                          {(act as any).description && (
+                            <span className="block font-medium mb-1 text-slate-700">
+                              {(act as any).description}
+                            </span>
+                          )}
                           {act.result || 'Ação registrada sem observação.'}
                         </p>
                         {act.nextAction && (
@@ -724,6 +760,13 @@ export default function LeadDetails() {
           </div>
         </div>
       </div>
+
+      <ManualActionModal
+        open={manualActionOpen}
+        onOpenChange={setManualActionOpen}
+        accountId={leadData.id}
+        onSuccess={() => window.location.reload()}
+      />
 
       <Dialog
         open={interactionModalOpen}
