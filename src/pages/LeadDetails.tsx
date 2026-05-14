@@ -36,6 +36,7 @@ import { cn } from '@/lib/utils'
 import LeadInteractionForm from '@/components/LeadInteractionForm'
 import { format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
+import { supabase } from '@/lib/supabase/client'
 
 export default function LeadDetails() {
   const { id } = useParams()
@@ -60,12 +61,30 @@ export default function LeadDetails() {
     type: any
   }>({ channel: 'WhatsApp', type: 'Mensagem' })
 
+  const [dbError, setDbError] = useState('')
+  const [loading, setLoading] = useState(true)
+
   useEffect(() => {
-    if (id) {
-      const lead = getLeadById(id)
-      if (lead) setLeadData(lead)
+    async function fetchAccount() {
+      if (!id) return
+      setLoading(true)
+      try {
+        const { data, error } = await supabase
+          .from('accounts')
+          .select('*')
+          .eq('id', id)
+          .single()
+        if (error) throw error
+        setLeadData(data)
+      } catch (e: any) {
+        setDbError(e.message || 'Erro desconhecido')
+        console.error(e)
+      } finally {
+        setLoading(false)
+      }
     }
-  }, [id, getLeadById, activities])
+    fetchAccount()
+  }, [id])
 
   const leadActivities = useMemo(() => {
     if (!id) return []
@@ -74,10 +93,42 @@ export default function LeadDetails() {
       .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
   }, [activities, id])
 
-  if (!leadData) {
+  if (loading) {
     return (
       <div className="p-10 text-center text-slate-500 font-medium">
-        Lead não encontrado.
+        Carregando detalhes...
+      </div>
+    )
+  }
+
+  if (!leadData) {
+    return (
+      <div className="p-10 max-w-2xl mx-auto mt-10">
+        <div className="bg-red-50 text-red-700 p-6 rounded-xl border border-red-200">
+          <h2 className="font-bold text-lg mb-4 flex items-center gap-2">
+            <AlertCircle className="w-5 h-5" /> Lead não encontrado.
+          </h2>
+          <div className="text-sm font-mono space-y-2 bg-white/50 p-4 rounded-lg">
+            <p>
+              <strong>ID na URL:</strong> {id}
+            </p>
+            <p>
+              <strong>Tabela consultada:</strong> accounts
+            </p>
+            <p>
+              <strong>Erro Supabase:</strong>{' '}
+              {dbError ||
+                'Nenhum registro retornado ou erro de permissão (RLS).'}
+            </p>
+          </div>
+          <Button
+            onClick={() => navigate('/pipeline')}
+            variant="outline"
+            className="mt-6 bg-white"
+          >
+            <ArrowLeft className="w-4 h-4 mr-2" /> Voltar ao Pipeline
+          </Button>
+        </div>
       </div>
     )
   }
