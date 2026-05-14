@@ -24,7 +24,9 @@ import {
 export function CompanySettingsForm() {
   const { user, profile } = useAuth()
   const { toast } = useToast()
-  const { logoUrl, setLogoUrl } = useMainStore()
+  const mainStore = useMainStore() || {}
+  const logoUrl = mainStore.logoUrl
+  const setLogoUrl = mainStore.setLogoUrl
   const [loading, setLoading] = useState(false)
   const [uploading, setUploading] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -71,7 +73,9 @@ export function CompanySettingsForm() {
     if (data) {
       console.log('Dados carregados do Supabase:', data)
       setFormData((prev: any) => ({ ...prev, ...data }))
-      if (data.logo_url) setLogoUrl(data.logo_url)
+      if (data.logo_url && typeof setLogoUrl === 'function') {
+        setLogoUrl(data.logo_url)
+      }
     }
   }
 
@@ -111,7 +115,7 @@ export function CompanySettingsForm() {
       ...formData,
       loja_id: targetLojaId,
       user_id: user?.id,
-      logo_url: logoUrl,
+      logo_url: logoUrl || formData.logo_url,
       updated_at: new Date().toISOString(),
     }
 
@@ -191,7 +195,11 @@ export function CompanySettingsForm() {
           .from('company_settings' as any)
           .upsert(logoPayload, { onConflict: 'loja_id' })
       }
-      setLogoUrl(publicUrl)
+
+      setFormData((prev: any) => ({ ...prev, logo_url: publicUrl }))
+      if (typeof setLogoUrl === 'function') {
+        setLogoUrl(publicUrl)
+      }
       toast({ title: 'Logo atualizada com sucesso!' })
       await fetchSettings()
     } catch (error: any) {
@@ -233,7 +241,11 @@ export function CompanySettingsForm() {
         .upsert(payload, { onConflict: 'loja_id' })
 
       if (error) throw error
-      setLogoUrl(null)
+
+      setFormData((prev: any) => ({ ...prev, logo_url: null }))
+      if (typeof setLogoUrl === 'function') {
+        setLogoUrl(null)
+      }
       toast({ title: 'Logo removida com sucesso!' })
       await fetchSettings()
     } catch (error: any) {
@@ -265,9 +277,9 @@ export function CompanySettingsForm() {
           </h3>
           <div className="flex flex-col sm:flex-row items-center gap-6 p-6 border rounded-xl bg-slate-50">
             <div className="w-40 h-40 bg-white rounded-lg border-2 border-dashed flex flex-col items-center justify-center p-2 relative overflow-hidden shrink-0">
-              {logoUrl ? (
+              {logoUrl || formData.logo_url ? (
                 <img
-                  src={logoUrl}
+                  src={logoUrl || formData.logo_url}
                   alt="Logo"
                   className="w-full h-full object-contain"
                 />
@@ -291,7 +303,7 @@ export function CompanySettingsForm() {
                   accept="image/png, image/jpeg, image/jpg, image/svg+xml"
                   className="hidden"
                 />
-                {!logoUrl ? (
+                {!(logoUrl || formData.logo_url) ? (
                   <Button
                     onClick={() => fileInputRef.current?.click()}
                     disabled={uploading}
