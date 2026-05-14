@@ -13,9 +13,10 @@ import { Plus } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
 import useMainStore from '@/stores/main'
 import { useNavigate } from 'react-router-dom'
+import { supabase } from '@/lib/supabase/client'
 
 export function NewLeadDialog({ children }: { children?: React.ReactNode }) {
-  const { addLead } = useMainStore()
+  const { fetchData } = useMainStore() as any
   const { toast } = useToast()
   const navigate = useNavigate()
   const [isOpen, setIsOpen] = useState(false)
@@ -28,7 +29,10 @@ export function NewLeadDialog({ children }: { children?: React.ReactNode }) {
       const fd = new FormData(e.target as HTMLFormElement)
       const data = Object.fromEntries(fd.entries()) as Record<string, string>
 
-      await addLead({
+      const { data: userData } = await supabase.auth.getUser()
+
+      const payload = {
+        name: data.companyName || 'Sem nome',
         companyName: data.companyName,
         contactName: data.contactName,
         phone: data.phone,
@@ -36,15 +40,32 @@ export function NewLeadDialog({ children }: { children?: React.ReactNode }) {
         city: data.city,
         state: data.state,
         segment: data.segment,
+        fleetModel: data.vehicleCount ? String(data.vehicleCount) : null,
         vehicleCount: data.vehicleCount ? parseInt(data.vehicleCount, 10) : 0,
         source: data.source,
         notes: data.notes,
         pipelineStage: data.pipelineStage || 'Prospecção',
         status: 'Novo Lead',
-      })
+        priority: 'Média',
+        user_id: userData?.user?.id || null,
+      }
+
+      const { error } = await supabase.from('accounts').insert(payload)
+
+      if (error) {
+        throw new Error(
+          error.message || 'Erro desconhecido ao inserir no banco.',
+        )
+      }
 
       toast({ title: 'Lead criado com sucesso!' })
       setIsOpen(false)
+
+      if (fetchData) {
+        await fetchData()
+      }
+
+      window.dispatchEvent(new CustomEvent('lead_added'))
       navigate('/pipeline')
     } catch (err: any) {
       toast({

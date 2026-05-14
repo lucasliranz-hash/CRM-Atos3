@@ -92,6 +92,12 @@ export default function Pipeline() {
 
   useEffect(() => {
     fetchAccounts()
+
+    const handleLeadAdded = () => {
+      fetchAccounts()
+    }
+    window.addEventListener('lead_added', handleLeadAdded)
+    return () => window.removeEventListener('lead_added', handleLeadAdded)
   }, [])
 
   // Processa as regras de exibição e fallback
