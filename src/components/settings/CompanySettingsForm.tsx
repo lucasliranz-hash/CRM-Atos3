@@ -27,9 +27,14 @@ export function CompanySettingsForm() {
   const { logoUrl, setLogoUrl } = useMainStore()
   const [loading, setLoading] = useState(false)
   const [uploading, setUploading] = useState(false)
+  const [debugInfo, setDebugInfo] = useState<{
+    payload?: any
+    response?: any
+    error?: any
+  } | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<any>({
     company_name: '',
     fantasy_name: '',
     cnpj: '',
@@ -61,34 +66,56 @@ export function CompanySettingsForm() {
       .select('*')
       .eq('loja_id', profile.loja_id)
       .maybeSingle()
+
     if (data) {
-      setFormData((prev) => ({ ...prev, ...data }))
+      console.log('Dados carregados do Supabase:', data)
+      setFormData((prev: any) => ({ ...prev, ...data }))
       if (data.logo_url) setLogoUrl(data.logo_url)
     }
   }
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target
-    setFormData((prev) => ({ ...prev, [name]: value }))
+    setFormData((prev: any) => ({ ...prev, [name]: value }))
   }
 
   const handleSave = async () => {
     if (!profile?.loja_id) return
     setLoading(true)
+
+    const payload = {
+      loja_id: profile.loja_id,
+      user_id: user?.id,
+      ...formData,
+      logo_url: logoUrl, // Garantir que a logo também seja enviada sempre
+      updated_at: new Date().toISOString(),
+    }
+
+    // Remover campos que não devem ser incluídos no upsert para evitar conflitos de restrição
+    if (payload.id) delete payload.id
+    if (payload.created_at) delete payload.created_at
+
     try {
-      const { error } = await supabase.from('company_settings' as any).upsert(
-        {
-          loja_id: profile.loja_id,
-          user_id: user?.id,
-          ...formData,
-          updated_at: new Date().toISOString(),
-        },
-        { onConflict: 'loja_id' },
-      )
+      console.log('--- SALVAR DADOS DA EMPRESA ---')
+      console.log('Payload Enviado:', payload)
+
+      const { data, error } = await supabase
+        .from('company_settings' as any)
+        .upsert(payload, { onConflict: 'loja_id' })
+        .select()
+
+      console.log('Resposta do Supabase:', data)
+      if (error) console.error('Erro do Supabase:', error)
+
+      setDebugInfo({ payload, response: data, error })
 
       if (error) throw error
+
       toast({ title: 'Dados da empresa salvos com sucesso' })
+      await fetchSettings() // Recarrega os dados do banco após salvar
     } catch (e: any) {
+      console.error('Exception ao salvar:', e)
+      setDebugInfo({ payload, error: e })
       toast({
         title: 'Erro ao salvar',
         description: e.message,
@@ -127,19 +154,33 @@ export function CompanySettingsForm() {
       } = supabase.storage.from('company-assets').getPublicUrl(filePath)
 
       if (profile?.loja_id) {
-        await supabase.from('company_settings' as any).upsert(
-          {
-            loja_id: profile.loja_id,
-            user_id: user?.id,
-            ...formData,
-            logo_url: publicUrl,
-            updated_at: new Date().toISOString(),
-          },
-          { onConflict: 'loja_id' },
-        )
+        const logoPayload = {
+          loja_id: profile.loja_id,
+          user_id: user?.id,
+          ...formData,
+          logo_url: publicUrl,
+          updated_at: new Date().toISOString(),
+        }
+
+        if (logoPayload.id) delete logoPayload.id
+        if (logoPayload.created_at) delete logoPayload.created_at
+
+        console.log('--- UPLOAD LOGO ---')
+        console.log('Payload Enviado:', logoPayload)
+
+        const { data, error } = await supabase
+          .from('company_settings' as any)
+          .upsert(logoPayload, { onConflict: 'loja_id' })
+          .select()
+
+        console.log('Resposta do Supabase (Upload Logo):', data)
+        if (error) console.error('Erro do Supabase (Upload Logo):', error)
+
+        setDebugInfo({ payload: logoPayload, response: data, error })
       }
       setLogoUrl(publicUrl)
       toast({ title: 'Logo atualizada com sucesso!' })
+      await fetchSettings() // Sincronizar o formulário
     } catch (error: any) {
       toast({
         title: 'Erro no upload',
@@ -157,20 +198,32 @@ export function CompanySettingsForm() {
   const handleRemoveLogo = async () => {
     if (!profile?.loja_id) return
     try {
-      const { error } = await supabase.from('company_settings' as any).upsert(
-        {
-          loja_id: profile.loja_id,
-          user_id: user?.id,
-          ...formData,
-          logo_url: null,
-          updated_at: new Date().toISOString(),
-        },
-        { onConflict: 'loja_id' },
-      )
+      const payload = {
+        loja_id: profile.loja_id,
+        user_id: user?.id,
+        ...formData,
+        logo_url: null,
+        updated_at: new Date().toISOString(),
+      }
+
+      if (payload.id) delete payload.id
+      if (payload.created_at) delete payload.created_at
+
+      console.log('--- REMOVER LOGO ---', payload)
+
+      const { data, error } = await supabase
+        .from('company_settings' as any)
+        .upsert(payload, { onConflict: 'loja_id' })
+        .select()
+
+      setDebugInfo({ payload, response: data, error })
+
       if (error) throw error
       setLogoUrl(null)
       toast({ title: 'Logo removida com sucesso!' })
+      await fetchSettings()
     } catch (error: any) {
+      console.error('Erro ao remover logo', error)
       toast({
         title: 'Erro ao remover logo',
         description: error.message,
@@ -443,6 +496,38 @@ export function CompanySettingsForm() {
             SALVAR DADOS DA EMPRESA
           </Button>
         </div>
+
+        {debugInfo && (
+          <div className="mt-8 p-4 bg-slate-900 text-green-400 rounded-lg overflow-auto text-xs font-mono">
+            <h4 className="text-white font-bold mb-2">
+              DEBUG INFO OBRIGATÓRIO:
+            </h4>
+            <div className="space-y-4">
+              <div>
+                <strong className="text-white">Payload Enviado:</strong>
+                <pre className="mt-1 whitespace-pre-wrap">
+                  {JSON.stringify(debugInfo.payload, null, 2)}
+                </pre>
+              </div>
+              {debugInfo.response && (
+                <div>
+                  <strong className="text-white">Resposta Supabase:</strong>
+                  <pre className="mt-1 whitespace-pre-wrap">
+                    {JSON.stringify(debugInfo.response, null, 2)}
+                  </pre>
+                </div>
+              )}
+              {debugInfo.error && (
+                <div>
+                  <strong className="text-red-400">Erro:</strong>
+                  <pre className="mt-1 text-red-400 whitespace-pre-wrap">
+                    {JSON.stringify(debugInfo.error, null, 2)}
+                  </pre>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
       </CardContent>
     </Card>
   )
