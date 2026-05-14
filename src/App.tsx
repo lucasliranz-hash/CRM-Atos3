@@ -14,6 +14,8 @@ import CalendarView from './pages/Calendar'
 import FocusMode from './pages/FocusMode'
 import Proposals from './pages/Proposals'
 import ProposalEditor from './pages/ProposalEditor'
+import Orders from './pages/Orders'
+import OrderEditor from './pages/OrderEditor'
 import NotFound from './pages/NotFound'
 import Login from './pages/Login'
 import Signup from './pages/Signup'
@@ -48,6 +50,9 @@ const App = () => (
               <Route path="/focus" element={<FocusMode />} />
               <Route path="/proposals" element={<Proposals />} />
               <Route path="/proposals/:id" element={<ProposalEditor />} />
+              <Route path="/orders" element={<Orders />} />
+              <Route path="/orders/new" element={<OrderEditor />} />
+              <Route path="/orders/:id" element={<OrderEditor />} />
             </Route>
             <Route path="*" element={<NotFound />} />
           </Routes>

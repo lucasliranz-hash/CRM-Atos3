@@ -216,6 +216,55 @@ export interface ProposalTravelFee {
   total: number
 }
 
+export type OrderStatus =
+  | 'Rascunho'
+  | 'Pedido gerado'
+  | 'Em separação'
+  | 'Entregue'
+  | 'Cancelado'
+
+export interface OrderForm {
+  id: string
+  order_number: string
+  account_id?: string | null
+  contact_id?: string | null
+  is_manual_customer: boolean
+  save_customer_to_crm: boolean
+  customer_name?: string
+  customer_cnpj?: string
+  contact_name?: string
+  phone?: string
+  email?: string
+  city?: string
+  state?: string
+  address?: string
+  responsible?: string
+  status: OrderStatus
+  notes?: string
+  logo_url?: string
+  subtotal: number
+  discount: number
+  total_amount: number
+  created_by?: string
+  user_id?: string
+  loja_id?: string
+  created_at: string
+  updated_at: string
+}
+
+export interface OrderFormItem {
+  id: string
+  order_form_id: string
+  product_name: string
+  description?: string
+  quantity: number
+  unit: string
+  unit_price: number
+  total_price: number
+  notes?: string
+  created_at: string
+}
+
 export interface Proposal {
   id: string
   accountId: string

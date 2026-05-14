@@ -10,6 +10,7 @@ import {
   Target,
   KanbanSquare,
   FileText,
+  ClipboardList,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Progress } from '@/components/ui/progress'
@@ -28,6 +29,7 @@ const navItems = [
   { icon: Users, label: 'Contatos', path: '/contacts' },
   { icon: Building2, label: 'Leads', path: '/accounts' },
   { icon: FileText, label: 'Propostas', path: '/proposals' },
+  { icon: ClipboardList, label: 'Pedidos', path: '/orders' },
   { icon: Activity, label: 'Atividades', path: '/activities' },
   { icon: Calendar, label: 'Calendário', path: '/calendar' },
   { icon: BarChart, label: 'Relatórios', path: '/reports' },
@@ -41,7 +43,7 @@ export function Sidebar() {
   const [profileOpen, setProfileOpen] = useState(false)
 
   return (
-    <aside className="fixed left-0 top-0 h-screen w-64 z-50 hidden md:flex flex-col bg-[#0D1B2A] border-r border-slate-800 text-slate-300">
+    <aside className="fixed left-0 top-0 h-screen w-64 z-50 hidden md:flex flex-col bg-[#0D1B2A] border-r border-slate-800 text-slate-300 print:hidden">
       <div className="p-6 pb-8 flex items-center gap-3">
         {logoUrl ? (
           <img src={logoUrl} alt="Logo" className="h-8 object-contain" />

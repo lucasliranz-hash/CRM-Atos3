@@ -39,6 +39,51 @@ export const exportExcelReport = (tables: any) => {
   a.click()
 }
 
+export const exportOrderExcel = (order: any, items: any[] = []) => {
+  let html =
+    '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40"><head><meta charset="utf-8"></head><body>'
+  html += `<h2>Ficha de Pedido - ${order.order_number}</h2>`
+  html += `<table>
+    <tr><td><b>Empresa:</b></td><td>${order.customer_name || ''}</td></tr>
+    <tr><td><b>CNPJ:</b></td><td>${order.customer_cnpj || ''}</td></tr>
+    <tr><td><b>Contato:</b></td><td>${order.contact_name || ''}</td></tr>
+    <tr><td><b>Telefone:</b></td><td>${order.phone || ''}</td></tr>
+    <tr><td><b>Responsável:</b></td><td>${order.responsible || ''}</td></tr>
+  </table><br/>`
+
+  if (items && items.length) {
+    html +=
+      '<table border="1"><tr><th>Produto</th><th>Descrição</th><th>Quantidade</th><th>Unidade</th><th>Valor Unitário</th><th>Total</th><th>Observação</th></tr>'
+    items.forEach((i: any) => {
+      html += `<tr>
+        <td>${i.product_name || ''}</td>
+        <td>${i.description || ''}</td>
+        <td>${i.quantity || 0}</td>
+        <td>${i.unit || ''}</td>
+        <td>${i.unit_price || 0}</td>
+        <td>${i.total_price || 0}</td>
+        <td>${i.notes || ''}</td>
+      </tr>`
+    })
+    html += '</table><br/>'
+  }
+
+  html += `<table>
+    <tr><td><b>Subtotal:</b></td><td>${order.subtotal || 0}</td></tr>
+    <tr><td><b>Desconto:</b></td><td>${order.discount || 0}</td></tr>
+    <tr><td><b>Total Geral:</b></td><td>${order.total_amount || 0}</td></tr>
+  </table>`
+
+  html += '</body></html>'
+
+  const blob = new Blob([html], { type: 'application/vnd.ms-excel' })
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = `Pedido_${order.order_number || 'Novo'}.xls`
+  a.click()
+}
+
 export const generatePDFReport = async (
   elementId: string,
   userName: string,
