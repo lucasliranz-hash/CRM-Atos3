@@ -1,9 +1,10 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import useMainStore from '@/stores/main'
-import { Search, Phone, Trash2 } from 'lucide-react'
+import { Search, Phone, Trash2, AlertCircle, RefreshCw } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { cn } from '@/lib/utils'
 import { useNavigate } from 'react-router-dom'
+import { supabase } from '@/lib/supabase/client'
 import {
   Select,
   SelectContent,
@@ -11,6 +12,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import { Button } from '@/components/ui/button'
 
 const COLUMNS_CONFIG = [
   {
@@ -58,25 +60,81 @@ const COLUMNS_CONFIG = [
 ]
 
 export default function Pipeline() {
-  const { accounts, moveLeadToStage, deleteLeadCascade } = useMainStore()
+  const { moveLeadToStage, deleteLeadCascade } = useMainStore() as any
   const navigate = useNavigate()
+
+  const [dbAccounts, setDbAccounts] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
+  const [errorMsg, setErrorMsg] = useState('')
 
   const [search, setSearch] = useState('')
   const [segmentFilter, setSegmentFilter] = useState('all')
   const [cityFilter, setCityFilter] = useState('all')
 
+  const fetchAccounts = async () => {
+    try {
+      setLoading(true)
+      setErrorMsg('')
+      // 1. No Pipeline, buscar todos os registros diretamente do banco sem filtros de user_id ou limits
+      const { data, error } = await supabase.from('accounts').select('*')
+
+      if (error) {
+        throw error
+      }
+
+      setDbAccounts(data || [])
+    } catch (err: any) {
+      setErrorMsg(err.message)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    fetchAccounts()
+  }, [])
+
+  // Processa as regras de exibição e fallback
+  const mappedAccounts = useMemo(() => {
+    return dbAccounts.map((account) => {
+      // Regra: se não tiver etapa definida (ou tiver nome diferente), forçar para "Prospecção"
+      let stage =
+        account.pipelineStage ||
+        account.stage ||
+        account.status_pipeline ||
+        'Prospecção'
+
+      const isValidStage = COLUMNS_CONFIG.some((c) => c.id === stage)
+      const finalStage = isValidStage ? stage : 'Prospecção'
+
+      const status = account.status || 'Novo Lead'
+
+      return {
+        ...account,
+        pipelineStage: finalStage,
+        originalStage: stage,
+        status: status,
+      }
+    })
+  }, [dbAccounts])
+
   const uniqueSegments = useMemo(
     () =>
-      Array.from(new Set(accounts.map((a: any) => a.segment).filter(Boolean))),
-    [accounts],
+      Array.from(
+        new Set(mappedAccounts.map((a: any) => a.segment).filter(Boolean)),
+      ),
+    [mappedAccounts],
   )
   const uniqueCities = useMemo(
-    () => Array.from(new Set(accounts.map((a: any) => a.city).filter(Boolean))),
-    [accounts],
+    () =>
+      Array.from(
+        new Set(mappedAccounts.map((a: any) => a.city).filter(Boolean)),
+      ),
+    [mappedAccounts],
   )
 
   const filteredLeads = useMemo(() => {
-    let leads = accounts
+    let leads = mappedAccounts
     if (segmentFilter !== 'all')
       leads = leads.filter((a: any) => a.segment === segmentFilter)
     if (cityFilter !== 'all')
@@ -92,14 +150,73 @@ export default function Pipeline() {
       )
     }
     return leads
-  }, [accounts, search, segmentFilter, cityFilter])
+  }, [mappedAccounts, search, segmentFilter, cityFilter])
+
+  // Debug Panel Info
+  const debugInfo = useMemo(() => {
+    const totalSupabase = dbAccounts.length
+
+    let totalRendered = 0
+    let totalIgnored = 0
+    let ignoredList: any[] = []
+
+    const validColumnIds = COLUMNS_CONFIG.map((c) => c.id)
+
+    dbAccounts.forEach((account) => {
+      const stage =
+        account.pipelineStage ||
+        account.stage ||
+        account.status_pipeline ||
+        'Prospecção'
+
+      if (validColumnIds.includes(stage)) {
+        totalRendered++
+      } else {
+        totalIgnored++
+        ignoredList.push({
+          id: account.id,
+          name: account.companyName || account.name,
+          stage: stage,
+          reason: `Etapa '${stage}' não existe nas colunas. Forçado para 'Prospecção'.`,
+        })
+      }
+    })
+
+    return { totalSupabase, totalRendered, totalIgnored, ignoredList }
+  }, [dbAccounts])
 
   const onDragStart = (e: React.DragEvent, leadId: string) =>
     e.dataTransfer.setData('leadId', leadId)
-  const onDrop = (e: React.DragEvent, stage: string) => {
+
+  const onDrop = async (e: React.DragEvent, stage: string) => {
     e.preventDefault()
     const leadId = e.dataTransfer.getData('leadId')
-    if (leadId) moveLeadToStage(leadId, stage)
+    if (leadId) {
+      // Atualização otimista na tela local
+      setDbAccounts((prev) =>
+        prev.map((a) => (a.id === leadId ? { ...a, pipelineStage: stage } : a)),
+      )
+
+      if (moveLeadToStage) {
+        moveLeadToStage(leadId, stage)
+      } else {
+        await supabase
+          .from('accounts')
+          .update({ pipelineStage: stage })
+          .eq('id', leadId)
+      }
+    }
+  }
+
+  const handleDelete = async (id: string) => {
+    if (window.confirm('Tem certeza que deseja excluir este lead?')) {
+      setDbAccounts((prev) => prev.filter((a) => a.id !== id))
+      if (deleteLeadCascade) {
+        deleteLeadCascade(id)
+      } else {
+        await supabase.from('accounts').delete().eq('id', id)
+      }
+    }
   }
 
   return (
@@ -114,6 +231,18 @@ export default function Pipeline() {
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-4 w-full xl:w-auto">
+          <Button
+            onClick={fetchAccounts}
+            variant="outline"
+            size="sm"
+            className="h-10 border-slate-200"
+          >
+            <RefreshCw
+              className={cn('w-4 h-4 mr-2', loading && 'animate-spin')}
+            />
+            Atualizar
+          </Button>
+
           <Select value={segmentFilter} onValueChange={setSegmentFilter}>
             <SelectTrigger className="w-[160px] bg-white h-10 border-slate-200">
               <SelectValue placeholder="Segmento" />
@@ -154,12 +283,63 @@ export default function Pipeline() {
         </div>
       </div>
 
+      {/* DEBUG PANEL */}
+      <div className="shrink-0 bg-red-50 border border-red-200 p-4 rounded-xl text-sm mb-2 shadow-sm">
+        <h3 className="font-bold text-red-800 flex items-center gap-2 mb-2">
+          <AlertCircle className="w-4 h-4" /> DEBUG SALVAMENTO E VISIBILIDADE
+          PIPELINE
+        </h3>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-red-800 mb-3">
+          <div className="bg-white/50 p-2 rounded border border-red-100">
+            <div className="text-[10px] font-bold uppercase mb-1">
+              Total Supabase
+            </div>
+            <div className="text-xl font-black">{debugInfo.totalSupabase}</div>
+          </div>
+          <div className="bg-white/50 p-2 rounded border border-red-100">
+            <div className="text-[10px] font-bold uppercase mb-1">
+              Total Renderizados
+            </div>
+            <div className="text-xl font-black">{mappedAccounts.length}</div>
+          </div>
+          <div className="bg-white/50 p-2 rounded border border-red-100">
+            <div className="text-[10px] font-bold uppercase mb-1">
+              Total Forçados (Sem etapa)
+            </div>
+            <div className="text-xl font-black">{debugInfo.totalIgnored}</div>
+          </div>
+          <div className="bg-white/50 p-2 rounded border border-red-100">
+            <div className="text-[10px] font-bold uppercase mb-1">
+              Erro Supabase
+            </div>
+            <div className="text-xs font-bold text-red-600 truncate">
+              {errorMsg || 'Sem erros'}
+            </div>
+          </div>
+        </div>
+
+        {debugInfo.ignoredList.length > 0 && (
+          <div className="mt-2 text-red-700 bg-white/60 p-3 rounded border border-red-100 max-h-32 overflow-y-auto custom-scrollbar">
+            <strong className="text-xs uppercase tracking-wider block mb-2">
+              Lista dos registros forçados para "Prospecção":
+            </strong>
+            <ul className="list-decimal list-inside text-xs space-y-1">
+              {debugInfo.ignoredList.map((ign, idx) => (
+                <li key={idx} className="border-b border-red-100/50 pb-1">
+                  <span className="font-bold">{ign.name}</span> (ID:{' '}
+                  <span className="font-mono">{ign.id?.split('-')[0]}</span>) -
+                  Motivo: {ign.reason}
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+      </div>
+
       <div className="flex gap-6 overflow-x-auto pb-4 custom-scrollbar items-start flex-1">
         {COLUMNS_CONFIG.map((col) => {
           const leadsInStage = filteredLeads.filter(
-            (a: any) =>
-              a.pipelineStage === col.id ||
-              (!a.pipelineStage && col.id === 'Prospecção'),
+            (a: any) => a.pipelineStage === col.id,
           )
           return (
             <div
@@ -191,14 +371,7 @@ export default function Pipeline() {
                     lead={lead}
                     onClick={() => navigate(`/leads/${lead.id}`)}
                     onDragStart={onDragStart}
-                    onDelete={() => {
-                      if (
-                        window.confirm(
-                          'Tem certeza que deseja excluir este lead?',
-                        )
-                      )
-                        deleteLeadCascade(lead.id)
-                    }}
+                    onDelete={() => handleDelete(lead.id)}
                   />
                 ))}
               </div>
@@ -211,12 +384,8 @@ export default function Pipeline() {
 }
 
 function KanbanCard({ lead, onClick, onDragStart, onDelete }: any) {
-  const dateStr = lead.updatedAt || lead.createdAt
+  const dateStr = lead.updatedAt || lead.createdAt || new Date().toISOString()
   const dateObj = new Date(dateStr)
-  const timeText = dateObj.toLocaleTimeString('pt-BR', {
-    hour: '2-digit',
-    minute: '2-digit',
-  })
   const dateText = dateObj.toLocaleDateString('pt-BR')
 
   return (
@@ -228,7 +397,7 @@ function KanbanCard({ lead, onClick, onDragStart, onDelete }: any) {
     >
       <div>
         <h4 className="font-bold text-[14px] text-[#0D1B2A] leading-snug group-hover:text-[#FF6A00] transition-colors">
-          {lead.companyName || lead.name}
+          {lead.companyName || lead.name || 'Sem nome'}
         </h4>
         <p className="text-[13px] text-slate-600 mt-1">
           {lead.contactName || 'Sem contato'}
@@ -244,11 +413,11 @@ function KanbanCard({ lead, onClick, onDragStart, onDelete }: any) {
       </div>
       <div className="pt-2 mt-1 border-t border-slate-100 flex justify-between items-center gap-2">
         <span className="text-[10px] font-bold px-1.5 py-0.5 bg-slate-100 text-slate-600 rounded whitespace-nowrap overflow-hidden text-ellipsis">
-          {lead.pipelineStage || 'Prospecção'}
+          {lead.status || 'Novo Lead'}
         </span>
         <div className="flex items-center gap-2">
           <div className="text-[10px] text-slate-400 font-medium whitespace-nowrap">
-            {dateText} {timeText}
+            {dateText}
           </div>
           <button
             onClick={(e) => {
