@@ -16,6 +16,7 @@ import {
   FileText,
   ShoppingCart,
   TrendingUp,
+  DollarSign,
 } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { cn } from '@/lib/utils'
@@ -34,6 +35,18 @@ import { ChartContainer, ChartTooltipContent } from '@/components/ui/chart'
 import LeadHistorySheet from '@/components/LeadHistorySheet'
 import { DatabaseDiagnostic } from '@/components/DatabaseDiagnostic'
 import { useDashboardData } from '@/hooks/use-dashboard-data'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from '@/components/ui/dialog'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/components/ui/tooltip'
 
 export default function Index() {
   const navigate = useNavigate()
@@ -41,6 +54,33 @@ export default function Index() {
 
   const [detailsAccountId, setDetailsAccountId] = useState<string | null>(null)
   const [showDebug, setShowDebug] = useState(false)
+  const [showNegotiationModal, setShowNegotiationModal] = useState(false)
+  const [showNegotiationModal, setShowNegotiationModal] = useState(false)
+
+  const activeProposals = useMemo(() => {
+    return data.proposals.filter(
+      (p: any) => p.status === 'Enviada' || p.status === 'Em negociação',
+    )
+  }, [data.proposals])
+
+  const financialMetrics = useMemo(() => {
+    const monthlyNegotiation = activeProposals.reduce(
+      (sum: number, p: any) => sum + (p.totalMonthly || 0),
+      0,
+    )
+    const annualNegotiation = monthlyNegotiation * 12
+    const setupEquipNegotiation = activeProposals.reduce(
+      (sum: number, p: any) =>
+        sum + ((p.totalSetup || 0) + (p.totalEquipment || 0)),
+      0,
+    )
+
+    return {
+      monthlyNegotiation,
+      annualNegotiation,
+      setupEquipNegotiation,
+    }
+  }, [activeProposals])
 
   const metrics = useMemo(() => {
     const now = new Date()
@@ -91,6 +131,21 @@ export default function Index() {
         return s + val
       }, 0)
 
+    const negotiationProposals = data.proposals.filter(
+      (p: any) => p.status === 'Enviada' || p.status === 'Em negociação',
+    )
+
+    const monthlyRevenue = negotiationProposals.reduce(
+      (sum: number, p: any) => sum + (p.totalMonthly || 0),
+      0,
+    )
+    const annualRevenue = monthlyRevenue * 12
+    const totalSetupEquipment = negotiationProposals.reduce(
+      (sum: number, p: any) =>
+        sum + (p.totalSetup || 0) + (p.totalEquipment || 0),
+      0,
+    )
+
     return {
       totalLeads,
       newLeadsMonth,
@@ -101,6 +156,10 @@ export default function Index() {
       closedSales,
       conversionRate,
       closedWonTotal,
+      negotiationProposals,
+      monthlyRevenue,
+      annualRevenue,
+      totalSetupEquipment,
     }
   }, [data])
 
@@ -218,6 +277,7 @@ export default function Index() {
     icon: Icon,
     colorClass,
     onClick,
+    tooltip,
   }: any) => (
     <Card
       className={cn(
@@ -237,9 +297,27 @@ export default function Index() {
             </span>
           )}
         </div>
-        <p className="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1">
-          {title}
-        </p>
+
+        {tooltip ? (
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <p
+                className="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1 cursor-help border-b border-dashed border-slate-300 w-fit"
+                onClick={(e) => e.stopPropagation()}
+              >
+                {title}
+              </p>
+            </TooltipTrigger>
+            <TooltipContent className="max-w-[250px] text-center" side="top">
+              <p>{tooltip}</p>
+            </TooltipContent>
+          </Tooltip>
+        ) : (
+          <p className="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1">
+            {title}
+          </p>
+        )}
+
         <h3 className="text-2xl font-black text-slate-900 group-hover:text-[#FF6A00] transition-colors">
           {value}
         </h3>
@@ -335,7 +413,98 @@ export default function Index() {
           </div>
         )}
 
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <Card
+            className={cn(
+              'rounded-[10px] border border-slate-100 shadow-sm bg-white overflow-visible cursor-pointer hover:shadow-md transition-all group',
+              loading && 'opacity-60 pointer-events-none',
+            )}
+            onClick={() => setShowNegotiationModal(true)}
+          >
+            <CardContent className="p-5">
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <div className="w-full text-left outline-none">
+                    <div className="flex justify-between items-start mb-4">
+                      <div className="p-2.5 rounded-xl transition-colors bg-emerald-50 text-emerald-600 group-hover:bg-emerald-100">
+                        <TrendingUp className="w-5 h-5" />
+                      </div>
+                    </div>
+                    <p className="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1 flex items-center gap-1">
+                      Valor em Negociação (12x)
+                      <AlertCircle className="w-3 h-3 text-slate-400" />
+                    </p>
+                    <h3 className="text-2xl font-black text-slate-900 group-hover:text-[#FF6A00] transition-colors">
+                      {formatCurrency(financialMetrics.annualNegotiation)}
+                    </h3>
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent
+                  side="top"
+                  className="max-w-[250px] text-center"
+                >
+                  <p>
+                    Cálculo: Soma das mensalidades das propostas ativas × 12
+                    meses. Setup/equipamentos não inclusos.
+                  </p>
+                </TooltipContent>
+              </Tooltip>
+            </CardContent>
+          </Card>
+
+          <Card
+            className={cn(
+              'rounded-[10px] border border-slate-100 shadow-sm bg-white',
+              loading && 'opacity-60',
+            )}
+          >
+            <CardContent className="p-5">
+              <div className="flex justify-between items-start mb-4">
+                <div className="p-2.5 rounded-xl transition-colors bg-blue-50 text-blue-600">
+                  <Calendar className="w-5 h-5" />
+                </div>
+              </div>
+              <p className="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1">
+                Receita Mensal em Negociação
+              </p>
+              <h3 className="text-2xl font-black text-slate-900">
+                {formatCurrency(financialMetrics.monthlyNegotiation)}
+              </h3>
+            </CardContent>
+          </Card>
+
+          <Card
+            className={cn(
+              'rounded-[10px] border border-slate-100 shadow-sm bg-white',
+              loading && 'opacity-60',
+            )}
+          >
+            <CardContent className="p-5">
+              <div className="flex justify-between items-start mb-4">
+                <div className="p-2.5 rounded-xl transition-colors bg-purple-50 text-purple-600">
+                  <Briefcase className="w-5 h-5" />
+                </div>
+              </div>
+              <p className="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1">
+                Valor Total de Setup/Equip.
+              </p>
+              <h3 className="text-2xl font-black text-slate-900">
+                {formatCurrency(financialMetrics.setupEquipNegotiation)}
+              </h3>
+            </CardContent>
+          </Card>
+        </div>
+
+        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
+          <MetricCard
+            title="Valor em Negociação (12x)"
+            value={formatCurrency(metrics.annualRevenue)}
+            variance="Projetado"
+            icon={DollarSign}
+            colorClass="bg-blue-50 text-blue-600 group-hover:bg-blue-100"
+            tooltip="Cálculo: Soma das mensalidades das propostas ativas × 12 meses. Setup/equipamentos não inclusos."
+            onClick={() => setShowNegotiationModal(true)}
+          />
           <MetricCard
             title="Total de Leads"
             value={metrics.totalLeads}
@@ -399,6 +568,43 @@ export default function Index() {
             icon={TrendingUp}
             colorClass="bg-sky-50 text-sky-600 group-hover:bg-sky-100"
             onClick={() => navigate('/pipeline')}
+          />
+        </div>
+
+        <h2 className="text-lg font-black text-slate-900 tracking-tight mt-2 mb-2 flex items-center gap-2">
+          <DollarSign className="w-5 h-5 text-emerald-500" /> Previsão de
+          Receita (Propostas Ativas)
+        </h2>
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+          <MetricCard
+            title="Valor em Negociação (12x)"
+            value={formatCurrency(financialMetrics.annual)}
+            variance="Anual"
+            icon={TrendingUp}
+            colorClass="bg-emerald-50 text-emerald-600 group-hover:bg-emerald-100"
+            onClick={() => setShowNegotiationModal(true)}
+            tooltip="Cálculo: Soma das mensalidades das propostas ativas × 12 meses. Setup/equipamentos não inclusos."
+          />
+          <MetricCard
+            title="Receita Mensal"
+            value={formatCurrency(financialMetrics.monthly)}
+            variance="Em Negociação"
+            icon={DollarSign}
+            colorClass="bg-blue-50 text-blue-600 group-hover:bg-blue-100"
+          />
+          <MetricCard
+            title="Receita Anual Projetada"
+            value={formatCurrency(financialMetrics.annual)}
+            variance="Projeção"
+            icon={TrendingUp}
+            colorClass="bg-indigo-50 text-indigo-600 group-hover:bg-indigo-100"
+          />
+          <MetricCard
+            title="Setup / Equipamentos"
+            value={formatCurrency(financialMetrics.setupAndEquip)}
+            variance="Taxa Única"
+            icon={Briefcase}
+            colorClass="bg-orange-50 text-orange-600 group-hover:bg-orange-100"
           />
         </div>
 
@@ -698,6 +904,88 @@ export default function Index() {
         open={!!detailsAccountId}
         onOpenChange={(open) => !open && setDetailsAccountId(null)}
       />
+
+      <Dialog
+        open={showNegotiationModal}
+        onOpenChange={setShowNegotiationModal}
+      >
+        <DialogContent className="max-w-4xl max-h-[80vh] flex flex-col">
+          <DialogHeader>
+            <DialogTitle>Detalhamento de Valores em Negociação</DialogTitle>
+            <DialogDescription>
+              Propostas com status "Enviada" ou "Em negociação".
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex-1 overflow-auto custom-scrollbar border rounded-md">
+            <table className="w-full text-sm text-left">
+              <thead className="bg-slate-50 sticky top-0 shadow-sm">
+                <tr className="border-b border-slate-200">
+                  <th className="px-4 py-3 font-semibold text-slate-600">
+                    Número
+                  </th>
+                  <th className="px-4 py-3 font-semibold text-slate-600">
+                    Cliente
+                  </th>
+                  <th className="px-4 py-3 font-semibold text-slate-600 text-right">
+                    Mensalidade
+                  </th>
+                  <th className="px-4 py-3 font-semibold text-slate-600 text-right">
+                    Anual Projetado
+                  </th>
+                  <th className="px-4 py-3 font-semibold text-slate-600 text-right">
+                    Setup/Equip.
+                  </th>
+                  <th className="px-4 py-3 font-semibold text-slate-600 text-center">
+                    Status
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100 bg-white">
+                {activeProposals.length > 0 ? (
+                  activeProposals.map((p: any) => (
+                    <tr
+                      key={p.id}
+                      className="hover:bg-slate-50/50 transition-colors"
+                    >
+                      <td className="px-4 py-3 font-medium text-slate-900">
+                        {p.proposalNumber || '-'}
+                      </td>
+                      <td className="px-4 py-3 text-slate-700">
+                        {p.companyName || '-'}
+                      </td>
+                      <td className="px-4 py-3 text-right text-slate-700">
+                        {formatCurrency(p.totalMonthly || 0)}
+                      </td>
+                      <td className="px-4 py-3 text-right font-black text-emerald-600">
+                        {formatCurrency((p.totalMonthly || 0) * 12)}
+                      </td>
+                      <td className="px-4 py-3 text-right text-slate-700">
+                        {formatCurrency(
+                          (p.totalSetup || 0) + (p.totalEquipment || 0),
+                        )}
+                      </td>
+                      <td className="px-4 py-3 text-center">
+                        <span className="bg-blue-50 text-blue-700 px-2.5 py-1 rounded-md text-[11px] font-bold uppercase tracking-wider inline-block">
+                          {p.status}
+                        </span>
+                      </td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td
+                      colSpan={6}
+                      className="px-4 py-8 text-center text-slate-500 font-medium"
+                    >
+                      Nenhuma proposta em negociação no momento.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
