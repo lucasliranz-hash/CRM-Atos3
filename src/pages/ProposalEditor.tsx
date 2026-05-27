@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react'
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom'
-import useMainStore from '@/stores/main'
+import { supabase } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
@@ -14,9 +14,20 @@ import {
   Download,
   Phone,
   Upload,
+  RefreshCw,
+  Share2,
+  Link as LinkIcon,
+  MessageCircle,
+  Mail,
 } from 'lucide-react'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Switch } from '@/components/ui/switch'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
 import {
   Select,
   SelectContent,
@@ -206,54 +217,66 @@ export default function ProposalEditor() {
   const { id } = useParams()
   const [searchParams] = useSearchParams()
   const navigate = useNavigate()
-  const { accounts, proposals, addProposalToLead, updateProposal } =
-    useMainStore()
   const { toast } = useToast()
 
   const [propData, setPropData] = useState<Proposal | null>(null)
   const [activeTab, setActiveTab] = useState('info')
+  const [isSaving, setIsSaving] = useState(false)
+  const [isGeneratingPdf, setIsGeneratingPdf] = useState(false)
+  const [shareModalOpen, setShareModalOpen] = useState(false)
 
   useEffect(() => {
-    if (id === 'new') {
-      const leadId = searchParams.get('leadId')
-      if (leadId) {
-        const lead = accounts.find((a) => a.id === leadId)
-        if (lead) {
+    async function loadData() {
+      if (id === 'new') {
+        const leadId = searchParams.get('leadId')
+        if (leadId) {
+          const { data: lead } = await supabase
+            .from('accounts')
+            .select('*')
+            .eq('id', leadId)
+            .single()
+          if (lead) {
+            setPropData({
+              id: crypto.randomUUID(),
+              accountId: lead.id,
+              proposalNumber: `PRO-${Math.floor(Math.random() * 10000)}`,
+              status: 'Rascunho',
+              companyName: lead.companyName || lead.name || '',
+              contactName: lead.contactName || '',
+              phone: lead.phone || '',
+              email: lead.email || '',
+              vehicleQuantity: lead.vehicleCount || lead.fleetEstimate || 0,
+              cover: { ...defaultCover },
+              items: [],
+              terms: { ...defaultTerms },
+              travelFee: { ...defaultTravelFee },
+              totalSetup: 0,
+              totalMonthly: 0,
+              totalEquipment: 0,
+              createdAt: new Date().toISOString(),
+              updatedAt: new Date().toISOString(),
+            })
+          }
+        }
+      } else {
+        const { data: existing } = await supabase
+          .from('proposals')
+          .select('*')
+          .eq('id', id)
+          .single()
+        if (existing) {
           setPropData({
-            id: crypto.randomUUID(),
-            accountId: lead.id,
-            proposalNumber: `PRO-${Math.floor(Math.random() * 10000)}`,
-            status: 'Rascunho',
-            companyName: lead.companyName || lead.name || '',
-            contactName: lead.contactName || '',
-            phone: lead.phone || '',
-            email: lead.email || '',
-            vehicleQuantity: lead.vehicleCount || lead.fleetEstimate || 0,
-            cover: { ...defaultCover },
-            items: [],
-            terms: { ...defaultTerms },
-            travelFee: { ...defaultTravelFee },
-            totalSetup: 0,
-            totalMonthly: 0,
-            totalEquipment: 0,
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString(),
+            ...(existing as any),
+            cover: existing.cover || { ...defaultCover },
+            items: existing.items || [],
+            terms: existing.terms || { ...defaultTerms },
+            travelFee: existing.travelFee || { ...defaultTravelFee },
           })
         }
       }
-    } else {
-      const existing = proposals.find((p) => p.id === id)
-      if (existing) {
-        setPropData({
-          ...existing,
-          cover: existing.cover || { ...defaultCover },
-          items: existing.items || [],
-          terms: existing.terms || { ...defaultTerms },
-          travelFee: existing.travelFee || { ...defaultTravelFee },
-        })
-      }
     }
-  }, [id, searchParams, accounts, proposals])
+    loadData()
+  }, [id, searchParams])
 
   const calculatedTotals = useMemo(() => {
     if (!propData) return { setup: 0, monthly: 0, equipment: 0, travel: 0 }
@@ -286,30 +309,131 @@ export default function ProposalEditor() {
     return { setup, monthly, equipment, travel }
   }, [propData?.items, propData?.travelFee])
 
+  const logActivity = async (title: string, description: string = '') => {
+    if (!propData?.accountId) return
+    await supabase.from('activities').insert({
+      accountId: propData.accountId,
+      type: 'Proposta enviada',
+      title,
+      description,
+      date: new Date().toISOString(),
+      channel: 'E-mail',
+      completed: true,
+      status: 'Realizada',
+    })
+  }
+
   const handleSave = async () => {
     if (!propData) return
-    const finalProp = {
-      ...propData,
-      totalSetup: calculatedTotals.setup + calculatedTotals.travel,
-      totalMonthly: calculatedTotals.monthly,
-      totalEquipment: calculatedTotals.equipment,
-      travelFee: propData.travelFee
-        ? {
-            ...propData.travelFee,
-            total: calculatedTotals.travel,
-          }
-        : undefined,
-    }
+    setIsSaving(true)
+    try {
+      const finalProp = {
+        ...propData,
+        totalSetup: calculatedTotals.setup + calculatedTotals.travel,
+        totalMonthly: calculatedTotals.monthly,
+        totalEquipment: calculatedTotals.equipment,
+        value:
+          calculatedTotals.setup +
+          calculatedTotals.travel +
+          calculatedTotals.monthly * 12 +
+          calculatedTotals.equipment,
+        travelFee: propData.travelFee
+          ? {
+              ...propData.travelFee,
+              total: calculatedTotals.travel,
+            }
+          : undefined,
+      }
 
-    if (id === 'new') {
-      const payload = { ...finalProp }
-      delete (payload as any).id
-      const saved = await addProposalToLead(payload)
-      toast({ title: 'Proposta criada com sucesso!' })
-      navigate(`/proposals/${saved.id}`, { replace: true })
-    } else {
-      await updateProposal(finalProp.id, finalProp)
-      toast({ title: 'Proposta salva com sucesso!' })
+      const payload = {
+        accountId: finalProp.accountId,
+        proposalNumber: finalProp.proposalNumber,
+        status: finalProp.status,
+        companyName: finalProp.companyName,
+        contactName: finalProp.contactName,
+        vehicleQuantity: finalProp.vehicleQuantity,
+        totalSetup: finalProp.totalSetup,
+        totalMonthly: finalProp.totalMonthly,
+        totalEquipment: finalProp.totalEquipment,
+        travelFee: finalProp.travelFee,
+        value: finalProp.value,
+        items: finalProp.items,
+        cover: finalProp.cover,
+        terms: finalProp.terms,
+        updatedAt: new Date().toISOString(),
+      }
+
+      if (id === 'new') {
+        const newId = crypto.randomUUID()
+        const { error } = await supabase
+          .from('proposals')
+          .insert({ ...payload, id: newId })
+        if (error) throw error
+        await logActivity(
+          'Proposta criada',
+          `Proposta ${finalProp.proposalNumber} criada no valor de ${formatCurrency(finalProp.value || 0)}`,
+        )
+        toast({ title: 'Proposta salva com sucesso!' })
+        navigate(`/proposals/${newId}`, { replace: true })
+      } else {
+        const { error } = await supabase
+          .from('proposals')
+          .update(payload)
+          .eq('id', id)
+        if (error) throw error
+        await logActivity(
+          'Proposta atualizada',
+          `Proposta ${finalProp.proposalNumber} atualizada.`,
+        )
+        toast({ title: 'Proposta salva com sucesso!' })
+      }
+    } catch (err: any) {
+      toast({
+        title: 'Erro ao salvar proposta',
+        description: err.message,
+        variant: 'destructive',
+      })
+    } finally {
+      setIsSaving(false)
+    }
+  }
+
+  const handlePdfGeneration = async () => {
+    setActiveTab('preview')
+    setIsGeneratingPdf(true)
+    await logActivity(
+      'PDF gerado',
+      `PDF da proposta ${propData?.proposalNumber} gerado.`,
+    )
+    setTimeout(() => {
+      window.print()
+      setIsGeneratingPdf(false)
+    }, 500)
+  }
+
+  const handleShare = async (type: 'link' | 'whatsapp' | 'email') => {
+    const url = `${window.location.origin}/proposals/${propData?.id || id}`
+    if (type === 'link') {
+      navigator.clipboard.writeText(url)
+      toast({ title: 'Link copiado!' })
+      await logActivity(
+        'Proposta compartilhada via Link',
+        `Link gerado e copiado.`,
+      )
+    } else if (type === 'whatsapp') {
+      window.open(
+        `https://wa.me/?text=Olá! Segue o link da nossa proposta: ${url}`,
+      )
+      await logActivity(
+        'Proposta compartilhada via WhatsApp',
+        `Link aberto no WhatsApp.`,
+      )
+    } else if (type === 'email') {
+      window.location.href = `mailto:?subject=Proposta Comercial&body=Olá! Segue o link da nossa proposta: ${url}`
+      await logActivity(
+        'Proposta compartilhada via E-mail',
+        `Rascunho de e-mail aberto.`,
+      )
     }
   }
 
@@ -380,25 +504,6 @@ export default function ProposalEditor() {
     )
   }
 
-  const simulateExport = async (type: 'pdf' | 'whatsapp' | 'email') => {
-    await handleSave()
-    if (type === 'pdf')
-      toast({
-        title: 'PDF gerado com sucesso! (Simulação)',
-        description: 'O download começará em breve.',
-      })
-    if (type === 'whatsapp')
-      toast({
-        title: 'Redirecionando para o WhatsApp...',
-        description: 'Link com a proposta copiado.',
-      })
-    if (type === 'email')
-      toast({
-        title: 'Rascunho de E-mail aberto.',
-        description: 'O anexo foi adicionado ao seu cliente de e-mail.',
-      })
-  }
-
   if (!propData)
     return (
       <div className="p-10 text-center text-slate-500">
@@ -457,25 +562,47 @@ export default function ProposalEditor() {
           <Button
             variant="outline"
             className="font-bold border-slate-200"
-            onClick={() => simulateExport('pdf')}
+            onClick={handlePdfGeneration}
+            disabled={isGeneratingPdf}
           >
-            <Download className="w-4 h-4 mr-2" /> Exportar PDF
+            {isGeneratingPdf ? (
+              <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
+            ) : (
+              <Download className="w-4 h-4 mr-2" />
+            )}
+            {isGeneratingPdf ? 'Gerando...' : 'Gerar PDF'}
           </Button>
           <Button
             variant="outline"
             className="font-bold border-slate-200"
-            onClick={() => simulateExport('whatsapp')}
+            onClick={() => setShareModalOpen(true)}
+            disabled={id === 'new'}
           >
-            <Phone className="w-4 h-4 mr-2 text-green-600" /> Compartilhar
+            <Share2 className="w-4 h-4 mr-2 text-green-600" /> Compartilhar
           </Button>
           <Button
             className="bg-[#FF6A00] hover:bg-[#e65c00] text-white font-bold shadow-sm"
             onClick={handleSave}
+            disabled={isSaving}
           >
-            <Save className="w-4 h-4 mr-2" /> Salvar Proposta
+            {isSaving ? (
+              <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
+            ) : (
+              <Save className="w-4 h-4 mr-2" />
+            )}
+            {isSaving ? 'Salvando...' : 'Salvar Proposta'}
           </Button>
         </div>
       </div>
+
+      <style>{`
+        @media print {
+          body * { visibility: hidden; }
+          .print-area, .print-area * { visibility: visible; }
+          .print-area { position: absolute; left: 0; top: 0; width: 100%; max-width: 100%; border: none !important; box-shadow: none !important; margin: 0; padding: 0; }
+          .no-print { display: none !important; }
+        }
+      `}</style>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <TabsList className="grid grid-cols-5 w-full bg-slate-100/50 p-1 rounded-xl mb-6">
@@ -1082,7 +1209,7 @@ export default function ProposalEditor() {
         </TabsContent>
 
         <TabsContent value="preview" className="space-y-6">
-          <div className="bg-white p-8 md:p-12 border border-slate-200 shadow-md min-h-[800px] w-full mx-auto rounded-xl print:shadow-none print:border-none print:p-0 text-slate-900 relative">
+          <div className="print-area bg-white p-8 md:p-12 border border-slate-200 shadow-md min-h-[800px] w-full mx-auto rounded-xl print:shadow-none print:border-none print:p-0 text-slate-900 relative">
             <div className="flex justify-between items-center mb-10 border-b border-slate-100 pb-6">
               {propData.cover.logoImage || propData.cover.logoUrl ? (
                 <img
@@ -1416,6 +1543,48 @@ export default function ProposalEditor() {
           </div>
         </TabsContent>
       </Tabs>
+
+      <Dialog open={shareModalOpen} onOpenChange={setShareModalOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Compartilhar Proposta</DialogTitle>
+          </DialogHeader>
+          <div className="flex flex-col gap-3 py-4">
+            <Button
+              variant="outline"
+              className="justify-start h-12"
+              onClick={() => handleShare('link')}
+            >
+              <LinkIcon className="w-4 h-4 mr-3 text-slate-500" /> Copiar Link
+            </Button>
+            <Button
+              variant="outline"
+              className="justify-start h-12"
+              onClick={() => handleShare('whatsapp')}
+            >
+              <MessageCircle className="w-4 h-4 mr-3 text-green-500" />{' '}
+              Compartilhar no WhatsApp
+            </Button>
+            <Button
+              variant="outline"
+              className="justify-start h-12"
+              onClick={() => handleShare('email')}
+            >
+              <Mail className="w-4 h-4 mr-3 text-blue-500" /> Enviar por E-mail
+            </Button>
+            <Button
+              variant="outline"
+              className="justify-start h-12"
+              onClick={() => {
+                setShareModalOpen(false)
+                handlePdfGeneration()
+              }}
+            >
+              <Download className="w-4 h-4 mr-3 text-slate-500" /> Baixar PDF
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

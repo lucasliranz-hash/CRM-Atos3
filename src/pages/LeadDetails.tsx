@@ -67,18 +67,31 @@ export default function LeadDetails() {
   const [dbError, setDbError] = useState('')
   const [loading, setLoading] = useState(true)
 
+  const [leadActivities, setLeadActivities] = useState<any[]>([])
+  const [leadProposals, setLeadProposals] = useState<any[]>([])
+
   useEffect(() => {
     async function fetchAccount() {
       if (!id) return
       setLoading(true)
       try {
-        const { data, error } = await supabase
-          .from('accounts')
-          .select('*')
-          .eq('id', id)
-          .single()
-        if (error) throw error
-        setLeadData(data)
+        const [accRes, actsRes, propsRes] = await Promise.all([
+          supabase.from('accounts').select('*').eq('id', id).single(),
+          supabase
+            .from('activities')
+            .select('*')
+            .eq('accountId', id)
+            .order('date', { ascending: false }),
+          supabase
+            .from('proposals')
+            .select('*')
+            .eq('accountId', id)
+            .order('createdAt', { ascending: false }),
+        ])
+        if (accRes.error) throw accRes.error
+        setLeadData(accRes.data)
+        if (actsRes.data) setLeadActivities(actsRes.data)
+        if (propsRes.data) setLeadProposals(propsRes.data)
       } catch (e: any) {
         setDbError(e.message || 'Erro desconhecido')
         console.error(e)
@@ -88,13 +101,6 @@ export default function LeadDetails() {
     }
     fetchAccount()
   }, [id])
-
-  const leadActivities = useMemo(() => {
-    if (!id) return []
-    return activities
-      .filter((a) => a.accountId === id)
-      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
-  }, [activities, id])
 
   if (loading) {
     return (
@@ -191,10 +197,6 @@ export default function LeadDetails() {
       toast({ title: 'Lead marcado como Perdido.' })
     }
   }
-
-  const leadProposals = proposals.filter(
-    (p: any) => p.accountId === leadData.id,
-  )
 
   const leadOrders =
     orders?.filter((o: any) => o.account_id === leadData.id) || []

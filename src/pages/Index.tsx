@@ -1,5 +1,4 @@
 import { useMemo, useState } from 'react'
-import useMainStore from '@/stores/main'
 import { isOverdue, isToday, formatCurrency } from '@/lib/crm-utils'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -10,18 +9,16 @@ import {
   Calendar,
   Briefcase,
   Users,
-  Filter,
   CheckCircle2,
+  RefreshCw,
+  Bug,
+  AlertCircle,
+  FileText,
+  ShoppingCart,
+  TrendingUp,
 } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { cn } from '@/lib/utils'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
 import {
   BarChart,
   Bar,
@@ -36,53 +33,56 @@ import {
 import { ChartContainer, ChartTooltipContent } from '@/components/ui/chart'
 import LeadHistorySheet from '@/components/LeadHistorySheet'
 import { DatabaseDiagnostic } from '@/components/DatabaseDiagnostic'
+import { useDashboardData } from '@/hooks/use-dashboard-data'
 
 export default function Index() {
   const navigate = useNavigate()
-  const {
-    activities,
-    accounts,
-    opportunities,
-    proposals,
-    dateFilter,
-    setDateFilter,
-    setKpiFilter,
-  } = useMainStore() as any
+  const { data, loading, error, getDashboardMetrics } = useDashboardData()
 
   const [detailsAccountId, setDetailsAccountId] = useState<string | null>(null)
+  const [showDebug, setShowDebug] = useState(false)
 
-  const getDashboardMetrics = () => {
-    const totalLeads = accounts.length
-    const newLeadsThisMonth = accounts.filter((a: any) => {
-      const d = new Date(a.createdAt)
-      const now = new Date()
-      return (
-        d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear()
+  const metrics = useMemo(() => {
+    const now = new Date()
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1)
+
+    const totalLeads = data.accounts.length
+    const newLeadsMonth = data.accounts.filter(
+      (a) => new Date(a.createdAt || now) >= startOfMonth,
+    ).length
+
+    const pendingActivities = data.activities.filter(
+      (a) =>
+        a.status === 'Pendente' ||
+        (!a.completed && a.status !== 'Cancelada' && a.status !== 'Realizada'),
+    ).length
+
+    const overdueActivities = data.activities.filter((a) => {
+      if (
+        a.status !== 'Pendente' &&
+        (a.completed || a.status === 'Cancelada' || a.status === 'Realizada')
       )
+        return false
+      const d = new Date(a.date)
+      d.setHours(0, 0, 0, 0)
+      const t = new Date()
+      t.setHours(0, 0, 0, 0)
+      return d < t
     }).length
 
-    const sentProposalsCount = proposals.filter(
-      (p: any) => p.status === 'Enviada' || p.status === 'Aprovada',
-    ).length
-    const pendingActivitiesCount = activities.filter(
-      (a: any) => !a.completed,
-    ).length
-    const scheduledMeetingsCount = activities.filter(
-      (a: any) => a.type.includes('Reunião') && !a.completed,
-    ).length
+    const sentProposals = data.proposals.length
+    const generatedOrders = data.orders.length
 
-    const closedWon = accounts.filter(
-      (a: any) => a.pipelineStage === 'Fechado',
-    ).length
-    const closedLost = accounts.filter(
-      (a: any) => a.pipelineStage === 'Perdido',
+    const closedSales = data.accounts.filter(
+      (a) =>
+        a.pipelineStage === 'Fechado' || a.pipelineStage === 'Fechado Ganho',
     ).length
     const conversionRate =
-      totalLeads > 0 ? ((closedWon / totalLeads) * 100).toFixed(1) : '0.0'
+      totalLeads > 0 ? ((closedSales / totalLeads) * 100).toFixed(1) : '0.0'
 
-    const closedWonTotal = proposals
+    const closedWonTotal = data.proposals
       .filter((p: any) => {
-        const a = accounts.find((acc: any) => acc.id === p.accountId)
+        const a = data.accounts.find((acc: any) => acc.id === p.accountId)
         return a?.pipelineStage === 'Fechado' && p.status === 'Aprovada'
       })
       .reduce((s: number, p: any) => {
@@ -93,23 +93,18 @@ export default function Index() {
 
     return {
       totalLeads,
-      newLeadsThisMonth,
-      sentProposalsCount,
-      pendingActivitiesCount,
-      scheduledMeetingsCount,
-      closedWon,
-      closedLost,
+      newLeadsMonth,
+      pendingActivities,
+      overdueActivities,
+      sentProposals,
+      generatedOrders,
+      closedSales,
       conversionRate,
       closedWonTotal,
     }
-  }
+  }, [data])
 
-  const metrics = useMemo(
-    () => getDashboardMetrics(),
-    [accounts, activities, proposals],
-  )
-
-  const chartData = useMemo(() => {
+  const activityChartData = useMemo(() => {
     const days = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb']
     const now = new Date()
     const start = new Date(now)
@@ -124,56 +119,72 @@ export default function Index() {
         const d2 = new Date(dateStr)
         return d2.getDate() === d.getDate() && d2.getMonth() === d.getMonth()
       }
-      const acts = activities.filter((a: any) => isDay(a.date))
+      const acts = data.activities.filter((a: any) => isDay(a.date))
       return {
         name: day,
         Contatos: acts.filter((a: any) =>
           ['Ligação', 'Mensagem', 'E-mail', 'Follow-up'].includes(a.type),
         ).length,
-        Reuniões: acts.filter((a: any) => a.type.includes('Reunião')).length,
-        Propostas: acts.filter((a: any) => a.type === 'Proposta enviada')
-          .length,
+        Reuniões: acts.filter((a: any) => a.type?.includes('Reunião')).length,
       }
     })
-  }, [activities])
+  }, [data.activities])
 
-  const conversionData = useMemo(() => {
-    return [
-      { name: 'Leads', value: accounts.length || 1, fill: '#3b82f6' },
-      {
-        name: 'Em Conversa',
-        value: accounts.filter((a: any) =>
-          ['Contato realizado', 'Em Conversa', 'Negociação'].includes(
-            a.pipelineStage,
-          ),
-        ).length,
-        fill: '#8b5cf6',
-      },
-      {
-        name: 'Propostas',
-        value: proposals.filter((p: any) => p.status === 'Enviada').length,
-        fill: '#f59e0b',
-      },
-      { name: 'Fechados', value: metrics.closedWon, fill: '#10b981' },
-    ]
-  }, [accounts, metrics])
+  const proposalStatusData = useMemo(() => {
+    const counts = data.proposals.reduce((acc: any, p: any) => {
+      const status = p.status || 'Rascunho'
+      acc[status] = (acc[status] || 0) + 1
+      return acc
+    }, {})
+    const colors: any = {
+      Rascunho: '#94a3b8',
+      Enviada: '#3b82f6',
+      Aprovada: '#10b981',
+      Recusada: '#ef4444',
+    }
+    return Object.keys(counts).map((k) => ({
+      name: k,
+      value: counts[k],
+      fill: colors[k] || '#94a3b8',
+    }))
+  }, [data.proposals])
+
+  const orderStatusData = useMemo(() => {
+    const counts = data.orders.reduce((acc: any, o: any) => {
+      const status = o.status || 'Rascunho'
+      acc[status] = (acc[status] || 0) + 1
+      return acc
+    }, {})
+    const colors: any = {
+      Rascunho: '#94a3b8',
+      'Pedido gerado': '#f59e0b',
+      'Em separação': '#8b5cf6',
+      Entregue: '#10b981',
+      Cancelado: '#ef4444',
+    }
+    return Object.keys(counts).map((k) => ({
+      name: k,
+      value: counts[k],
+      fill: colors[k] || '#94a3b8',
+    }))
+  }, [data.orders])
 
   const tasks = useMemo(() => {
     const t: any[] = []
-    activities.forEach((act: any) => {
+    data.activities.forEach((act: any) => {
       if (!act.completed && (isToday(act.date) || isOverdue(act.date))) {
-        const acc = accounts.find((a: any) => a.id === act.accountId)
+        const acc = data.accounts.find((a: any) => a.id === act.accountId)
         t.push({
           id: `act-${act.id}`,
           text: `${act.type} - ${act.title || act.result || ''}`,
           date: act.date,
-          name: acc?.name || 'Lead',
+          name: acc?.name || acc?.companyName || 'Lead',
           accountId: act.accountId,
           item: act,
         })
       }
     })
-    accounts.forEach((a: any) => {
+    data.accounts.forEach((a: any) => {
       if (
         a.nextAction &&
         a.nextActionDate &&
@@ -195,15 +206,10 @@ export default function Index() {
       (a: any, b: any) =>
         new Date(a.date).getTime() - new Date(b.date).getTime(),
     )
-  }, [activities, accounts])
+  }, [data.activities, data.accounts])
 
   const overdue = tasks.filter((t: any) => isOverdue(t.date))
   const today = tasks.filter((t: any) => isToday(t.date))
-
-  const handleKpiClick = (filterName: string) => {
-    setKpiFilter(filterName)
-    navigate('/pipeline')
-  }
 
   const MetricCard = ({
     title,
@@ -211,20 +217,25 @@ export default function Index() {
     variance,
     icon: Icon,
     colorClass,
-    kpiName,
+    onClick,
   }: any) => (
     <Card
-      className="rounded-[10px] border border-slate-100 shadow-sm bg-white overflow-hidden cursor-pointer hover:shadow-md transition-shadow group"
-      onClick={() => handleKpiClick(kpiName)}
+      className={cn(
+        'rounded-[10px] border border-slate-100 shadow-sm bg-white overflow-hidden cursor-pointer hover:shadow-md transition-all group',
+        loading && 'opacity-60 pointer-events-none',
+      )}
+      onClick={onClick}
     >
       <CardContent className="p-5">
         <div className="flex justify-between items-start mb-4">
           <div className={cn('p-2.5 rounded-xl transition-colors', colorClass)}>
             <Icon className="w-5 h-5" />
           </div>
-          <span className="text-[11px] font-bold text-emerald-600 bg-emerald-50 px-2 py-1 rounded-md border border-emerald-100">
-            {variance}
-          </span>
+          {variance && (
+            <span className="text-[11px] font-bold text-slate-500 bg-slate-50 px-2 py-1 rounded-md border border-slate-100">
+              {variance}
+            </span>
+          )}
         </div>
         <p className="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1">
           {title}
@@ -240,72 +251,208 @@ export default function Index() {
     <div className="flex flex-col lg:flex-row gap-6 pb-10 animate-in fade-in duration-500 min-h-[calc(100vh-6rem)]">
       <div className="flex-1 space-y-6">
         <DatabaseDiagnostic />
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
-            <h1 className="text-3xl font-black text-slate-900 tracking-tight">
+            <h1 className="text-3xl font-black text-slate-900 tracking-tight flex items-center gap-3">
               Visão Estratégica 👋
             </h1>
             <p className="text-slate-500 mt-1 font-medium text-sm">
-              Acompanhe seus resultados e funil em tempo real.
+              Métricas em tempo real atualizadas do Supabase.
             </p>
           </div>
-          <div className="flex gap-3 w-full sm:w-auto">
-            <Select value={dateFilter} onValueChange={setDateFilter as any}>
-              <SelectTrigger className="w-[160px] bg-white h-10 border-slate-200 font-semibold shadow-sm">
-                <Filter className="w-4 h-4 mr-2 text-slate-400" />
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="month">Este Mês</SelectItem>
-                <SelectItem value="year">Este Ano</SelectItem>
-                <SelectItem value="all">Todo Período</SelectItem>
-              </SelectContent>
-            </Select>
+          <div className="flex gap-2 w-full sm:w-auto">
             <Button
-              onClick={() => navigate('/pipeline')}
-              className="bg-[#FF6A00] text-white hover:bg-[#e65c00] rounded-[8px] font-bold h-10 shadow-md hidden sm:flex"
+              variant="outline"
+              size="sm"
+              className={cn(
+                'bg-white border-slate-200 text-slate-500 hover:text-slate-900 font-medium',
+                showDebug && 'bg-slate-100 text-slate-900',
+              )}
+              onClick={() => setShowDebug(!showDebug)}
             >
-              <Target className="w-4 h-4 mr-2" /> Ver Pipeline
+              <Bug className="w-4 h-4 mr-2" />
+              Ver diagnóstico
+            </Button>
+            <Button
+              onClick={getDashboardMetrics}
+              disabled={loading}
+              className="bg-white text-slate-700 border border-slate-200 hover:bg-slate-50 font-bold shadow-sm"
+            >
+              <RefreshCw
+                className={cn('w-4 h-4 mr-2', loading && 'animate-spin')}
+              />
+              Atualizar Dashboard
             </Button>
           </div>
         </div>
 
+        {showDebug && (
+          <div className="bg-slate-900 text-slate-300 p-4 rounded-xl text-sm font-mono relative shadow-inner animate-in fade-in slide-in-from-top-2">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="absolute top-2 right-2 h-6 w-6 text-slate-400 hover:text-white hover:bg-slate-800"
+              onClick={() => setShowDebug(false)}
+            >
+              &times;
+            </Button>
+            <h3 className="font-bold text-white mb-3 flex items-center gap-2">
+              <Bug className="w-4 h-4 text-emerald-400" /> Diagnóstico do
+              Supabase
+            </h3>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+              <div className="bg-slate-800/50 p-3 rounded-lg border border-slate-700">
+                <div className="text-slate-400 text-xs mb-1">Accounts</div>
+                <div className="text-xl font-bold text-white">
+                  {data.accounts.length}
+                </div>
+              </div>
+              <div className="bg-slate-800/50 p-3 rounded-lg border border-slate-700">
+                <div className="text-slate-400 text-xs mb-1">Activities</div>
+                <div className="text-xl font-bold text-white">
+                  {data.activities.length}
+                </div>
+              </div>
+              <div className="bg-slate-800/50 p-3 rounded-lg border border-slate-700">
+                <div className="text-slate-400 text-xs mb-1">Proposals</div>
+                <div className="text-xl font-bold text-white">
+                  {data.proposals.length}
+                </div>
+              </div>
+              <div className="bg-slate-800/50 p-3 rounded-lg border border-slate-700">
+                <div className="text-slate-400 text-xs mb-1">Order Forms</div>
+                <div className="text-xl font-bold text-white">
+                  {data.orders.length}
+                </div>
+              </div>
+            </div>
+            {error && (
+              <div className="mt-4 p-3 bg-red-950/50 border border-red-900 rounded-lg text-red-400 flex items-start gap-2">
+                <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+                <span>{error}</span>
+              </div>
+            )}
+          </div>
+        )}
+
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <MetricCard
-            title="Leads Mapeados"
+            title="Total de Leads"
             value={metrics.totalLeads}
-            variance={`+${metrics.newLeadsThisMonth} mês`}
+            variance="Pipeline"
             icon={Users}
-            colorClass="bg-blue-50 text-blue-600 group-hover:bg-[#FF6A00]/10 group-hover:text-[#FF6A00]"
-            kpiName="leads"
+            colorClass="bg-blue-50 text-blue-600 group-hover:bg-blue-100"
+            onClick={() => navigate('/accounts')}
           />
           <MetricCard
-            title="Ações Pendentes"
-            value={metrics.pendingActivitiesCount}
-            variance="Em Aberto"
+            title="Novos Leads (Mês)"
+            value={metrics.newLeadsMonth}
+            variance="Recentes"
+            icon={Target}
+            colorClass="bg-emerald-50 text-emerald-600 group-hover:bg-emerald-100"
+            onClick={() => navigate('/accounts')}
+          />
+          <MetricCard
+            title="Atividades Pendentes"
+            value={metrics.pendingActivities}
+            variance="Para fazer"
             icon={Phone}
-            colorClass="bg-indigo-50 text-indigo-600 group-hover:bg-[#FF6A00]/10 group-hover:text-[#FF6A00]"
-            kpiName="contatos"
+            colorClass="bg-indigo-50 text-indigo-600 group-hover:bg-indigo-100"
+            onClick={() => navigate('/activities')}
           />
           <MetricCard
-            title="Reuniões Agendadas"
-            value={metrics.scheduledMeetingsCount}
-            variance="Em Aberto"
-            icon={Calendar}
-            colorClass="bg-purple-50 text-purple-600 group-hover:bg-[#FF6A00]/10 group-hover:text-[#FF6A00]"
-            kpiName="reunioes"
+            title="Atividades Atrasadas"
+            value={metrics.overdueActivities}
+            variance="Atenção"
+            icon={AlertCircle}
+            colorClass="bg-red-50 text-red-600 group-hover:bg-red-100"
+            onClick={() => navigate('/activities')}
           />
           <MetricCard
-            title="Taxa de Conversão"
-            value={`${metrics.conversionRate}%`}
-            variance={`${metrics.closedWon} Vendas`}
+            title="Propostas"
+            value={metrics.sentProposals}
+            variance="Total"
+            icon={FileText}
+            colorClass="bg-orange-50 text-orange-600 group-hover:bg-orange-100"
+            onClick={() => navigate('/proposals')}
+          />
+          <MetricCard
+            title="Pedidos"
+            value={metrics.generatedOrders}
+            variance="Total"
+            icon={ShoppingCart}
+            colorClass="bg-purple-50 text-purple-600 group-hover:bg-purple-100"
+            onClick={() => navigate('/orders')}
+          />
+          <MetricCard
+            title="Vendas Fechadas"
+            value={metrics.closedSales}
+            variance="Ganhos"
             icon={Briefcase}
-            colorClass="bg-emerald-50 text-emerald-600 group-hover:bg-[#FF6A00]/10 group-hover:text-[#FF6A00]"
-            kpiName="vendas"
+            colorClass="bg-teal-50 text-teal-600 group-hover:bg-teal-100"
+            onClick={() => navigate('/pipeline?stage=Fechado')}
+          />
+          <MetricCard
+            title="Conversão Geral"
+            value={`${metrics.conversionRate}%`}
+            variance="Performance"
+            icon={TrendingUp}
+            colorClass="bg-sky-50 text-sky-600 group-hover:bg-sky-100"
+            onClick={() => navigate('/pipeline')}
           />
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <Card className="rounded-[10px] shadow-sm border-slate-100 bg-white overflow-hidden">
+            <CardContent className="p-6">
+              <h3 className="font-black text-slate-900 mb-6 flex justify-between items-center">
+                Funil de Vendas Real
+                <span className="text-xs font-bold text-emerald-600 bg-emerald-50 px-2.5 py-1.5 rounded-md border border-emerald-100">
+                  Receita Ganha: {formatCurrency(metrics.closedWonTotal)}
+                </span>
+              </h3>
+              <div className="space-y-3">
+                {[
+                  { label: 'Prospecção', color: 'bg-blue-500' },
+                  { label: 'Contato realizado', color: 'bg-indigo-400' },
+                  { label: 'Reunião agendada', color: 'bg-purple-400' },
+                  { label: 'Proposta enviada', color: 'bg-orange-500' },
+                  { label: 'Negociação', color: 'bg-pink-400' },
+                  { label: 'Fechado', color: 'bg-emerald-500' },
+                ].map((stage) => {
+                  const count = data.accounts.filter((a) => {
+                    const st = a.pipelineStage || 'Prospecção'
+                    return st === stage.label
+                  }).length
+                  const maxCount = Math.max(data.accounts.length, 1)
+                  const width = Math.max((count / maxCount) * 100, 4)
+                  return (
+                    <div
+                      key={stage.label}
+                      className="flex items-center gap-4 group"
+                    >
+                      <div className="w-32 text-xs font-bold text-slate-600 text-right group-hover:text-slate-900 transition-colors">
+                        {stage.label}
+                      </div>
+                      <div className="flex-1 flex items-center gap-3">
+                        <div
+                          className={cn(
+                            'h-7 rounded-r-md transition-all duration-1000 ease-out',
+                            stage.color,
+                          )}
+                          style={{ width: `${width}%` }}
+                        />
+                        <span className="text-sm font-black text-slate-900">
+                          {count}
+                        </span>
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            </CardContent>
+          </Card>
+
           <Card className="rounded-[10px] shadow-sm border-slate-100 bg-white">
             <CardContent className="p-6">
               <h3 className="font-black text-slate-900 mb-6">
@@ -313,7 +460,7 @@ export default function Index() {
               </h3>
               <ChartContainer config={{}} className="h-[240px] w-full">
                 <BarChart
-                  data={chartData}
+                  data={activityChartData}
                   margin={{ top: 0, right: 0, left: -20, bottom: 0 }}
                 >
                   <CartesianGrid
@@ -341,19 +488,13 @@ export default function Index() {
                     dataKey="Contatos"
                     fill="#3b82f6"
                     radius={[4, 4, 0, 0]}
-                    barSize={12}
+                    barSize={16}
                   />
                   <Bar
                     dataKey="Reuniões"
                     fill="#8b5cf6"
                     radius={[4, 4, 0, 0]}
-                    barSize={12}
-                  />
-                  <Bar
-                    dataKey="Propostas"
-                    fill="#f59e0b"
-                    radius={[4, 4, 0, 0]}
-                    barSize={12}
+                    barSize={16}
                   />
                 </BarChart>
               </ChartContainer>
@@ -361,134 +502,125 @@ export default function Index() {
           </Card>
 
           <Card className="rounded-[10px] shadow-sm border-slate-100 bg-white">
-            <CardContent className="p-6 flex flex-col">
-              <h3 className="font-black text-slate-900 mb-6">
-                Eficiência do Funil
+            <CardContent className="p-6 flex flex-col h-full">
+              <h3 className="font-black text-slate-900 mb-2">
+                Status das Propostas
               </h3>
               <div className="flex items-center justify-center flex-1">
-                <ChartContainer
-                  config={{}}
-                  className="h-[200px] w-[200px] shrink-0"
-                >
-                  <PieChart>
-                    <Pie
-                      data={conversionData}
-                      cx="50%"
-                      cy="50%"
-                      innerRadius={60}
-                      outerRadius={80}
-                      paddingAngle={5}
-                      dataKey="value"
+                {proposalStatusData.length > 0 ? (
+                  <>
+                    <ChartContainer
+                      config={{}}
+                      className="h-[180px] w-[180px] shrink-0"
                     >
-                      {conversionData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.fill} />
+                      <PieChart>
+                        <Pie
+                          data={proposalStatusData}
+                          cx="50%"
+                          cy="50%"
+                          innerRadius={50}
+                          outerRadius={70}
+                          paddingAngle={5}
+                          dataKey="value"
+                        >
+                          {proposalStatusData.map((entry, index) => (
+                            <Cell key={`cell-${index}`} fill={entry.fill} />
+                          ))}
+                        </Pie>
+                        <Tooltip content={<ChartTooltipContent />} />
+                      </PieChart>
+                    </ChartContainer>
+                    <div className="ml-6 space-y-2 w-full max-w-[140px]">
+                      {proposalStatusData.map((item) => (
+                        <div
+                          key={item.name}
+                          className="flex items-center justify-between"
+                        >
+                          <div className="flex items-center gap-2">
+                            <div
+                              className="w-3 h-3 rounded-full shrink-0"
+                              style={{ backgroundColor: item.fill }}
+                            />
+                            <span className="text-xs font-medium text-slate-600">
+                              {item.name}
+                            </span>
+                          </div>
+                          <span className="text-xs font-bold text-slate-900">
+                            {item.value}
+                          </span>
+                        </div>
                       ))}
-                    </Pie>
-                    <Tooltip content={<ChartTooltipContent />} />
-                  </PieChart>
-                </ChartContainer>
-                <div className="ml-6 space-y-3 w-full max-w-[140px]">
-                  {conversionData.map((item) => (
-                    <div key={item.name} className="flex items-center gap-2">
-                      <div
-                        className="w-3 h-3 rounded-full shrink-0"
-                        style={{ backgroundColor: item.fill }}
-                      />
-                      <span className="text-sm font-medium text-slate-600">
-                        {item.name}
-                      </span>
-                      <span className="text-sm font-bold text-slate-900 ml-auto">
-                        {item.value}
-                      </span>
                     </div>
-                  ))}
-                </div>
+                  </>
+                ) : (
+                  <div className="text-sm text-slate-400 font-medium my-auto text-center w-full">
+                    Nenhuma proposta registrada
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="rounded-[10px] shadow-sm border-slate-100 bg-white">
+            <CardContent className="p-6 flex flex-col h-full">
+              <h3 className="font-black text-slate-900 mb-2">
+                Status dos Pedidos
+              </h3>
+              <div className="flex items-center justify-center flex-1">
+                {orderStatusData.length > 0 ? (
+                  <>
+                    <ChartContainer
+                      config={{}}
+                      className="h-[180px] w-[180px] shrink-0"
+                    >
+                      <PieChart>
+                        <Pie
+                          data={orderStatusData}
+                          cx="50%"
+                          cy="50%"
+                          innerRadius={50}
+                          outerRadius={70}
+                          paddingAngle={5}
+                          dataKey="value"
+                        >
+                          {orderStatusData.map((entry, index) => (
+                            <Cell key={`cell-${index}`} fill={entry.fill} />
+                          ))}
+                        </Pie>
+                        <Tooltip content={<ChartTooltipContent />} />
+                      </PieChart>
+                    </ChartContainer>
+                    <div className="ml-6 space-y-2 w-full max-w-[140px]">
+                      {orderStatusData.map((item) => (
+                        <div
+                          key={item.name}
+                          className="flex items-center justify-between"
+                        >
+                          <div className="flex items-center gap-2">
+                            <div
+                              className="w-3 h-3 rounded-full shrink-0"
+                              style={{ backgroundColor: item.fill }}
+                            />
+                            <span className="text-xs font-medium text-slate-600 line-clamp-1">
+                              {item.name}
+                            </span>
+                          </div>
+                          <span className="text-xs font-bold text-slate-900">
+                            {item.value}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </>
+                ) : (
+                  <div className="text-sm text-slate-400 font-medium my-auto text-center w-full">
+                    Nenhum pedido gerado
+                  </div>
+                )}
               </div>
             </CardContent>
           </Card>
         </div>
-
-        <Card className="rounded-[10px] shadow-sm border-slate-100 bg-white overflow-hidden">
-          <CardContent className="p-6">
-            <h3 className="font-black text-slate-900 mb-6 flex justify-between items-center">
-              Funil de Vendas
-              <span className="text-xs font-bold text-emerald-600 bg-emerald-50 px-2.5 py-1.5 rounded-md border border-emerald-100">
-                Receita Estimada: {formatCurrency(metrics.closedWonTotal)}
-              </span>
-            </h3>
-            <div className="space-y-3">
-              {[
-                {
-                  label: 'Prospecção',
-                  count: accounts.filter(
-                    (a: any) => a.pipelineStage === 'Prospecção',
-                  ).length,
-                  color: 'bg-blue-500',
-                },
-                {
-                  label: 'Contato realizado',
-                  count: accounts.filter(
-                    (a: any) => a.pipelineStage === 'Contato realizado',
-                  ).length,
-                  color: 'bg-indigo-400',
-                },
-                {
-                  label: 'Reunião agendada',
-                  count: accounts.filter(
-                    (a: any) => a.pipelineStage === 'Reunião agendada',
-                  ).length,
-                  color: 'bg-purple-400',
-                },
-                {
-                  label: 'Proposta enviada',
-                  count: accounts.filter(
-                    (a: any) => a.pipelineStage === 'Proposta enviada',
-                  ).length,
-                  color: 'bg-orange-500',
-                },
-                {
-                  label: 'Negociação',
-                  count: accounts.filter(
-                    (a: any) => a.pipelineStage === 'Negociação',
-                  ).length,
-                  color: 'bg-pink-400',
-                },
-                {
-                  label: 'Fechado',
-                  count: accounts.filter(
-                    (a: any) => a.pipelineStage === 'Fechado',
-                  ).length,
-                  color: 'bg-emerald-500',
-                },
-              ].map((stage) => {
-                const maxCount = Math.max(accounts.length, 1)
-                const width = Math.max((stage.count / maxCount) * 100, 4)
-                return (
-                  <div
-                    key={stage.label}
-                    className="flex items-center gap-4 group"
-                  >
-                    <div className="w-32 text-xs font-bold text-slate-600 text-right group-hover:text-slate-900 transition-colors">
-                      {stage.label}
-                    </div>
-                    <div className="flex-1 flex items-center gap-3">
-                      <div
-                        className={cn(
-                          'h-7 rounded-r-md transition-all duration-1000 ease-out',
-                          stage.color,
-                        )}
-                        style={{ width: `${width}%` }}
-                      />
-                      <span className="text-sm font-black text-slate-900">
-                        {stage.count}
-                      </span>
-                    </div>
-                  </div>
-                )
-              })}
-            </div>
-          </CardContent>
-        </Card>
       </div>
 
       <div className="w-full lg:w-[340px] shrink-0">
@@ -496,10 +628,11 @@ export default function Index() {
           <div className="p-5 border-b border-slate-100 shrink-0">
             <h2 className="text-lg font-black text-[#0D1B2A] flex items-center gap-2">
               <CheckCircle2 className="w-5 h-5 text-[#FF6A00]" /> Minhas Ações
-              Hoje
             </h2>
             <p className="text-xs font-medium text-slate-500 mt-1">
-              {today.length + overdue.length} tarefas pendentes
+              {loading
+                ? 'Carregando ações...'
+                : `${today.length + overdue.length} tarefas pendentes`}
             </p>
           </div>
 
@@ -530,7 +663,7 @@ export default function Index() {
                   {today.length}
                 </span>
               </h4>
-              {today.length === 0 ? (
+              {!loading && today.length === 0 ? (
                 <div className="text-xs font-medium text-slate-400 p-4 border border-dashed border-slate-200 rounded-lg text-center">
                   Tudo limpo para hoje!
                 </div>
@@ -559,7 +692,9 @@ export default function Index() {
       </div>
 
       <LeadHistorySheet
-        account={accounts.find((a: any) => a.id === detailsAccountId) || null}
+        account={
+          data.accounts.find((a: any) => a.id === detailsAccountId) || null
+        }
         open={!!detailsAccountId}
         onOpenChange={(open) => !open && setDetailsAccountId(null)}
       />
