@@ -39,6 +39,27 @@
   }
 }
 
+@media print {
+  @page {
+    size: A4;
+    margin: 0;
+  }
+  body {
+    margin: 0;
+  }
+  .no-print {
+    display: none !important;
+  }
+}
+
+@layer components {
+  .proposal-preview {
+    width: 210mm;
+    min-height: 297mm;
+    background-color: white;
+  }
+}
+
 @layer utilities {
   .custom-scrollbar::-webkit-scrollbar {
     width: 6px;

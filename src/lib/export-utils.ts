@@ -1,3 +1,6 @@
+import html2canvas from 'html2canvas'
+import { jsPDF } from 'jspdf'
+
 export const exportExcelReport = (tables: any) => {
   let html =
     '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40"><head><meta charset="utf-8"></head><body>'
@@ -106,4 +109,58 @@ export const generatePDFReport = async (
   logoUrl: string | null,
 ) => {
   window.print()
+}
+
+export const generateProposalPDF = async (
+  elementId: string,
+  filename: string,
+) => {
+  const element = document.getElementById(elementId)
+  if (!element) return
+
+  try {
+    const noPrintElements = element.querySelectorAll('.no-print')
+    noPrintElements.forEach((el) => {
+      ;(el as HTMLElement).style.setProperty('display', 'none', 'important')
+    })
+
+    const canvas = await html2canvas(element, {
+      scale: 2,
+      useCORS: true,
+      logging: false,
+    })
+
+    noPrintElements.forEach((el) => {
+      ;(el as HTMLElement).style.removeProperty('display')
+    })
+
+    const imgData = canvas.toDataURL('image/jpeg', 1.0)
+    const pdf = new jsPDF({
+      orientation: 'portrait',
+      unit: 'mm',
+      format: 'a4',
+    })
+
+    const pdfWidth = pdf.internal.pageSize.getWidth()
+    const pdfHeight = pdf.internal.pageSize.getHeight()
+    const imgHeight = (canvas.height * pdfWidth) / canvas.width
+
+    let heightLeft = imgHeight
+    let position = 0
+
+    pdf.addImage(imgData, 'JPEG', 0, position, pdfWidth, imgHeight)
+    heightLeft -= pdfHeight
+
+    while (heightLeft > 0) {
+      position = heightLeft - imgHeight
+      pdf.addPage()
+      pdf.addImage(imgData, 'JPEG', 0, position, pdfWidth, imgHeight)
+      heightLeft -= pdfHeight
+    }
+
+    pdf.save(filename)
+  } catch (error) {
+    console.error('Error generating PDF:', error)
+    throw error
+  }
 }

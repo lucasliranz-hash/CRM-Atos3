@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from 'react'
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom'
 import { supabase } from '@/lib/supabase/client'
+import { generateProposalPDF } from '@/lib/export-utils'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
@@ -401,14 +402,32 @@ export default function ProposalEditor() {
   const handlePdfGeneration = async () => {
     setActiveTab('preview')
     setIsGeneratingPdf(true)
-    await logActivity(
-      'PDF gerado',
-      `PDF da proposta ${propData?.proposalNumber} gerado.`,
-    )
-    setTimeout(() => {
-      window.print()
+
+    try {
+      await logActivity(
+        'PDF gerado',
+        `PDF da proposta ${propData?.proposalNumber} gerado.`,
+      )
+
+      setTimeout(async () => {
+        try {
+          const fileName =
+            `Proposta_${propData?.companyName || 'Cliente'}_${propData?.proposalNumber || 'Novo'}.pdf`.replace(
+              /\s+/g,
+              '_',
+            )
+          await generateProposalPDF('proposal-pdf-content', fileName)
+          toast({ title: 'PDF gerado com sucesso!' })
+        } catch (e) {
+          toast({ title: 'Erro ao gerar PDF', variant: 'destructive' })
+        } finally {
+          setIsGeneratingPdf(false)
+        }
+      }, 800)
+    } catch (err) {
       setIsGeneratingPdf(false)
-    }, 500)
+      toast({ title: 'Erro ao preparar PDF', variant: 'destructive' })
+    }
   }
 
   const handleShare = async (type: 'link' | 'whatsapp' | 'email') => {
@@ -594,15 +613,6 @@ export default function ProposalEditor() {
           </Button>
         </div>
       </div>
-
-      <style>{`
-        @media print {
-          body * { visibility: hidden; }
-          .print-area, .print-area * { visibility: visible; }
-          .print-area { position: absolute; left: 0; top: 0; width: 100%; max-width: 100%; border: none !important; box-shadow: none !important; margin: 0; padding: 0; }
-          .no-print { display: none !important; }
-        }
-      `}</style>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <TabsList className="grid grid-cols-5 w-full bg-slate-100/50 p-1 rounded-xl mb-6">
@@ -1208,8 +1218,14 @@ export default function ProposalEditor() {
           </div>
         </TabsContent>
 
-        <TabsContent value="preview" className="space-y-6">
-          <div className="print-area bg-white p-8 md:p-12 border border-slate-200 shadow-md min-h-[800px] w-full mx-auto rounded-xl print:shadow-none print:border-none print:p-0 text-slate-900 relative">
+        <TabsContent
+          value="preview"
+          className="space-y-6 overflow-x-auto custom-scrollbar flex justify-center pb-8"
+        >
+          <div
+            id="proposal-pdf-content"
+            className="proposal-preview print-area bg-white p-8 md:p-12 border border-slate-200 shadow-md mx-auto rounded-xl print:shadow-none print:border-none print:p-0 text-slate-900 relative shrink-0"
+          >
             <div className="flex justify-between items-center mb-10 border-b border-slate-100 pb-6">
               {propData.cover.logoImage || propData.cover.logoUrl ? (
                 <img
