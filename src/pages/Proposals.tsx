@@ -1,6 +1,6 @@
-import { useState, useMemo } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
-import useMainStore from '@/stores/main'
+import { supabase } from '@/lib/supabase/client'
 import { Plus, Search, FileText, Trash2, Edit2, Copy } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -17,12 +17,23 @@ import { Card, CardContent } from '@/components/ui/card'
 import { useToast } from '@/hooks/use-toast'
 
 export default function Proposals() {
-  const { proposals, deleteProposal, addProposalToLead } = useMainStore()
   const navigate = useNavigate()
   const { toast } = useToast()
 
+  const [proposals, setProposals] = useState<any[]>([])
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState('all')
+
+  useEffect(() => {
+    async function fetchProposals() {
+      const { data } = await supabase
+        .from('proposals')
+        .select('*')
+        .order('createdAt', { ascending: false })
+      if (data) setProposals(data)
+    }
+    fetchProposals()
+  }, [])
 
   const filteredProposals = useMemo(() => {
     let list = proposals
@@ -67,13 +78,22 @@ export default function Proposals() {
       travelFee: prop.travelFee ? { ...prop.travelFee } : undefined,
     }
     delete dup.id
-    await addProposalToLead(dup)
-    toast({ title: 'Proposta duplicada com sucesso!' })
+    const newId = crypto.randomUUID()
+    const { error } = await supabase
+      .from('proposals')
+      .insert({ ...dup, id: newId })
+    if (!error) {
+      setProposals([{ ...dup, id: newId }, ...proposals])
+      toast({ title: 'Proposta duplicada com sucesso!' })
+    } else {
+      toast({ title: 'Erro ao duplicar', variant: 'destructive' })
+    }
   }
 
   const handleDelete = async (id: string) => {
     if (window.confirm('Tem certeza que deseja excluir esta proposta?')) {
-      await deleteProposal(id)
+      await supabase.from('proposals').delete().eq('id', id)
+      setProposals(proposals.filter((p) => p.id !== id))
       toast({ title: 'Proposta excluída.' })
     }
   }
