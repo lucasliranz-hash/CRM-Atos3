@@ -43,7 +43,7 @@ import {
   DialogDescription,
 } from '@/components/ui/dialog'
 import {
-  Tooltip,
+  Tooltip as UITooltip,
   TooltipContent,
   TooltipTrigger,
 } from '@/components/ui/tooltip'
@@ -54,7 +54,6 @@ export default function Index() {
 
   const [detailsAccountId, setDetailsAccountId] = useState<string | null>(null)
   const [showDebug, setShowDebug] = useState(false)
-  const [showNegotiationModal, setShowNegotiationModal] = useState(false)
   const [showNegotiationModal, setShowNegotiationModal] = useState(false)
 
   const activeProposals = useMemo(() => {
@@ -299,7 +298,7 @@ export default function Index() {
         </div>
 
         {tooltip ? (
-          <Tooltip>
+          <UITooltip>
             <TooltipTrigger asChild>
               <p
                 className="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1 cursor-help border-b border-dashed border-slate-300 w-fit"
@@ -311,7 +310,7 @@ export default function Index() {
             <TooltipContent className="max-w-[250px] text-center" side="top">
               <p>{tooltip}</p>
             </TooltipContent>
-          </Tooltip>
+          </UITooltip>
         ) : (
           <p className="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1">
             {title}
@@ -422,7 +421,7 @@ export default function Index() {
             onClick={() => setShowNegotiationModal(true)}
           >
             <CardContent className="p-5">
-              <Tooltip>
+              <UITooltip>
                 <TooltipTrigger asChild>
                   <div className="w-full text-left outline-none">
                     <div className="flex justify-between items-start mb-4">
@@ -448,7 +447,7 @@ export default function Index() {
                     meses. Setup/equipamentos não inclusos.
                   </p>
                 </TooltipContent>
-              </Tooltip>
+              </UITooltip>
             </CardContent>
           </Card>
 
