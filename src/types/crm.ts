@@ -163,7 +163,14 @@ export interface Opportunity {
   user_id?: string
 }
 
-export type ProposalStatus = 'Rascunho' | 'Enviada' | 'Aprovada' | 'Recusada'
+export type ProposalStatus =
+  | 'Rascunho'
+  | 'Enviada'
+  | 'Em negociação'
+  | 'Aprovada'
+  | 'Recusada'
+  | 'Cancelada'
+  | 'Perdida'
 
 export type ProposalItemBillingType =
   | 'Único'

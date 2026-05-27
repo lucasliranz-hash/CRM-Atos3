@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '@/lib/supabase/client'
-import { Plus, Search, FileText, Trash2, Edit2, Copy } from 'lucide-react'
+import { Plus, Search, FileText, Trash2, Edit2, Copy, Info } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { formatCurrency } from '@/lib/crm-utils'
@@ -15,6 +15,19 @@ import {
 } from '@/components/ui/select'
 import { Card, CardContent } from '@/components/ui/card'
 import { useToast } from '@/hooks/use-toast'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/components/ui/tooltip'
 
 export default function Proposals() {
   const navigate = useNavigate()
@@ -23,14 +36,18 @@ export default function Proposals() {
   const [proposals, setProposals] = useState<any[]>([])
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState('all')
+  const [loading, setLoading] = useState(true)
+  const [isModalOpen, setIsModalOpen] = useState(false)
 
   useEffect(() => {
     async function fetchProposals() {
+      setLoading(true)
       const { data } = await supabase
         .from('proposals')
         .select('*')
         .order('createdAt', { ascending: false })
       if (data) setProposals(data)
+      setLoading(false)
     }
     fetchProposals()
   }, [])
@@ -55,18 +72,18 @@ export default function Proposals() {
     )
   }, [proposals, search, statusFilter])
 
-  const totalInNegotiation = useMemo(() => {
-    return proposals
-      .filter((p) => p.status === 'Enviada')
-      .reduce(
-        (acc, p) =>
-          acc +
-          (p.totalSetup || 0) +
-          (p.totalEquipment || 0) +
-          (p.totalMonthly * 12 || 0),
-        0,
-      )
+  const negotiationStatuses = ['Enviada', 'Em negociação']
+
+  const proposalsInNegotiation = useMemo(() => {
+    return proposals.filter((p) => negotiationStatuses.includes(p.status))
   }, [proposals])
+
+  const totalInNegotiation = useMemo(() => {
+    return proposalsInNegotiation.reduce(
+      (acc, p) => acc + (p.totalMonthly || 0) * 12,
+      0,
+    )
+  }, [proposalsInNegotiation])
 
   const handleDuplicate = async (prop: any) => {
     const dup = {
@@ -110,14 +127,112 @@ export default function Proposals() {
           </p>
         </div>
         <div className="flex gap-4">
-          <div className="flex flex-col text-right mr-4">
-            <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">
-              Valor em Negociação (12x)
-            </span>
-            <span className="text-2xl font-black text-[#FF6A00]">
-              {formatCurrency(totalInNegotiation)}
-            </span>
-          </div>
+          <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <DialogTrigger asChild>
+                  <button className="flex flex-col items-end text-right mr-4 cursor-pointer outline-none group hover:opacity-80 transition-opacity">
+                    <span className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center justify-end gap-1">
+                      Valor em Negociação (12x){' '}
+                      <Info className="w-3 h-3 text-slate-300 group-hover:text-slate-500" />
+                    </span>
+                    {loading ? (
+                      <div className="h-8 w-32 bg-slate-200 animate-pulse rounded mt-1"></div>
+                    ) : (
+                      <span className="text-2xl font-black text-[#FF6A00]">
+                        {formatCurrency(totalInNegotiation)}
+                      </span>
+                    )}
+                  </button>
+                </DialogTrigger>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>
+                  Cálculo: Soma das mensalidades das propostas ativas × 12
+                  meses. Setup/equipamentos não inclusos.
+                </p>
+              </TooltipContent>
+            </Tooltip>
+
+            <DialogContent className="max-w-3xl">
+              <DialogHeader>
+                <DialogTitle>Detalhamento: Valor em Negociação</DialogTitle>
+                <DialogDescription>
+                  Listagem das propostas ativas (
+                  {negotiationStatuses.join(', ')}) consideradas no cálculo de
+                  ARR (Receita Recorrente Anual).
+                </DialogDescription>
+              </DialogHeader>
+              <div className="max-h-[60vh] overflow-y-auto mt-4 rounded-md border border-slate-200">
+                <table className="w-full text-sm text-left">
+                  <thead className="bg-slate-50 sticky top-0 border-b border-slate-200 text-xs font-bold text-slate-500 uppercase">
+                    <tr>
+                      <th className="px-4 py-3">Nº / Cliente</th>
+                      <th className="px-4 py-3">Status</th>
+                      <th className="px-4 py-3 text-right">
+                        Setup/Equip (Ignorado)
+                      </th>
+                      <th className="px-4 py-3 text-right">Mensalidade</th>
+                      <th className="px-4 py-3 text-right">Anual (ARR)</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    {proposalsInNegotiation.length === 0 ? (
+                      <tr>
+                        <td
+                          colSpan={5}
+                          className="px-4 py-8 text-center text-slate-500"
+                        >
+                          Nenhuma proposta em negociação no momento.
+                        </td>
+                      </tr>
+                    ) : (
+                      proposalsInNegotiation.map((p) => (
+                        <tr key={p.id} className="hover:bg-slate-50/50">
+                          <td className="px-4 py-3">
+                            <div className="font-bold text-slate-900">
+                              {p.proposalNumber || 'PRO-000'}
+                            </div>
+                            <div className="text-xs text-slate-500">
+                              {p.companyName}
+                            </div>
+                          </td>
+                          <td className="px-4 py-3">
+                            <span className="text-[11px] font-bold px-2.5 py-1 rounded-md border bg-orange-50 text-orange-600 border-orange-100">
+                              {p.status}
+                            </span>
+                          </td>
+                          <td className="px-4 py-3 text-right text-slate-400 line-through decoration-slate-300">
+                            {formatCurrency(
+                              (p.totalSetup || 0) + (p.totalEquipment || 0),
+                            )}
+                          </td>
+                          <td className="px-4 py-3 text-right font-medium text-slate-700">
+                            {formatCurrency(p.totalMonthly || 0)}
+                          </td>
+                          <td className="px-4 py-3 text-right font-bold text-[#FF6A00]">
+                            {formatCurrency((p.totalMonthly || 0) * 12)}
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                  {proposalsInNegotiation.length > 0 && (
+                    <tfoot className="bg-slate-50 font-bold sticky bottom-0 border-t border-slate-200 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
+                      <tr>
+                        <td colSpan={4} className="px-4 py-3 text-right">
+                          Total ARR em Negociação:
+                        </td>
+                        <td className="px-4 py-3 text-right text-[#FF6A00]">
+                          {formatCurrency(totalInNegotiation)}
+                        </td>
+                      </tr>
+                    </tfoot>
+                  )}
+                </table>
+              </div>
+            </DialogContent>
+          </Dialog>
         </div>
       </div>
 
@@ -139,8 +254,11 @@ export default function Proposals() {
             <SelectItem value="all">Todos os Status</SelectItem>
             <SelectItem value="Rascunho">Rascunho</SelectItem>
             <SelectItem value="Enviada">Enviada</SelectItem>
+            <SelectItem value="Em negociação">Em negociação</SelectItem>
             <SelectItem value="Aprovada">Aprovada</SelectItem>
             <SelectItem value="Recusada">Recusada</SelectItem>
+            <SelectItem value="Cancelada">Cancelada</SelectItem>
+            <SelectItem value="Perdida">Perdida</SelectItem>
           </SelectContent>
         </Select>
       </div>
@@ -148,14 +266,20 @@ export default function Proposals() {
       {filteredProposals.length === 0 ? (
         <Card className="border-dashed border-2 shadow-none border-slate-200 bg-slate-50">
           <CardContent className="flex flex-col items-center justify-center py-20 text-center">
-            <FileText className="w-12 h-12 text-slate-300 mb-4" />
-            <h3 className="text-lg font-bold text-slate-700">
-              Nenhuma proposta encontrada
-            </h3>
-            <p className="text-sm text-slate-500 max-w-sm mt-1 mb-6">
-              Você ainda não tem propostas com os filtros selecionados ou ainda
-              não criou nenhuma.
-            </p>
+            {loading ? (
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#FF6A00] mb-4"></div>
+            ) : (
+              <>
+                <FileText className="w-12 h-12 text-slate-300 mb-4" />
+                <h3 className="text-lg font-bold text-slate-700">
+                  Nenhuma proposta encontrada
+                </h3>
+                <p className="text-sm text-slate-500 max-w-sm mt-1 mb-6">
+                  Você ainda não tem propostas com os filtros selecionados ou
+                  ainda não criou nenhuma.
+                </p>
+              </>
+            )}
           </CardContent>
         </Card>
       ) : (
@@ -198,11 +322,13 @@ export default function Proposals() {
                       <span
                         className={cn(
                           'text-[11px] font-bold px-2.5 py-1 rounded-md border',
-                          p.status === 'Enviada'
+                          p.status === 'Enviada' || p.status === 'Em negociação'
                             ? 'bg-orange-50 text-orange-600 border-orange-100'
                             : p.status === 'Aprovada'
                               ? 'bg-emerald-50 text-emerald-600 border-emerald-100'
-                              : p.status === 'Recusada'
+                              : p.status === 'Recusada' ||
+                                  p.status === 'Cancelada' ||
+                                  p.status === 'Perdida'
                                 ? 'bg-red-50 text-red-600 border-red-100'
                                 : 'bg-slate-100 text-slate-600 border-slate-200',
                         )}
