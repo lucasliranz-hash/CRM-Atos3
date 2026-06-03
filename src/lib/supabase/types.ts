@@ -27,7 +27,9 @@ export type Database = {
           contactRole: string | null
           createdAt: string | null
           detailedSource: string | null
+          district: string | null
           email: string | null
+          fleet_notes: string | null
           fleetEstimate: number | null
           fleetModel: string | null
           fleetPotential: string | null
@@ -47,6 +49,7 @@ export type Database = {
           nextActionStatus: string | null
           nextActionTime: string | null
           notes: string | null
+          number: string | null
           phone: string | null
           pipelineStage: string | null
           priority: string
@@ -60,6 +63,7 @@ export type Database = {
           vehicleCount: number | null
           website: string | null
           whatsapp: string | null
+          zip_code: string | null
         }
         Insert: {
           accountPotential?: string | null
@@ -72,7 +76,9 @@ export type Database = {
           contactRole?: string | null
           createdAt?: string | null
           detailedSource?: string | null
+          district?: string | null
           email?: string | null
+          fleet_notes?: string | null
           fleetEstimate?: number | null
           fleetModel?: string | null
           fleetPotential?: string | null
@@ -92,6 +98,7 @@ export type Database = {
           nextActionStatus?: string | null
           nextActionTime?: string | null
           notes?: string | null
+          number?: string | null
           phone?: string | null
           pipelineStage?: string | null
           priority: string
@@ -105,6 +112,7 @@ export type Database = {
           vehicleCount?: number | null
           website?: string | null
           whatsapp?: string | null
+          zip_code?: string | null
         }
         Update: {
           accountPotential?: string | null
@@ -117,7 +125,9 @@ export type Database = {
           contactRole?: string | null
           createdAt?: string | null
           detailedSource?: string | null
+          district?: string | null
           email?: string | null
+          fleet_notes?: string | null
           fleetEstimate?: number | null
           fleetModel?: string | null
           fleetPotential?: string | null
@@ -137,6 +147,7 @@ export type Database = {
           nextActionStatus?: string | null
           nextActionTime?: string | null
           notes?: string | null
+          number?: string | null
           phone?: string | null
           pipelineStage?: string | null
           priority?: string
@@ -150,6 +161,7 @@ export type Database = {
           vehicleCount?: number | null
           website?: string | null
           whatsapp?: string | null
+          zip_code?: string | null
         }
         Relationships: [
           {
@@ -1141,6 +1153,10 @@ export const Constants = {
 //   nextActionTime: time without time zone (nullable)
 //   nextActionNotes: text (nullable)
 //   nextActionStatus: text (nullable)
+//   number: text (nullable)
+//   district: text (nullable)
+//   zip_code: text (nullable)
+//   fleet_notes: text (nullable)
 // Table: activities
 //   id: uuid (not null, default: gen_random_uuid())
 //   accountId: uuid (nullable)

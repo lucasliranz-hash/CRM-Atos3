@@ -54,7 +54,6 @@ export default function LeadDetails() {
   } = useMainStore() as any
   const { toast } = useToast()
 
-  const [isEditing, setIsEditing] = useState(false)
   const [leadData, setLeadData] = useState<any>(null)
   const [isProposalOpen, setIsProposalOpen] = useState(false)
 
@@ -145,12 +144,6 @@ export default function LeadDetails() {
     )
   }
 
-  const handleSave = async () => {
-    await updateAccount(leadData.id, leadData)
-    setIsEditing(false)
-    toast({ title: 'Lead atualizado com sucesso!' })
-  }
-
   const handleDelete = async () => {
     if (
       window.confirm(
@@ -161,13 +154,6 @@ export default function LeadDetails() {
       toast({ title: 'Lead excluído com sucesso!' })
       navigate('/pipeline')
     }
-  }
-
-  const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
-  ) => {
-    const { name, value } = e.target
-    setLeadData((prev: any) => ({ ...prev, [name]: value }))
   }
 
   const openInteraction = (channel: string, type: string) => {
@@ -227,31 +213,19 @@ export default function LeadDetails() {
           <ArrowLeft className="w-4 h-4 mr-2" /> Voltar ao Pipeline
         </Button>
         <div className="flex items-center gap-3">
-          {isEditing ? (
-            <Button
-              onClick={handleSave}
-              className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold"
-            >
-              <Save className="w-4 h-4 mr-2" /> Salvar
-            </Button>
-          ) : (
-            <>
-              <Button
-                onClick={() => setIsEditing(true)}
-                variant="outline"
-                className="font-bold border-slate-200"
-              >
-                <Edit2 className="w-4 h-4 mr-2" /> Editar Lead
-              </Button>
-              <Button
-                onClick={handleDelete}
-                variant="ghost"
-                className="font-bold text-red-500 hover:text-red-700 hover:bg-red-50"
-              >
-                <Trash2 className="w-4 h-4 mr-2" /> Excluir
-              </Button>
-            </>
-          )}
+          <Button
+            onClick={() => setFullEditModalOpen(true)}
+            className="font-bold bg-slate-900 text-white hover:bg-slate-800 shadow-sm"
+          >
+            <Edit2 className="w-4 h-4 mr-2" /> Editar Lead
+          </Button>
+          <Button
+            onClick={handleDelete}
+            variant="ghost"
+            className="font-bold text-red-500 hover:text-red-700 hover:bg-red-50"
+          >
+            <Trash2 className="w-4 h-4 mr-2" /> Excluir
+          </Button>
         </div>
       </div>
 
@@ -298,7 +272,15 @@ export default function LeadDetails() {
         </div>
       </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+        <Button
+          onClick={() => setFullEditModalOpen(true)}
+          variant="outline"
+          className="h-auto py-3 flex flex-col items-center gap-2 border-slate-200 hover:bg-slate-100 hover:text-slate-900 transition-all shadow-sm"
+        >
+          <Edit2 className="w-5 h-5" />
+          <span className="font-bold text-xs">Editar Lead</span>
+        </Button>
         <Button
           onClick={() => openInteraction('Telefone', 'Ligação')}
           variant="outline"
@@ -537,115 +519,49 @@ export default function LeadDetails() {
                 <label className="text-[10px] font-bold text-slate-500 uppercase">
                   Empresa
                 </label>
-                {isEditing ? (
-                  <Input
-                    name="name"
-                    value={leadData.name || ''}
-                    onChange={handleChange}
-                    className="h-8 text-sm"
-                  />
-                ) : (
-                  <div className="text-sm font-semibold text-slate-900">
-                    {leadData.name}
-                  </div>
-                )}
+                <div className="text-sm font-semibold text-slate-900">
+                  {leadData.name}
+                </div>
               </div>
               <div className="space-y-1">
                 <label className="text-[10px] font-bold text-slate-500 uppercase">
                   Contato
                 </label>
-                {isEditing ? (
-                  <Input
-                    name="contactName"
-                    value={leadData.contactName || ''}
-                    onChange={handleChange}
-                    className="h-8 text-sm"
-                  />
-                ) : (
-                  <div className="text-sm font-medium text-slate-800">
-                    {leadData.contactName || '-'}
-                  </div>
-                )}
+                <div className="text-sm font-medium text-slate-800">
+                  {leadData.contactName || '-'}
+                </div>
               </div>
               <div className="space-y-1">
                 <label className="text-[10px] font-bold text-slate-500 uppercase">
                   Telefone
                 </label>
-                {isEditing ? (
-                  <Input
-                    name="phone"
-                    value={leadData.phone || ''}
-                    onChange={handleChange}
-                    className="h-8 text-sm"
-                  />
-                ) : (
-                  <div className="text-sm font-medium text-slate-800">
-                    {leadData.phone || '-'}
-                  </div>
-                )}
+                <div className="text-sm font-medium text-slate-800">
+                  {leadData.phone || '-'}
+                </div>
               </div>
               <div className="space-y-1">
                 <label className="text-[10px] font-bold text-slate-500 uppercase">
                   E-mail
                 </label>
-                {isEditing ? (
-                  <Input
-                    name="email"
-                    value={leadData.email || ''}
-                    onChange={handleChange}
-                    className="h-8 text-sm"
-                  />
-                ) : (
-                  <div className="text-sm font-medium text-slate-800 break-all">
-                    {leadData.email || '-'}
-                  </div>
-                )}
+                <div className="text-sm font-medium text-slate-800 break-all">
+                  {leadData.email || '-'}
+                </div>
               </div>
               <div className="space-y-1">
                 <label className="text-[10px] font-bold text-slate-500 uppercase">
                   Localização
                 </label>
-                {isEditing ? (
-                  <div className="flex gap-2">
-                    <Input
-                      name="city"
-                      value={leadData.city || ''}
-                      onChange={handleChange}
-                      className="h-8 text-sm w-2/3"
-                      placeholder="Cidade"
-                    />
-                    <Input
-                      name="state"
-                      value={leadData.state || ''}
-                      onChange={handleChange}
-                      className="h-8 text-sm w-1/3"
-                      placeholder="UF"
-                    />
-                  </div>
-                ) : (
-                  <div className="text-sm font-medium text-slate-800">
-                    {leadData.city
-                      ? `${leadData.city} - ${leadData.state}`
-                      : '-'}
-                  </div>
-                )}
+                <div className="text-sm font-medium text-slate-800">
+                  {leadData.city ? `${leadData.city} - ${leadData.state}` : '-'}
+                </div>
               </div>
               <div className="space-y-1">
                 <label className="text-[10px] font-bold text-slate-500 uppercase">
                   Observações
                 </label>
-                {isEditing ? (
-                  <Textarea
-                    name="notes"
-                    value={leadData.notes || ''}
-                    onChange={handleChange}
-                    className="h-20 text-sm resize-none"
-                  />
-                ) : (
-                  <div className="text-sm text-slate-600 bg-slate-50 p-2 rounded-md border border-slate-100 whitespace-pre-wrap min-h-[3rem]">
-                    {leadData.notes || '-'}
-                  </div>
-                )}
+                <div className="text-sm text-slate-600 bg-slate-50 p-2 rounded-md border border-slate-100 whitespace-pre-wrap min-h-[3rem]">
+                  {leadData.notes || '-'}
+                </div>
               </div>
             </div>
 
