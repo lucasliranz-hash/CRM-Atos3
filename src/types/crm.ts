@@ -44,6 +44,10 @@ export interface Account {
   lastTouchDate?: string
   cadenceStage?: string
   lossReason?: string
+  number?: string
+  district?: string
+  zip_code?: string
+  fleet_notes?: string
   loja_id?: string
   createdAt: string
   updatedAt: string

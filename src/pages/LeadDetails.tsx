@@ -35,6 +35,7 @@ import { formatCurrency, isOverdue } from '@/lib/crm-utils'
 import { cn } from '@/lib/utils'
 import LeadInteractionForm from '@/components/LeadInteractionForm'
 import { ManualActionModal } from '@/components/ManualActionModal'
+import { LeadEditModal } from '@/components/LeadEditModal'
 import { format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import { supabase } from '@/lib/supabase/client'
@@ -57,6 +58,7 @@ export default function LeadDetails() {
   const [leadData, setLeadData] = useState<any>(null)
   const [isProposalOpen, setIsProposalOpen] = useState(false)
 
+  const [fullEditModalOpen, setFullEditModalOpen] = useState(false)
   const [interactionModalOpen, setInteractionModalOpen] = useState(false)
   const [manualActionOpen, setManualActionOpen] = useState(false)
   const [interactionDefaults, setInteractionDefaults] = useState<{
@@ -70,35 +72,36 @@ export default function LeadDetails() {
   const [leadActivities, setLeadActivities] = useState<any[]>([])
   const [leadProposals, setLeadProposals] = useState<any[]>([])
 
-  useEffect(() => {
-    async function fetchAccount() {
-      if (!id) return
-      setLoading(true)
-      try {
-        const [accRes, actsRes, propsRes] = await Promise.all([
-          supabase.from('accounts').select('*').eq('id', id).single(),
-          supabase
-            .from('activities')
-            .select('*')
-            .eq('accountId', id)
-            .order('date', { ascending: false }),
-          supabase
-            .from('proposals')
-            .select('*')
-            .eq('accountId', id)
-            .order('createdAt', { ascending: false }),
-        ])
-        if (accRes.error) throw accRes.error
-        setLeadData(accRes.data)
-        if (actsRes.data) setLeadActivities(actsRes.data)
-        if (propsRes.data) setLeadProposals(propsRes.data)
-      } catch (e: any) {
-        setDbError(e.message || 'Erro desconhecido')
-        console.error(e)
-      } finally {
-        setLoading(false)
-      }
+  async function fetchAccount() {
+    if (!id) return
+    setLoading(true)
+    try {
+      const [accRes, actsRes, propsRes] = await Promise.all([
+        supabase.from('accounts').select('*').eq('id', id).single(),
+        supabase
+          .from('activities')
+          .select('*')
+          .eq('accountId', id)
+          .order('date', { ascending: false }),
+        supabase
+          .from('proposals')
+          .select('*')
+          .eq('accountId', id)
+          .order('createdAt', { ascending: false }),
+      ])
+      if (accRes.error) throw accRes.error
+      setLeadData(accRes.data)
+      if (actsRes.data) setLeadActivities(actsRes.data)
+      if (propsRes.data) setLeadProposals(propsRes.data)
+    } catch (e: any) {
+      setDbError(e.message || 'Erro desconhecido')
+      console.error(e)
+    } finally {
+      setLoading(false)
     }
+  }
+
+  useEffect(() => {
     fetchAccount()
   }, [id])
 
@@ -516,9 +519,19 @@ export default function LeadDetails() {
 
         <div className="space-y-6">
           <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
-            <h3 className="font-black text-slate-900 mb-4 flex items-center gap-2">
-              <Briefcase className="w-4 h-4 text-slate-400" /> Informações
-            </h3>
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="font-black text-slate-900 flex items-center gap-2">
+                <Briefcase className="w-4 h-4 text-slate-400" /> Informações
+              </h3>
+              <Button
+                onClick={() => setFullEditModalOpen(true)}
+                variant="outline"
+                size="sm"
+                className="h-7 text-[10px] font-bold px-2 bg-white"
+              >
+                <Edit2 className="w-3 h-3 mr-1" /> Editar Lead Completo
+              </Button>
+            </div>
             <div className="space-y-4">
               <div className="space-y-1">
                 <label className="text-[10px] font-bold text-slate-500 uppercase">
@@ -769,6 +782,15 @@ export default function LeadDetails() {
         accountId={leadData.id}
         onSuccess={() => window.location.reload()}
       />
+
+      {fullEditModalOpen && (
+        <LeadEditModal
+          open={fullEditModalOpen}
+          onOpenChange={setFullEditModalOpen}
+          accountId={leadData.id}
+          onSuccess={() => fetchAccount()}
+        />
+      )}
 
       <Dialog
         open={interactionModalOpen}

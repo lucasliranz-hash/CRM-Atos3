@@ -18,30 +18,40 @@ export type Database = {
       accounts: {
         Row: {
           accountPotential: string | null
+          address: string | null
           cadenceStage: string | null
           city: string | null
+          cnpj: string | null
           companyName: string | null
           contactName: string | null
+          contactRole: string | null
           createdAt: string | null
           detailedSource: string | null
           email: string | null
           fleetEstimate: number | null
           fleetModel: string | null
+          fleetPotential: string | null
           icpFit: string | null
           id: string
           interestLevel: string | null
           lastTouchDate: string | null
           leadSource: string | null
+          leadTemperature: string | null
           loja_id: string | null
           lossReason: string | null
+          mainInterest: string | null
           name: string
           nextAction: string | null
           nextActionDate: string | null
+          nextActionNotes: string | null
+          nextActionStatus: string | null
+          nextActionTime: string | null
           notes: string | null
           phone: string | null
           pipelineStage: string | null
           priority: string
           segment: string | null
+          solutionInterest: string | null
           source: string | null
           state: string | null
           status: string
@@ -49,33 +59,44 @@ export type Database = {
           user_id: string | null
           vehicleCount: number | null
           website: string | null
+          whatsapp: string | null
         }
         Insert: {
           accountPotential?: string | null
+          address?: string | null
           cadenceStage?: string | null
           city?: string | null
+          cnpj?: string | null
           companyName?: string | null
           contactName?: string | null
+          contactRole?: string | null
           createdAt?: string | null
           detailedSource?: string | null
           email?: string | null
           fleetEstimate?: number | null
           fleetModel?: string | null
+          fleetPotential?: string | null
           icpFit?: string | null
           id?: string
           interestLevel?: string | null
           lastTouchDate?: string | null
           leadSource?: string | null
+          leadTemperature?: string | null
           loja_id?: string | null
           lossReason?: string | null
+          mainInterest?: string | null
           name: string
           nextAction?: string | null
           nextActionDate?: string | null
+          nextActionNotes?: string | null
+          nextActionStatus?: string | null
+          nextActionTime?: string | null
           notes?: string | null
           phone?: string | null
           pipelineStage?: string | null
           priority: string
           segment?: string | null
+          solutionInterest?: string | null
           source?: string | null
           state?: string | null
           status: string
@@ -83,33 +104,44 @@ export type Database = {
           user_id?: string | null
           vehicleCount?: number | null
           website?: string | null
+          whatsapp?: string | null
         }
         Update: {
           accountPotential?: string | null
+          address?: string | null
           cadenceStage?: string | null
           city?: string | null
+          cnpj?: string | null
           companyName?: string | null
           contactName?: string | null
+          contactRole?: string | null
           createdAt?: string | null
           detailedSource?: string | null
           email?: string | null
           fleetEstimate?: number | null
           fleetModel?: string | null
+          fleetPotential?: string | null
           icpFit?: string | null
           id?: string
           interestLevel?: string | null
           lastTouchDate?: string | null
           leadSource?: string | null
+          leadTemperature?: string | null
           loja_id?: string | null
           lossReason?: string | null
+          mainInterest?: string | null
           name?: string
           nextAction?: string | null
           nextActionDate?: string | null
+          nextActionNotes?: string | null
+          nextActionStatus?: string | null
+          nextActionTime?: string | null
           notes?: string | null
           phone?: string | null
           pipelineStage?: string | null
           priority?: string
           segment?: string | null
+          solutionInterest?: string | null
           source?: string | null
           state?: string | null
           status?: string
@@ -117,6 +149,7 @@ export type Database = {
           user_id?: string | null
           vehicleCount?: number | null
           website?: string | null
+          whatsapp?: string | null
         }
         Relationships: [
           {
@@ -1097,6 +1130,17 @@ export const Constants = {
 //   source: text (nullable)
 //   notes: text (nullable)
 //   user_id: uuid (nullable)
+//   cnpj: text (nullable)
+//   contactRole: text (nullable)
+//   whatsapp: text (nullable)
+//   address: text (nullable)
+//   fleetPotential: text (nullable)
+//   mainInterest: text (nullable)
+//   solutionInterest: text (nullable)
+//   leadTemperature: text (nullable)
+//   nextActionTime: time without time zone (nullable)
+//   nextActionNotes: text (nullable)
+//   nextActionStatus: text (nullable)
 // Table: activities
 //   id: uuid (not null, default: gen_random_uuid())
 //   accountId: uuid (nullable)
