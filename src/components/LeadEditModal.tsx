@@ -126,6 +126,15 @@ export function LeadEditModal({
       payload.nextActionStatus = 'Concluída'
     }
 
+    if (payload.pipelineStage === 'Fechado' && payload.status !== 'Perdido') {
+      payload.status = 'Ganho'
+      payload.nextActionStatus = 'Concluída'
+    }
+
+    if (payload.pipelineStage === 'Perdido') {
+      payload.status = 'Perdido'
+    }
+
     const { error } = await supabase
       .from('accounts')
       .update(payload)

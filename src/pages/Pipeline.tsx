@@ -86,8 +86,11 @@ export default function Pipeline() {
     try {
       setLoading(true)
       setErrorMsg('')
-      // 1. No Pipeline, buscar todos os registros diretamente do banco sem filtros de user_id ou limits
-      const { data, error } = await supabase.from('accounts').select('*')
+      // 1. No Pipeline, buscar apenas contas que não são "Ganho" (clientes fechados)
+      const { data, error } = await supabase
+        .from('accounts')
+        .select('*')
+        .neq('status', 'Ganho')
 
       if (error) {
         throw error

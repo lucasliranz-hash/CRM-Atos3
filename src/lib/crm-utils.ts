@@ -45,7 +45,13 @@ export function getStatusColor(status: string) {
 export function isGanhoOrCustomer(account: any): boolean {
   if (!account) return false
   const status = (account.status || '').toLowerCase().trim()
-  return status === 'ganho' || status === 'cliente' || status === 'customer'
+  const pipelineStage = (account.pipelineStage || '').toLowerCase().trim()
+  return (
+    status === 'ganho' ||
+    status === 'cliente' ||
+    status === 'customer' ||
+    (status === 'fechado' && pipelineStage === 'fechado')
+  )
 }
 
 export function parseCurrencyInput(

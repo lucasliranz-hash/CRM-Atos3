@@ -208,7 +208,7 @@ export function FocusModals({ modalState, onClose, onSuccess }: any) {
           resPipe === 'Perdido'
             ? 'Perdido'
             : resPipe === 'Fechado'
-              ? 'Fechado'
+              ? 'Ganho'
               : 'Em andamento',
         ...(resSched
           ? {

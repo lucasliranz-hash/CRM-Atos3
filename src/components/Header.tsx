@@ -84,7 +84,8 @@ export function Header() {
           .from('accounts')
           .select('id, name, nextAction, nextActionDate, nextActionStatus')
           .not('nextAction', 'is', null)
-          .neq('nextActionStatus', 'Concluída'),
+          .neq('nextActionStatus', 'Concluída')
+          .neq('status', 'Ganho'),
       ])
 
       let allNotifs = notifRes.data || []
@@ -146,6 +147,7 @@ export function Header() {
           .from('accounts')
           .select('id, status')
           .in('id', accIds)
+          .neq('status', 'Ganho')
 
         const ganhoIds = new Set(
           (accs || []).filter((a) => isGanhoOrCustomer(a)).map((a) => a.id),

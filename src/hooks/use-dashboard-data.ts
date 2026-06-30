@@ -42,6 +42,23 @@ export function useDashboardData() {
         supabase.from('monthly_goals').select('*'),
       ])
 
+      const ganhoAccountIds = new Set(
+        (accounts || [])
+          .filter((a: any) => {
+            const status = (a.status || '').toLowerCase().trim()
+            return (
+              status === 'ganho' ||
+              status === 'cliente' ||
+              status === 'customer'
+            )
+          })
+          .map((a: any) => a.id),
+      )
+
+      const filteredActivities = (activities || []).filter(
+        (a: any) => !ganhoAccountIds.has(a.accountId),
+      )
+
       if (accErr) throw accErr
       if (actErr) throw actErr
       if (propErr) throw propErr
@@ -51,7 +68,7 @@ export function useDashboardData() {
 
       setData({
         accounts: accounts || [],
-        activities: activities || [],
+        activities: filteredActivities,
         proposals: proposals || [],
         orders: orders || [],
         opportunities: opportunities || [],
