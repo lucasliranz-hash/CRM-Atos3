@@ -48,12 +48,6 @@ export function isGanhoOrCustomer(account: any): boolean {
   return status === 'ganho' || status === 'cliente' || status === 'customer'
 }
 
-export function isGanhoOrCustomer(account: any): boolean {
-  if (!account) return false
-  const status = (account.status || '').toLowerCase().trim()
-  return status === 'ganho' || status === 'cliente' || status === 'customer'
-}
-
 export function parseCurrencyInput(
   value: string | number | null | undefined,
 ): number {
