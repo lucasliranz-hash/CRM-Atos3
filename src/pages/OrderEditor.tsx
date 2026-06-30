@@ -8,6 +8,7 @@ import {
   Printer,
   Download,
   Building2,
+  RefreshCw,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
@@ -17,7 +18,7 @@ import { OrderForm, OrderFormItem } from '@/types/crm'
 import { OrderCustomerForm } from '@/components/orders/OrderCustomerForm'
 import { OrderItemsTable } from '@/components/orders/OrderItemsTable'
 import { OrderPreview } from '@/components/orders/OrderPreview'
-import { exportOrderExcel } from '@/lib/export-utils'
+import { exportOrderExcel, generateProposalPDF } from '@/lib/export-utils'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import useMainStore from '@/stores/main'
@@ -40,6 +41,7 @@ export default function OrderEditor() {
   const [items, setItems] = useState<Partial<OrderFormItem>[]>([])
   const [loading, setLoading] = useState(false)
   const [showPreview, setShowPreview] = useState(showPreviewParam)
+  const [isGeneratingPdf, setIsGeneratingPdf] = useState(false)
   const [companySettings, setCompanySettings] = useState<any>(null)
   const [loadingSettings, setLoadingSettings] = useState(true)
   const { profile } = useAuth()
@@ -169,6 +171,20 @@ export default function OrderEditor() {
     setLoading(false)
   }
 
+  const handleGeneratePdf = async () => {
+    setIsGeneratingPdf(true)
+    try {
+      await generateProposalPDF(
+        'order-pdf-content',
+        `Pedido_${order.order_number || 'Novo'}.pdf`,
+      )
+      toast({ title: 'PDF gerado com sucesso!' })
+    } catch (e) {
+      toast({ title: 'Erro ao gerar PDF', variant: 'destructive' })
+    }
+    setIsGeneratingPdf(false)
+  }
+
   if (!loadingSettings && (!companySettings || !companySettings.company_name)) {
     return (
       <div className="p-8 max-w-2xl mx-auto mt-20">
@@ -218,7 +234,19 @@ export default function OrderEditor() {
           {showPreview && (
             <>
               <Button variant="outline" onClick={() => window.print()}>
-                <Printer className="w-4 h-4 mr-2" /> Imprimir / PDF
+                <Printer className="w-4 h-4 mr-2" /> Imprimir
+              </Button>
+              <Button
+                variant="outline"
+                onClick={handleGeneratePdf}
+                disabled={isGeneratingPdf}
+              >
+                {isGeneratingPdf ? (
+                  <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
+                ) : (
+                  <FileText className="w-4 h-4 mr-2" />
+                )}
+                {isGeneratingPdf ? 'Gerando...' : 'PDF'}
               </Button>
               <Button
                 variant="outline"

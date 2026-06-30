@@ -23,6 +23,7 @@ export const OrderPreview = forwardRef<HTMLDivElement, Props>(
     return (
       <div
         ref={ref}
+        id="order-pdf-content"
         className="bg-white p-8 max-w-[800px] mx-auto text-sm print:p-0 print:shadow-none shadow-sm border border-slate-200 print:border-none print:max-w-none print:w-full"
       >
         <div className="flex justify-between items-start mb-8 pb-6 border-b border-slate-200">
