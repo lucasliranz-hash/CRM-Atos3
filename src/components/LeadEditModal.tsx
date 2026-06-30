@@ -116,6 +116,11 @@ export function LeadEditModal({
       payload.vehicleCount = parseInt(payload.vehicleCount, 10) || 0
     }
 
+    // If nextAction changed, reset status
+    if (payload.nextAction && formData.nextActionStatus === 'Concluída') {
+      payload.nextActionStatus = null
+    }
+
     const { error } = await supabase
       .from('accounts')
       .update(payload)
@@ -133,6 +138,7 @@ export function LeadEditModal({
       await fetchData()
       onSuccess?.()
       onOpenChange(false)
+      window.dispatchEvent(new Event('lead_updated'))
     }
   }
 
@@ -255,7 +261,7 @@ export function LeadEditModal({
                         Status
                       </label>
                       <Select
-                        value={formData.status || ''}
+                        value={formData.status || 'Novo Lead'}
                         onValueChange={(v) => handleSelect('status', v)}
                       >
                         <SelectTrigger>
@@ -281,7 +287,7 @@ export function LeadEditModal({
                         Etapa do Pipeline
                       </label>
                       <Select
-                        value={formData.pipelineStage || ''}
+                        value={formData.pipelineStage || 'Prospecção'}
                         onValueChange={(v) => handleSelect('pipelineStage', v)}
                       >
                         <SelectTrigger>

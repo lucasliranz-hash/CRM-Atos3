@@ -1,10 +1,20 @@
 import { useState, useMemo, useEffect } from 'react'
 import useMainStore from '@/stores/main'
-import { Search, Phone, Trash2, RefreshCw } from 'lucide-react'
+import {
+  Search,
+  Phone,
+  Trash2,
+  RefreshCw,
+  AlertCircle,
+  Clock as ClockIcon,
+  Target,
+} from 'lucide-react'
+import { isOverdue, isToday } from '@/lib/crm-utils'
 import { Input } from '@/components/ui/input'
 import { cn } from '@/lib/utils'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '@/lib/supabase/client'
+import { exportLeadsToExcel } from '@/lib/export-utils'
 import {
   Select,
   SelectContent,
@@ -93,11 +103,15 @@ export default function Pipeline() {
   useEffect(() => {
     fetchAccounts()
 
-    const handleLeadAdded = () => {
+    const handleEvent = () => {
       fetchAccounts()
     }
-    window.addEventListener('lead_added', handleLeadAdded)
-    return () => window.removeEventListener('lead_added', handleLeadAdded)
+    window.addEventListener('lead_added', handleEvent)
+    window.addEventListener('lead_updated', handleEvent)
+    return () => {
+      window.removeEventListener('lead_added', handleEvent)
+      window.removeEventListener('lead_updated', handleEvent)
+    }
   }, [])
 
   // Processa as regras de exibição e fallback
@@ -178,6 +192,7 @@ export default function Pipeline() {
           .update({ pipelineStage: stage })
           .eq('id', leadId)
       }
+      window.dispatchEvent(new Event('lead_updated'))
     }
   }
 
@@ -204,6 +219,15 @@ export default function Pipeline() {
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-4 w-full xl:w-auto">
+          <Button
+            onClick={() => exportLeadsToExcel(filteredLeads)}
+            variant="outline"
+            size="sm"
+            className="h-10 border-slate-200 text-green-600 hover:text-green-700 hover:bg-green-50 font-bold"
+          >
+            Exportar Leads Excel
+          </Button>
+
           <Button
             onClick={fetchAccounts}
             variant="outline"
@@ -308,30 +332,104 @@ function KanbanCard({ lead, onClick, onDragStart, onDelete }: any) {
   const dateObj = new Date(dateStr)
   const dateText = dateObj.toLocaleDateString('pt-BR')
 
+  const isOverdueTask = isOverdue(
+    lead.nextActionDate,
+    lead.nextActionStatus === 'Concluída',
+  )
+  const isTodayTask = isToday(
+    lead.nextActionDate,
+    lead.nextActionStatus === 'Concluída',
+  )
+  const d = lead.nextActionDate ? new Date(lead.nextActionDate) : null
+  const t = new Date()
+  if (d) d.setHours(0, 0, 0, 0)
+  t.setHours(0, 0, 0, 0)
+  const hasFutureTask = !isOverdueTask && !isTodayTask && d && d > t
+
+  let cardClass = 'bg-white border-slate-200'
+  let badge = null
+
+  if (isOverdueTask) {
+    cardClass = 'bg-red-50/50 border-red-300 shadow-sm shadow-red-100'
+    badge = (
+      <span className="bg-red-100 text-red-700 px-1.5 py-0.5 rounded text-[10px] font-bold uppercase flex items-center gap-1">
+        <AlertCircle className="w-3 h-3" /> Atrasada
+      </span>
+    )
+  } else if (isTodayTask) {
+    cardClass = 'bg-orange-50/50 border-orange-300 shadow-sm shadow-orange-100'
+    badge = (
+      <span className="bg-orange-100 text-orange-700 px-1.5 py-0.5 rounded text-[10px] font-bold uppercase flex items-center gap-1">
+        <ClockIcon className="w-3 h-3" /> Ação hoje
+      </span>
+    )
+  } else if (hasFutureTask) {
+    badge = (
+      <span className="bg-blue-50 text-blue-700 px-1.5 py-0.5 rounded text-[10px] font-bold uppercase">
+        Próxima:{' '}
+        {d?.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })}
+      </span>
+    )
+  } else {
+    badge = (
+      <span className="bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded text-[10px] font-bold uppercase">
+        Sem ação
+      </span>
+    )
+  }
+
   return (
     <div
       draggable
       onDragStart={(e) => onDragStart(e, lead.id)}
       onClick={onClick}
-      className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm hover:shadow-md transition-all cursor-grab active:cursor-grabbing flex flex-col gap-3 group relative overflow-hidden"
+      className={cn(
+        'p-4 rounded-xl border shadow-sm hover:shadow-md transition-all cursor-grab active:cursor-grabbing flex flex-col gap-3 group relative overflow-hidden',
+        cardClass,
+      )}
     >
-      <div>
-        <h4 className="font-bold text-[14px] text-[#0D1B2A] leading-snug group-hover:text-[#FF6A00] transition-colors">
-          {lead.companyName || lead.name || 'Sem nome'}
-        </h4>
-        <p className="text-[13px] text-slate-600 mt-1">
-          {lead.contactName || 'Sem contato'}
-        </p>
+      <div className="flex justify-between items-start gap-2">
+        <div>
+          <h4 className="font-bold text-[14px] text-[#0D1B2A] leading-snug group-hover:text-[#FF6A00] transition-colors line-clamp-1">
+            {lead.companyName || lead.name || 'Sem nome'}
+          </h4>
+          <p className="text-[13px] text-slate-600 mt-1 line-clamp-1">
+            {lead.contactName || 'Sem contato'}
+          </p>
+        </div>
+        <div className="shrink-0">{badge}</div>
       </div>
+
       <div className="flex items-center justify-between mt-1 text-[12px] text-slate-500">
         <div className="flex items-center gap-1">
           <Phone className="w-3.5 h-3.5" /> {lead.phone || '-'}
         </div>
-        <div className="font-semibold text-slate-700 bg-slate-100 px-2 py-0.5 rounded">
+        <div className="font-semibold text-slate-700 bg-white/60 px-2 py-0.5 rounded border border-slate-100">
           Frota: {lead.vehicleCount ?? lead.fleetEstimate ?? 0}
         </div>
       </div>
-      <div className="pt-2 mt-1 border-t border-slate-100 flex justify-between items-center gap-2">
+
+      {(lead.nextAction || lead.nextActionTime) &&
+        lead.nextActionStatus !== 'Concluída' && (
+          <div className="bg-white/60 p-2 rounded-lg border border-slate-100/50 text-xs">
+            <div className="font-bold text-slate-700 flex items-center gap-1">
+              <Target className="w-3 h-3" />{' '}
+              {lead.nextAction || 'Ação Pendente'}
+              {lead.nextActionTime && (
+                <span className="text-slate-500 ml-auto font-medium">
+                  {lead.nextActionTime}
+                </span>
+              )}
+            </div>
+            {lead.nextActionNotes && (
+              <p className="text-[10px] text-slate-500 mt-1 line-clamp-2">
+                {lead.nextActionNotes}
+              </p>
+            )}
+          </div>
+        )}
+
+      <div className="pt-2 mt-1 border-t border-slate-200/50 flex justify-between items-center gap-2">
         <span className="text-[10px] font-bold px-1.5 py-0.5 bg-slate-100 text-slate-600 rounded whitespace-nowrap overflow-hidden text-ellipsis">
           {lead.status || 'Novo Lead'}
         </span>

@@ -1,5 +1,44 @@
 import html2canvas from 'html2canvas'
 import { jsPDF } from 'jspdf'
+import * as XLSX from 'xlsx'
+
+export const exportLeadsToExcel = (leads: any[]) => {
+  const data = leads.map((lead) => ({
+    Empresa: lead.companyName || lead.name || '',
+    CNPJ: lead.cnpj || '',
+    Contato: lead.contactName || '',
+    Telefone: lead.phone || '',
+    WhatsApp: lead.whatsapp || '',
+    'E-mail': lead.email || '',
+    Cidade: lead.city || '',
+    Estado: lead.state || '',
+    Segmento: lead.segment || '',
+    'Quantidade de veículos': lead.vehicleCount ?? lead.fleetEstimate ?? 0,
+    'Origem do lead': lead.leadSource || lead.source || '',
+    'Etapa do pipeline': lead.pipelineStage || '',
+    Status: lead.status || '',
+    'Próxima ação': lead.nextAction || '',
+    'Data próxima ação': lead.nextActionDate
+      ? new Date(lead.nextActionDate).toLocaleDateString('pt-BR')
+      : '',
+    Observações: lead.notes || '',
+    'Criado em': lead.createdAt
+      ? new Date(lead.createdAt).toLocaleDateString('pt-BR')
+      : '',
+    'Atualizado em': lead.updatedAt
+      ? new Date(lead.updatedAt).toLocaleDateString('pt-BR')
+      : '',
+  }))
+
+  const worksheet = XLSX.utils.json_to_sheet(data)
+  const workbook = XLSX.utils.book_new()
+  XLSX.utils.book_append_sheet(workbook, worksheet, 'Leads')
+
+  const today = new Date().toISOString().split('T')[0]
+  const filename = `leads_atos3_${today}.xlsx`
+
+  XLSX.writeFile(workbook, filename)
+}
 
 export const exportExcelReport = (tables: any) => {
   let html =

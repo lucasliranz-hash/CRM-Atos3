@@ -14,11 +14,15 @@ import { useReportsData, DateRange } from '@/hooks/use-reports-data'
 import { ReportsKPIs } from '@/components/reports/reports-kpis'
 import { ReportsCharts } from '@/components/reports/reports-charts'
 import { ReportsTables } from '@/components/reports/reports-tables'
-import { generatePDFReport, exportExcelReport } from '@/lib/export-utils'
+import {
+  generatePDFReport,
+  exportExcelReport,
+  exportLeadsToExcel,
+} from '@/lib/export-utils'
 
 export default function Reports() {
   const { user } = useAuth()
-  const { logoUrl } = useMainStore()
+  const { logoUrl, accounts } = useMainStore() as any
 
   const [dateRange, setDateRange] = useState<DateRange>(() => {
     return (localStorage.getItem('crm_report_date') as DateRange) || 'month'
@@ -55,6 +59,17 @@ export default function Reports() {
 
   const handleExportExcel = () => {
     exportExcelReport(data.tables)
+  }
+
+  const handleExportLeadsExcel = () => {
+    let filtered = accounts || []
+    if (stageFilter !== 'all') {
+      filtered = filtered.filter(
+        (a: any) =>
+          (a.pipelineStage || a.status || 'Prospecção') === stageFilter,
+      )
+    }
+    exportLeadsToExcel(filtered)
   }
 
   return (
@@ -99,11 +114,19 @@ export default function Reports() {
           </Select>
           <Button
             variant="outline"
+            onClick={handleExportLeadsExcel}
+            className="bg-white text-green-600 border-slate-200 hover:text-green-700 hover:bg-green-50 font-bold"
+          >
+            <Download className="h-4 w-4 mr-2" />
+            Exportar Leads Excel
+          </Button>
+          <Button
+            variant="outline"
             onClick={handleExportExcel}
             className="bg-white text-slate-700 border-slate-200 hover:bg-slate-50"
           >
             <Download className="h-4 w-4 mr-2" />
-            Excel
+            Excel Relatório
           </Button>
           <Button
             onClick={handleExportPDF}

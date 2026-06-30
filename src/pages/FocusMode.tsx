@@ -68,7 +68,11 @@ export default function FocusMode() {
             account: a,
           })
         }
-      } else if (a.nextAction && a.nextActionDate) {
+      } else if (
+        a.nextAction &&
+        a.nextActionDate &&
+        a.nextActionStatus !== 'Concluída'
+      ) {
         if (isToday(a.nextActionDate) || isOverdue(a.nextActionDate)) {
           if (
             !t.find(
@@ -78,6 +82,8 @@ export default function FocusMode() {
             t.push({
               id: `acc-${a.id}`,
               text: a.nextAction,
+              notes: a.nextActionNotes,
+              time: a.nextActionTime,
               date: a.nextActionDate,
               name: a.companyName || a.name,
               accountId: a.id,
@@ -213,13 +219,19 @@ export default function FocusMode() {
                         )}
                       </div>
                       <p className="text-slate-600 font-medium">{task.text}</p>
+                      {task.notes && (
+                        <p className="text-xs text-slate-500 mt-2 bg-slate-50 p-2 rounded-md border border-slate-100">
+                          {task.notes}
+                        </p>
+                      )}
                       <div className="flex items-center gap-3 mt-3 text-xs font-bold text-slate-400">
                         <span className="flex items-center text-slate-500 bg-slate-50 px-2 py-1 rounded-md border border-slate-100">
                           <Clock className="w-3.5 h-3.5 mr-1" />
-                          {new Date(task.date).toLocaleTimeString('pt-BR', {
-                            hour: '2-digit',
-                            minute: '2-digit',
-                          })}
+                          {task.time ||
+                            new Date(task.date).toLocaleTimeString('pt-BR', {
+                              hour: '2-digit',
+                              minute: '2-digit',
+                            })}
                         </span>
                       </div>
                     </div>

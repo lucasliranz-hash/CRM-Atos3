@@ -58,20 +58,71 @@ export function Header() {
   useEffect(() => {
     fetchNotifications()
     fetchAgenda()
+
+    const handleEvent = () => {
+      fetchNotifications()
+      fetchAgenda()
+    }
+    window.addEventListener('lead_updated', handleEvent)
+    window.addEventListener('lead_added', handleEvent)
+    return () => {
+      window.removeEventListener('lead_updated', handleEvent)
+      window.removeEventListener('lead_added', handleEvent)
+    }
   }, [])
 
   const fetchNotifications = async () => {
     try {
-      const { data } = await supabase
-        .from('notifications')
-        .select('*')
-        .order('created_at', { ascending: false })
-        .limit(20)
+      const [notifRes, accRes] = await Promise.all([
+        supabase
+          .from('notifications')
+          .select('*')
+          .order('created_at', { ascending: false })
+          .limit(20),
+        supabase
+          .from('accounts')
+          .select('id, name, nextAction, nextActionDate, nextActionStatus')
+          .not('nextAction', 'is', null)
+          .neq('nextActionStatus', 'Concluída'),
+      ])
 
-      if (data) {
-        setNotifications(data)
-        setUnreadCount(data.filter((n) => !n.read).length)
+      let allNotifs = notifRes.data || []
+
+      if (accRes.data) {
+        const today = new Date()
+        today.setHours(0, 0, 0, 0)
+
+        const taskNotifs = accRes.data
+          .filter((a) => {
+            if (!a.nextActionDate) return false
+            const d = new Date(a.nextActionDate)
+            d.setHours(0, 0, 0, 0)
+            return d <= today
+          })
+          .map((a) => {
+            const d = new Date(a.nextActionDate)
+            d.setHours(0, 0, 0, 0)
+            const isOverdue = d < today
+            return {
+              id: `task-${a.id}`,
+              title: isOverdue ? 'Tarefa Atrasada' : 'Tarefa do Dia',
+              message: `${a.name}: ${a.nextAction}`,
+              read: false,
+              related_id: a.id,
+              related_type: 'account',
+              created_at: a.nextActionDate,
+              isTask: true,
+            }
+          })
+
+        allNotifs = [...taskNotifs, ...allNotifs].sort(
+          (a, b) =>
+            new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
+        )
       }
+
+      setNotifications(allNotifs)
+      setUnreadCount(allNotifs.filter((n) => !n.read).length)
     } catch (e) {
       console.error(e)
     }
@@ -95,9 +146,11 @@ export function Header() {
     }
   }
 
-  const markAsRead = async (id: string) => {
+  const markAsRead = async (id: string, isTask?: boolean) => {
     try {
-      await supabase.from('notifications').update({ read: true }).eq('id', id)
+      if (!isTask) {
+        await supabase.from('notifications').update({ read: true }).eq('id', id)
+      }
       setNotifications((prev) =>
         prev.map((n) => (n.id === id ? { ...n, read: true } : n)),
       )
@@ -108,7 +161,7 @@ export function Header() {
   }
 
   const handleNotificationClick = (n: any) => {
-    markAsRead(n.id)
+    markAsRead(n.id, n.isTask)
     if (n.related_id) {
       if (n.related_type === 'account' || n.related_type === 'lead') {
         navigate(`/leads/${n.related_id}`)
@@ -173,6 +226,7 @@ export function Header() {
                       className={cn(
                         'p-4 border-b border-slate-50 cursor-pointer hover:bg-slate-50 transition-colors',
                         !n.read && 'bg-orange-50/30',
+                        n.title === 'Tarefa Atrasada' && 'bg-red-50/30',
                       )}
                     >
                       <div className="flex justify-between items-start mb-1">

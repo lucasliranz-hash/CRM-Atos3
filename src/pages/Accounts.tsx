@@ -16,6 +16,7 @@ import {
 } from 'lucide-react'
 import { NewLeadDialog } from '@/components/leads/NewLeadDialog'
 import { Card, CardContent } from '@/components/ui/card'
+import { exportLeadsToExcel } from '@/lib/export-utils'
 
 export default function Accounts() {
   const { accounts } = useMainStore()
@@ -43,11 +44,20 @@ export default function Accounts() {
           </p>
         </div>
 
-        <NewLeadDialog>
-          <Button className="bg-[#FF6A00] text-white hover:bg-[#e65c00] rounded-[8px] font-bold h-10 shadow-md">
-            <Plus className="w-4 h-4 mr-2" /> Novo Lead
+        <div className="flex gap-2">
+          <Button
+            onClick={() => exportLeadsToExcel(filtered)}
+            variant="outline"
+            className="h-10 border-slate-200 text-green-600 hover:text-green-700 hover:bg-green-50 font-bold"
+          >
+            Exportar Leads Excel
           </Button>
-        </NewLeadDialog>
+          <NewLeadDialog>
+            <Button className="bg-[#FF6A00] text-white hover:bg-[#e65c00] rounded-[8px] font-bold h-10 shadow-md">
+              <Plus className="w-4 h-4 mr-2" /> Novo Lead
+            </Button>
+          </NewLeadDialog>
+        </div>
       </div>
 
       <Card className="rounded-[10px] border border-slate-100 shadow-sm bg-white flex-1 overflow-hidden flex flex-col">

@@ -1,5 +1,7 @@
 import { useMemo, useState } from 'react'
 import { isOverdue, isToday, formatCurrency } from '@/lib/crm-utils'
+import { LeadEditModal } from '@/components/LeadEditModal'
+import { supabase } from '@/lib/supabase/client'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import {
@@ -35,6 +37,7 @@ import { ChartContainer, ChartTooltipContent } from '@/components/ui/chart'
 import LeadHistorySheet from '@/components/LeadHistorySheet'
 import { DatabaseDiagnostic } from '@/components/DatabaseDiagnostic'
 import { useDashboardData } from '@/hooks/use-dashboard-data'
+import { useEffect } from 'react'
 import {
   Dialog,
   DialogContent,
@@ -52,9 +55,16 @@ export default function Index() {
   const navigate = useNavigate()
   const { data, loading, error, getDashboardMetrics } = useDashboardData()
 
+  useEffect(() => {
+    const handleEvent = () => getDashboardMetrics()
+    window.addEventListener('lead_updated', handleEvent)
+    return () => window.removeEventListener('lead_updated', handleEvent)
+  }, [getDashboardMetrics])
+
   const [detailsAccountId, setDetailsAccountId] = useState<string | null>(null)
   const [showDebug, setShowDebug] = useState(false)
   const [showNegotiationModal, setShowNegotiationModal] = useState(false)
+  const [editLeadId, setEditLeadId] = useState<string | null>(null)
 
   const activeProposals = useMemo(() => {
     return data.proposals.filter(
@@ -239,6 +249,7 @@ export default function Index() {
           name: acc?.name || acc?.companyName || 'Lead',
           accountId: act.accountId,
           item: act,
+          isActivity: true,
         })
       }
     })
@@ -246,16 +257,25 @@ export default function Index() {
       if (
         a.nextAction &&
         a.nextActionDate &&
+        a.nextActionStatus !== 'Concluída' &&
         (isToday(a.nextActionDate) || isOverdue(a.nextActionDate))
       ) {
-        if (!t.find((task: any) => task.accountId === a.id)) {
+        if (
+          !t.find(
+            (task: any) =>
+              task.accountId === a.id && task.text === a.nextAction,
+          )
+        ) {
           t.push({
             id: `acc-${a.id}`,
             text: a.nextAction,
             date: a.nextActionDate,
+            time: a.nextActionTime,
+            notes: a.nextActionNotes,
             name: a.name || a.companyName,
             accountId: a.id,
             item: a,
+            isActivity: false,
           })
         }
       }
@@ -832,11 +852,12 @@ export default function Index() {
         <Card className="rounded-[10px] shadow-sm border-slate-100 bg-white sticky top-24 h-[calc(100vh-7rem)] flex flex-col">
           <div className="p-5 border-b border-slate-100 shrink-0">
             <h2 className="text-lg font-black text-[#0D1B2A] flex items-center gap-2">
-              <CheckCircle2 className="w-5 h-5 text-[#FF6A00]" /> Minhas Ações
+              <CheckCircle2 className="w-5 h-5 text-[#FF6A00]" /> Tarefas de
+              hoje
             </h2>
             <p className="text-xs font-medium text-slate-500 mt-1">
               {loading
-                ? 'Carregando ações...'
+                ? 'Carregando tarefas...'
                 : `${today.length + overdue.length} tarefas pendentes`}
             </p>
           </div>
@@ -856,6 +877,10 @@ export default function Index() {
                     task={t}
                     isRed
                     onClick={() => setDetailsAccountId(t.accountId)}
+                    onComplete={() => getDashboardMetrics()}
+                    onReschedule={(accountId: string) =>
+                      setEditLeadId(accountId)
+                    }
                   />
                 ))}
               </div>
@@ -878,6 +903,10 @@ export default function Index() {
                     key={t.id}
                     task={t}
                     onClick={() => setDetailsAccountId(t.accountId)}
+                    onComplete={() => getDashboardMetrics()}
+                    onReschedule={(accountId: string) =>
+                      setEditLeadId(accountId)
+                    }
                   />
                 ))
               )}
@@ -903,6 +932,15 @@ export default function Index() {
         open={!!detailsAccountId}
         onOpenChange={(open) => !open && setDetailsAccountId(null)}
       />
+
+      {editLeadId && (
+        <LeadEditModal
+          open={!!editLeadId}
+          onOpenChange={(open: boolean) => !open && setEditLeadId(null)}
+          accountId={editLeadId}
+          onSuccess={() => getDashboardMetrics()}
+        />
+      )}
 
       <Dialog
         open={showNegotiationModal}
@@ -989,43 +1027,123 @@ export default function Index() {
   )
 }
 
-function TaskItem({ task, isRed, onClick }: any) {
+function TaskItem({ task, isRed, onClick, onComplete, onReschedule }: any) {
+  const navigate = useNavigate()
+  const [completing, setCompleting] = useState(false)
+
+  const handleComplete = async (e: any) => {
+    e.stopPropagation()
+    setCompleting(true)
+    if (task.isActivity) {
+      await supabase
+        .from('activities')
+        .update({ completed: true, status: 'Realizada' })
+        .eq('id', task.item.id)
+    } else {
+      await supabase.from('activities').insert({
+        accountId: task.accountId,
+        date: new Date().toISOString(),
+        type: 'Ação Manual',
+        result: `Concluído: ${task.text}`,
+        completed: true,
+        status: 'Realizada',
+      })
+      await supabase
+        .from('accounts')
+        .update({
+          nextActionStatus: 'Concluída',
+          nextActionDate: null,
+          nextActionTime: null,
+        })
+        .eq('id', task.accountId)
+    }
+    setCompleting(false)
+    window.dispatchEvent(new Event('lead_updated'))
+    onComplete?.()
+  }
+
+  const handleOpenLead = (e: any) => {
+    e.stopPropagation()
+    navigate(`/leads/${task.accountId}`)
+  }
+
+  const handleReschedule = (e: any) => {
+    e.stopPropagation()
+    onReschedule?.(task.accountId)
+  }
+
   return (
     <div
       onClick={onClick}
       className={cn(
-        'p-3 rounded-xl border cursor-pointer transition-all group',
+        'p-3 rounded-xl border cursor-pointer transition-all group flex flex-col gap-2',
         isRed
           ? 'bg-red-50/50 border-red-100 hover:border-red-300 hover:shadow-sm'
           : 'bg-slate-50/50 border-slate-200 hover:border-slate-300 hover:shadow-sm',
+        completing && 'opacity-50 pointer-events-none',
       )}
     >
-      <div className="flex justify-between items-start mb-1.5">
+      <div className="flex justify-between items-start mb-1">
         <div className="font-bold text-sm text-slate-900 line-clamp-1">
           {task.name}
         </div>
         <Clock
           className={cn(
-            'w-3.5 h-3.5 mt-0.5',
+            'w-3.5 h-3.5 mt-0.5 shrink-0',
             isRed ? 'text-red-500' : 'text-slate-400',
           )}
         />
       </div>
+
       <p className="text-xs font-medium text-slate-600 line-clamp-2">
         {task.text}
       </p>
-      <div
-        className={cn(
-          'text-[10px] font-bold mt-2',
-          isRed ? 'text-red-600' : 'text-[#FF6A00]',
-        )}
-      >
-        {new Date(task.date).toLocaleString('pt-BR', {
-          day: '2-digit',
-          month: '2-digit',
-          hour: '2-digit',
-          minute: '2-digit',
-        })}
+
+      {task.notes && (
+        <p className="text-[10px] text-slate-500 line-clamp-2 mt-1 bg-white/50 p-1.5 rounded-md border border-slate-100">
+          {task.notes}
+        </p>
+      )}
+
+      <div className="flex items-center justify-between mt-2 pt-2 border-t border-slate-200/50">
+        <div
+          className={cn(
+            'text-[10px] font-bold',
+            isRed ? 'text-red-600' : 'text-[#FF6A00]',
+          )}
+        >
+          {new Date(task.date).toLocaleDateString('pt-BR', {
+            day: '2-digit',
+            month: '2-digit',
+          })}
+          {task.time ? ` às ${task.time}` : ''}
+        </div>
+      </div>
+
+      <div className="flex items-center gap-1.5 mt-1 opacity-0 group-hover:opacity-100 transition-opacity">
+        <Button
+          size="sm"
+          variant="outline"
+          className="h-6 px-2 text-[10px] bg-white border-slate-200"
+          onClick={handleOpenLead}
+        >
+          Abrir Lead
+        </Button>
+        <Button
+          size="sm"
+          variant="outline"
+          className="h-6 px-2 text-[10px] bg-white border-slate-200"
+          onClick={handleReschedule}
+        >
+          Reagendar
+        </Button>
+        <Button
+          size="sm"
+          className="h-6 px-2 text-[10px] bg-emerald-500 hover:bg-emerald-600 text-white ml-auto"
+          onClick={handleComplete}
+        >
+          <CheckCircle2 className="w-3 h-3 mr-1" /> Concluir
+        </Button>
       </div>
     </div>
   )

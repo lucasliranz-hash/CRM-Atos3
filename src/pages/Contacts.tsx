@@ -22,6 +22,7 @@ import { useNavigate } from 'react-router-dom'
 import { supabase } from '@/lib/supabase/client'
 import { Contact } from '@/types/crm'
 import { ContactForm } from '@/components/contacts/ContactForm'
+import { exportLeadsToExcel } from '@/lib/export-utils'
 
 export default function Contacts() {
   const { contacts, accounts, addContact, updateContact } =
@@ -108,23 +109,32 @@ export default function Contacts() {
           </DialogContent>
         </Dialog>
 
-        <Dialog open={isOpen} onOpenChange={setIsOpen}>
-          <DialogTrigger asChild>
-            <Button className="bg-orange-500 text-white rounded font-bold hover:bg-orange-600 shadow-lg shadow-orange-500/20">
-              <Plus className="w-4 h-4 mr-2" /> Novo Contato
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="sm:max-w-[600px]">
-            <DialogHeader>
-              <DialogTitle>Adicionar Contato</DialogTitle>
-            </DialogHeader>
-            <ContactForm
-              accounts={accounts}
-              onSubmit={handleCreate}
-              submitLabel="Salvar Contato"
-            />
-          </DialogContent>
-        </Dialog>
+        <div className="flex gap-2">
+          <Button
+            onClick={() => exportLeadsToExcel(accounts)}
+            variant="outline"
+            className="h-10 border-gray-200 text-green-600 hover:text-green-700 hover:bg-green-50 font-bold shadow-sm"
+          >
+            Exportar Leads Excel
+          </Button>
+          <Dialog open={isOpen} onOpenChange={setIsOpen}>
+            <DialogTrigger asChild>
+              <Button className="bg-orange-500 text-white rounded font-bold hover:bg-orange-600 shadow-lg shadow-orange-500/20">
+                <Plus className="w-4 h-4 mr-2" /> Novo Contato
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-[600px]">
+              <DialogHeader>
+                <DialogTitle>Adicionar Contato</DialogTitle>
+              </DialogHeader>
+              <ContactForm
+                accounts={accounts}
+                onSubmit={handleCreate}
+                submitLabel="Salvar Contato"
+              />
+            </DialogContent>
+          </Dialog>
+        </div>
       </div>
 
       <div className="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm">
