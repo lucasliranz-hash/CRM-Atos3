@@ -15,11 +15,7 @@ import { cn } from '@/lib/utils'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '@/lib/supabase/client'
 import { exportLeadsToExcel } from '@/lib/export-utils'
-import {
-  isGanhoOrCustomer,
-  pipelineStageToStatus,
-  isLostLead,
-} from '@/lib/crm-utils'
+import { pipelineStageToStatus } from '@/lib/crm-utils'
 import {
   Select,
   SelectContent,
@@ -91,7 +87,6 @@ export default function Pipeline() {
     try {
       setLoading(true)
       setErrorMsg('')
-      // 1. No Pipeline, buscar apenas contas que não são "Ganho" (clientes fechados)
       const { data, error } = await supabase.from('accounts').select('*')
 
       if (error) {
@@ -122,28 +117,26 @@ export default function Pipeline() {
 
   // Processa as regras de exibição e fallback
   const mappedAccounts = useMemo(() => {
-    return dbAccounts
-      .filter((account) => !isGanhoOrCustomer(account) && !isLostLead(account))
-      .map((account) => {
-        // Regra: se não tiver etapa definida (ou tiver nome diferente), forçar para "Prospecção"
-        let stage =
-          account.pipelineStage ||
-          account.stage ||
-          account.status_pipeline ||
-          'Prospecção'
+    return dbAccounts.map((account) => {
+      // Regra: se não tiver etapa definida (ou tiver nome diferente), forçar para "Prospecção"
+      let stage =
+        account.pipelineStage ||
+        account.stage ||
+        account.status_pipeline ||
+        'Prospecção'
 
-        const isValidStage = COLUMNS_CONFIG.some((c) => c.id === stage)
-        const finalStage = isValidStage ? stage : 'Prospecção'
+      const isValidStage = COLUMNS_CONFIG.some((c) => c.id === stage)
+      const finalStage = isValidStage ? stage : 'Prospecção'
 
-        const status = account.status || 'Novo Lead'
+      const status = account.status || 'Novo Lead'
 
-        return {
-          ...account,
-          pipelineStage: finalStage,
-          originalStage: stage,
-          status: status,
-        }
-      })
+      return {
+        ...account,
+        pipelineStage: finalStage,
+        originalStage: stage,
+        status: status,
+      }
+    })
   }, [dbAccounts])
 
   const uniqueSegments = useMemo(
@@ -180,14 +173,8 @@ export default function Pipeline() {
     return leads
   }, [mappedAccounts, search, segmentFilter, cityFilter])
 
-  const ganhoCount = useMemo(
-    () => dbAccounts.filter((a) => isGanhoOrCustomer(a)).length,
-    [dbAccounts],
-  )
-  const perdidoCount = useMemo(
-    () => dbAccounts.filter((a) => isLostLead(a)).length,
-    [dbAccounts],
-  )
+  const ganhoCount = 0
+  const perdidoCount = 0
 
   const onDragStart = (e: React.DragEvent, leadId: string) =>
     e.dataTransfer.setData('leadId', leadId)
