@@ -16,7 +16,6 @@ import { useNavigate } from 'react-router-dom'
 import { supabase } from '@/lib/supabase/client'
 import { exportLeadsToExcel } from '@/lib/export-utils'
 import { isGanhoOrCustomer } from '@/lib/crm-utils'
-import { isGanhoOrCustomer } from '@/lib/crm-utils'
 import {
   Select,
   SelectContent,
@@ -176,6 +175,11 @@ export default function Pipeline() {
     return leads
   }, [mappedAccounts, search, segmentFilter, cityFilter])
 
+  const ganhoCount = useMemo(
+    () => dbAccounts.filter((a) => isGanhoOrCustomer(a)).length,
+    [dbAccounts],
+  )
+
   const onDragStart = (e: React.DragEvent, leadId: string) =>
     e.dataTransfer.setData('leadId', leadId)
 
@@ -246,12 +250,6 @@ export default function Pipeline() {
 
           {ganhoCount > 0 && (
             <span className="text-xs font-bold text-emerald-600 bg-emerald-50 px-3 py-2 rounded-md border border-emerald-200 whitespace-nowrap">
-              {ganhoCount} cliente(s) oculto(s)
-            </span>
-          )}
-
-          {ganhoCount > 0 && (
-            <span className="text-xs font-bold text-emerald-600 bg-emerald-50 px-3 py-2 rounded-md border border-emerald-200">
               {ganhoCount} cliente(s) ganho(s) oculto(s)
             </span>
           )}

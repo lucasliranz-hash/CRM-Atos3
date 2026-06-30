@@ -5,7 +5,6 @@ import { Calendar as CalendarIcon, Clock } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
 import { cn } from '@/lib/utils'
 import { isGanhoOrCustomer } from '@/lib/crm-utils'
-import { isGanhoOrCustomer } from '@/lib/crm-utils'
 
 export default function Activities() {
   const { activities, accounts, addActivity, updateAccount, completeActivity } =

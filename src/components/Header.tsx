@@ -19,7 +19,6 @@ import {
 import { supabase } from '@/lib/supabase/client'
 import { cn } from '@/lib/utils'
 import { isGanhoOrCustomer } from '@/lib/crm-utils'
-import { isGanhoOrCustomer } from '@/lib/crm-utils'
 
 export function Header() {
   const navigate = useNavigate()
