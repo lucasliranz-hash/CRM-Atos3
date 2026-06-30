@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input'
 import { Card, CardContent } from '@/components/ui/card'
 import { Search, FileText, ShoppingCart, Pencil, History } from 'lucide-react'
 import { LeadEditModal } from '@/components/LeadEditModal'
-import { LeadHistorySheet } from '@/components/LeadHistorySheet'
+import LeadHistorySheet from '@/components/LeadHistorySheet'
 import { formatCurrency } from '@/lib/crm-utils'
 import { format } from 'date-fns'
 
