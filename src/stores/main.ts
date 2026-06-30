@@ -172,6 +172,8 @@ export const useMainStore = create((set: any, get: any) => ({
     set((state: any) => ({
       accounts: state.accounts.map((a: any) => (a.id === id ? mapped : a)),
     }))
+    window.dispatchEvent(new Event('lead_updated'))
+    get().fetchData()
   },
 
   addActivity: async (act: any) => {
@@ -219,6 +221,7 @@ export const useMainStore = create((set: any, get: any) => ({
       .single()
     if (error) throw error
     set((state: any) => ({ proposals: [...state.proposals, data] }))
+    window.dispatchEvent(new Event('lead_updated'))
     return data
   },
 
@@ -233,6 +236,8 @@ export const useMainStore = create((set: any, get: any) => ({
     set((state: any) => ({
       proposals: state.proposals.map((p: any) => (p.id === id ? data : p)),
     }))
+    window.dispatchEvent(new Event('lead_updated'))
+    get().fetchData()
   },
 
   deleteProposal: async (id: string) => {

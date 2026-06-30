@@ -414,8 +414,14 @@ export function MainProvider({ children }: { children: ReactNode }) {
   }
 
   const moveLeadToStage = async (id: string, stage: string) => {
+    const statusMap: Record<string, string> = {
+      Fechado: 'Ganho',
+      Perdido: 'Perdido',
+    }
+    const newStatus = statusMap[stage] || 'Em prospecção'
     try {
-      await updateLead(id, { pipelineStage: stage })
+      await updateLead(id, { pipelineStage: stage, status: newStatus })
+      window.dispatchEvent(new Event('lead_updated'))
     } catch (e) {
       console.error(e)
     }
@@ -464,6 +470,7 @@ export function MainProvider({ children }: { children: ReactNode }) {
     }
 
     await fetchSupabaseData()
+    window.dispatchEvent(new Event('lead_updated'))
   }
 
   const deleteProposal = async (id: string) => {

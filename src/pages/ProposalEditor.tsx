@@ -43,6 +43,7 @@ import {
   ProposalCover,
 } from '@/types/crm'
 import { formatCurrency } from '@/lib/crm-utils'
+import useMainStore from '@/stores/main'
 
 const defaultCover: ProposalCover = {
   title: 'Proposta Comercial',
@@ -219,6 +220,7 @@ export default function ProposalEditor() {
   const [searchParams] = useSearchParams()
   const navigate = useNavigate()
   const { toast } = useToast()
+  const fetchData = useMainStore((s: any) => s.fetchData)
 
   const [propData, setPropData] = useState<Proposal | null>(null)
   const [activeTab, setActiveTab] = useState('info')
@@ -374,6 +376,8 @@ export default function ProposalEditor() {
           'Proposta criada',
           `Proposta ${finalProp.proposalNumber} criada no valor de ${formatCurrency(finalProp.value || 0)}`,
         )
+        window.dispatchEvent(new Event('lead_updated'))
+        fetchData()
         toast({ title: 'Proposta salva com sucesso!' })
         navigate(`/proposals/${newId}`, { replace: true })
       } else {
@@ -386,6 +390,8 @@ export default function ProposalEditor() {
           'Proposta atualizada',
           `Proposta ${finalProp.proposalNumber} atualizada.`,
         )
+        window.dispatchEvent(new Event('lead_updated'))
+        fetchData()
         toast({ title: 'Proposta salva com sucesso!' })
       }
     } catch (err: any) {
@@ -566,8 +572,11 @@ export default function ProposalEditor() {
                 <SelectContent>
                   <SelectItem value="Rascunho">Rascunho</SelectItem>
                   <SelectItem value="Enviada">Enviada</SelectItem>
+                  <SelectItem value="Em negociação">Em negociação</SelectItem>
                   <SelectItem value="Aprovada">Aprovada</SelectItem>
+                  <SelectItem value="Ganha">Ganha</SelectItem>
                   <SelectItem value="Recusada">Recusada</SelectItem>
+                  <SelectItem value="Perdida">Perdida</SelectItem>
                 </SelectContent>
               </Select>
             </h1>
