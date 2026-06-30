@@ -18,6 +18,8 @@ import {
 } from '@/components/ui/popover'
 import { supabase } from '@/lib/supabase/client'
 import { cn } from '@/lib/utils'
+import { isGanhoOrCustomer } from '@/lib/crm-utils'
+import { isGanhoOrCustomer } from '@/lib/crm-utils'
 
 export function Header() {
   const navigate = useNavigate()
@@ -93,6 +95,7 @@ export function Header() {
         today.setHours(0, 0, 0, 0)
 
         const taskNotifs = accRes.data
+          .filter((a) => !isGanhoOrCustomer(a))
           .filter((a) => {
             if (!a.nextActionDate) return false
             const d = new Date(a.nextActionDate)
@@ -131,15 +134,24 @@ export function Header() {
   const fetchAgenda = async () => {
     try {
       const today = new Date().toISOString().split('T')[0]
-      const { data } = await supabase
+      const { data: acts } = await supabase
         .from('activities')
         .select('*')
         .gte('date', today)
         .order('date', { ascending: true })
-        .limit(10)
+        .limit(20)
 
-      if (data) {
-        setAgenda(data)
+      if (acts) {
+        const accIds = acts.map((a) => a.accountId).filter(Boolean)
+        const { data: accs } = await supabase
+          .from('accounts')
+          .select('id, status')
+          .in('id', accIds)
+
+        const ganhoIds = new Set(
+          (accs || []).filter((a) => isGanhoOrCustomer(a)).map((a) => a.id),
+        )
+        setAgenda(acts.filter((a) => !ganhoIds.has(a.accountId)).slice(0, 10))
       }
     } catch (e) {
       console.error(e)

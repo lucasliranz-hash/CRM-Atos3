@@ -15,6 +15,8 @@ import { cn } from '@/lib/utils'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '@/lib/supabase/client'
 import { exportLeadsToExcel } from '@/lib/export-utils'
+import { isGanhoOrCustomer } from '@/lib/crm-utils'
+import { isGanhoOrCustomer } from '@/lib/crm-utils'
 import {
   Select,
   SelectContent,
@@ -116,26 +118,28 @@ export default function Pipeline() {
 
   // Processa as regras de exibição e fallback
   const mappedAccounts = useMemo(() => {
-    return dbAccounts.map((account) => {
-      // Regra: se não tiver etapa definida (ou tiver nome diferente), forçar para "Prospecção"
-      let stage =
-        account.pipelineStage ||
-        account.stage ||
-        account.status_pipeline ||
-        'Prospecção'
+    return dbAccounts
+      .filter((account) => !isGanhoOrCustomer(account))
+      .map((account) => {
+        // Regra: se não tiver etapa definida (ou tiver nome diferente), forçar para "Prospecção"
+        let stage =
+          account.pipelineStage ||
+          account.stage ||
+          account.status_pipeline ||
+          'Prospecção'
 
-      const isValidStage = COLUMNS_CONFIG.some((c) => c.id === stage)
-      const finalStage = isValidStage ? stage : 'Prospecção'
+        const isValidStage = COLUMNS_CONFIG.some((c) => c.id === stage)
+        const finalStage = isValidStage ? stage : 'Prospecção'
 
-      const status = account.status || 'Novo Lead'
+        const status = account.status || 'Novo Lead'
 
-      return {
-        ...account,
-        pipelineStage: finalStage,
-        originalStage: stage,
-        status: status,
-      }
-    })
+        return {
+          ...account,
+          pipelineStage: finalStage,
+          originalStage: stage,
+          status: status,
+        }
+      })
   }, [dbAccounts])
 
   const uniqueSegments = useMemo(
@@ -239,6 +243,18 @@ export default function Pipeline() {
             />
             Atualizar
           </Button>
+
+          {ganhoCount > 0 && (
+            <span className="text-xs font-bold text-emerald-600 bg-emerald-50 px-3 py-2 rounded-md border border-emerald-200 whitespace-nowrap">
+              {ganhoCount} cliente(s) oculto(s)
+            </span>
+          )}
+
+          {ganhoCount > 0 && (
+            <span className="text-xs font-bold text-emerald-600 bg-emerald-50 px-3 py-2 rounded-md border border-emerald-200">
+              {ganhoCount} cliente(s) ganho(s) oculto(s)
+            </span>
+          )}
 
           <Select value={segmentFilter} onValueChange={setSegmentFilter}>
             <SelectTrigger className="w-[160px] bg-white h-10 border-slate-200">

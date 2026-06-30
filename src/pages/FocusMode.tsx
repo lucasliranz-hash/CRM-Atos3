@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import useMainStore from '@/stores/main'
-import { isToday, isOverdue } from '@/lib/crm-utils'
+import { isToday, isOverdue, isGanhoOrCustomer } from '@/lib/crm-utils'
 import { Button } from '@/components/ui/button'
 import {
   CheckCircle2,
@@ -33,9 +33,18 @@ export default function FocusMode() {
   const focusTasks = useMemo(() => {
     const t: any[] = []
 
+    const activeAccounts = accounts.filter(
+      (a) => !isGanhoOrCustomer(a),
+    )
+    const activeAccountIds = new Set(activeAccounts.map((a) => a.id))
+
     activities.forEach((act) => {
-      if (!act.completed && (isToday(act.date) || isOverdue(act.date))) {
-        const acc = accounts.find((a) => a.id === act.accountId)
+      if (
+        !act.completed &&
+        (isToday(act.date) || isOverdue(act.date)) &&
+        activeAccountIds.has(act.accountId)
+      ) {
+        const acc = activeAccounts.find((a) => a.id === act.accountId)
         if (acc) {
           t.push({
             id: `act-${act.id}`,
@@ -51,7 +60,7 @@ export default function FocusMode() {
       }
     })
 
-    accounts.forEach((a) => {
+    activeAccounts.forEach((a) => {
       if (
         !a.nextActionDate &&
         !['Fechado', 'Perdido'].includes(a.pipelineStage)
@@ -142,6 +151,28 @@ export default function FocusMode() {
       (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime(),
     )
   }, [activities, accounts, proposals])
+```
+
+Wait, I need to be more careful. The FocusMode code has a complex `accounts.forEach` that I need to update to use `activeAccounts`. Let me re-examine.
+
+The original code after the `activities.forEach` block has:
+```
+    accounts.forEach((a) => {
+```
+
+I need to change this to `activeAccounts.forEach((a) => {`. And the dependency array should include activeAccounts computation but since it's derived from accounts, the existing deps `[activities, accounts, proposals]` should be fine.
+
+Let me redo the FocusMode patch more carefully.
+
+Actually, looking at the code again, the `accounts.forEach((a) => {` line appears in the focusTasks useMemo. I need to change it to `activeAccounts.forEach((a) => {`.
+
+Let me also check - the `activeAccountIds` set is used in the activities.forEach filter. Good.
+
+Now for Activities.tsx:
+
+<skip-patch path="src/pages/Activities.tsx">
+=======
+import { isToday, isOverdue, isGanhoOrCustomer } from '@/lib/crm-utils'
 
   const handleWhatsApp = (task: any, account: any) => {
     if (!account.phone)

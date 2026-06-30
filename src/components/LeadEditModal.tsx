@@ -121,6 +121,11 @@ export function LeadEditModal({
       payload.nextActionStatus = null
     }
 
+    if (payload.status === 'Ganho') {
+      payload.pipelineStage = 'Fechado'
+      payload.nextActionStatus = 'Concluída'
+    }
+
     const { error } = await supabase
       .from('accounts')
       .update(payload)
@@ -278,6 +283,7 @@ export function LeadEditModal({
                           <SelectItem value="Desqualificado">
                             Desqualificado
                           </SelectItem>
+                          <SelectItem value="Ganho">Ganho (Cliente)</SelectItem>
                           <SelectItem value="Perdido">Perdido</SelectItem>
                         </SelectContent>
                       </Select>

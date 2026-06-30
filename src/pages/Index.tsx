@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { isOverdue, isToday, formatCurrency } from '@/lib/crm-utils'
+import { isOverdue, isToday, formatCurrency, isGanhoOrCustomer } from '@/lib/crm-utils'
 import { LeadEditModal } from '@/components/LeadEditModal'
 import { supabase } from '@/lib/supabase/client'
 import { Card, CardContent } from '@/components/ui/card'
@@ -100,13 +100,22 @@ export default function Index() {
       (a) => new Date(a.createdAt || now) >= startOfMonth,
     ).length
 
-    const pendingActivities = data.activities.filter(
+    const ganhoAccountIds = new Set(
+      data.accounts
+        .filter((a) => isGanhoOrCustomer(a))
+        .map((a) => a.id),
+    )
+    const activeActivities = data.activities.filter(
+      (a) => !ganhoAccountIds.has(a.accountId),
+    )
+
+    const pendingActivities = activeActivities.filter(
       (a) =>
         a.status === 'Pendente' ||
         (!a.completed && a.status !== 'Cancelada' && a.status !== 'Realizada'),
     ).length
 
-    const overdueActivities = data.activities.filter((a) => {
+    const overdueActivities = activeActivities.filter((a) => {
       if (
         a.status !== 'Pendente' &&
         (a.completed || a.status === 'Cancelada' || a.status === 'Realizada')
@@ -173,22 +182,30 @@ export default function Index() {
   }, [data])
 
   const activityChartData = useMemo(() => {
-    const days = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb']
-    const now = new Date()
-    const start = new Date(now)
-    start.setDate(now.getDate() - now.getDay())
-    start.setHours(0, 0, 0, 0)
+  const days = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb']
+  const now = new Date()
+  const start = new Date(now)
+  start.setDate(now.getDate() - now.getDay())
+  start.setHours(0, 0, 0, 0)
 
-    return days.map((day, i) => {
-      const d = new Date(start)
-      d.setDate(start.getDate() + i)
-      const isDay = (dateStr: string) => {
-        if (!dateStr) return false
-        const d2 = new Date(dateStr)
-        return d2.getDate() === d.getDate() && d2.getMonth() === d.getMonth()
-      }
-      const acts = data.activities.filter((a: any) => isDay(a.date))
-      return {
+  const ganhoAccountIds = new Set(
+    data.accounts
+      .filter((a) => isGanhoOrCustomer(a))
+      .map((a) => a.id),
+  )
+  const chartActivities = data.activities.filter(
+    (a: any) => !ganhoAccountIds.has(a.accountId),
+  )
+
+  return days.map((day, i) => {
+    const d = new Date(start)
+    d.setDate(start.getDate() + i)
+    const isDay = (dateStr: string) => {
+      if (!dateStr) return false
+      const d2 = new Date(dateStr)
+      return d2.getDate() === d.getDate() && d2.getMonth() === d.getMonth()
+    }
+    const acts = chartActivities.filter((a: any) => isDay(a.date))      return {
         name: day,
         Contatos: acts.filter((a: any) =>
           ['Ligação', 'Mensagem', 'E-mail', 'Follow-up'].includes(a.type),
@@ -196,7 +213,7 @@ export default function Index() {
         Reuniões: acts.filter((a: any) => a.type?.includes('Reunião')).length,
       }
     })
-  }, [data.activities])
+  }, [data.activities, data.accounts])
 
   const proposalStatusData = useMemo(() => {
     const counts = data.proposals.reduce((acc: any, p: any) => {
@@ -239,9 +256,30 @@ export default function Index() {
 
   const tasks = useMemo(() => {
     const t: any[] = []
+    const activeAccounts = data.accounts.filter(
+      (a: any) => !isGanhoOrCustomer(a),
+    )
     data.activities.forEach((act: any) => {
       if (!act.completed && (isToday(act.date) || isOverdue(act.date))) {
-        const acc = data.accounts.find((a: any) => a.id === act.accountId)
+        const acc = activeAccounts.find((a: any) => a.id === act.accountId)
+        if (!acc) return
+        t.push({
+          id: `act-${act.id}`,
+          text: `${act.type} - ${act.title || act.result || ''}`,
+          date: act.date,
+          name: acc?.name || acc?.companyName || 'Lead',
+          accountId: act.accountId,
+          item: act,
+          isActivity: true,
+  const tasks = useMemo(() => {
+    const t: any[] = []
+    const activeAccounts = data.accounts.filter(
+      (a: any) => !isGanhoOrCustomer(a),
+    )
+    data.activities.forEach((act: any) => {
+      if (!act.completed && (isToday(act.date) || isOverdue(act.date))) {
+        const acc = activeAccounts.find((a: any) => a.id === act.accountId)
+        if (!acc) return
         t.push({
           id: `act-${act.id}`,
           text: `${act.type} - ${act.title || act.result || ''}`,
@@ -253,7 +291,7 @@ export default function Index() {
         })
       }
     })
-    data.accounts.forEach((a: any) => {
+    activeAccounts.forEach((a: any) => {
       if (
         a.nextAction &&
         a.nextActionDate &&

@@ -4,6 +4,8 @@ import { Button } from '@/components/ui/button'
 import { Calendar as CalendarIcon, Clock } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
 import { cn } from '@/lib/utils'
+import { isGanhoOrCustomer } from '@/lib/crm-utils'
+import { isGanhoOrCustomer } from '@/lib/crm-utils'
 
 export default function Activities() {
   const { activities, accounts, addActivity, updateAccount, completeActivity } =
@@ -13,9 +15,12 @@ export default function Activities() {
   const tasks = React.useMemo(() => {
     const t: any[] = []
 
+    const activeAccounts = accounts.filter((a) => !isGanhoOrCustomer(a))
+    const activeAccountIds = new Set(activeAccounts.map((a) => a.id))
+
     activities.forEach((act) => {
-      if (!act.completed) {
-        const acc = accounts.find((a) => a.id === act.accountId)
+      if (!act.completed && activeAccountIds.has(act.accountId)) {
+        const acc = activeAccounts.find((a) => a.id === act.accountId)
         t.push({
           id: `act-${act.id}`,
           text: act.title || act.type || 'Ação Pendente',
@@ -28,7 +33,7 @@ export default function Activities() {
       }
     })
 
-    accounts.forEach((a) => {
+    activeAccounts.forEach((a) => {
       if (a.nextAction && a.nextActionDate) {
         if (
           !t.find(

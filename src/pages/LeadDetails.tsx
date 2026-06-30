@@ -190,6 +190,30 @@ export default function LeadDetails() {
     }
   }
 
+  const handleWon = async () => {
+    if (window.confirm('Marcar este lead como Ganho (Cliente)?')) {
+      await updateAccount(leadData.id, {
+        pipelineStage: 'Fechado',
+        status: 'Ganho',
+        nextActionStatus: 'Concluída',
+      })
+      toast({ title: 'Lead marcado como Ganho! Movido para Clientes.' })
+      window.dispatchEvent(new Event('lead_updated'))
+    }
+  }
+
+  const handleWon = async () => {
+    if (window.confirm('Marcar este lead como Ganho (Cliente)?')) {
+      await updateAccount(leadData.id, {
+        pipelineStage: 'Fechado',
+        status: 'Ganho',
+        nextActionStatus: 'Concluída',
+      })
+      toast({ title: 'Lead marcado como Ganho! Movido para Clientes.' })
+      window.dispatchEvent(new Event('lead_updated'))
+    }
+  }
+
   const leadOrders =
     orders?.filter((o: any) => o.account_id === leadData.id) || []
 
@@ -591,13 +615,34 @@ export default function LeadDetails() {
             </div>
 
             <div className="mt-6 pt-6 border-t border-slate-100 flex justify-center">
-              <Button
-                onClick={handleLost}
-                variant="ghost"
-                className="text-xs font-bold text-slate-400 hover:text-red-600 hover:bg-red-50 w-full"
-              >
-                <XCircle className="w-3.5 h-3.5 mr-1.5" /> Marcar como Perdido
-              </Button>
+              <div className="flex gap-2 w-full">
+                <Button
+                  onClick={handleWon}
+                  variant="ghost"
+                  className="text-xs font-bold text-emerald-500 hover:text-emerald-700 hover:bg-emerald-50 flex-1"
+                >
+                  <CheckCircle2 className="w-3.5 h-3.5 mr-1.5" /> Marcar como
+                  Ganho
+                </Button>
+                <div className="flex gap-2 w-full">
+                  <Button
+                    onClick={handleWon}
+                    variant="ghost"
+                    className="text-xs font-bold text-emerald-500 hover:text-emerald-700 hover:bg-emerald-50 flex-1"
+                  >
+                    <CheckCircle2 className="w-3.5 h-3.5 mr-1.5" /> Marcar como
+                    Ganho
+                  </Button>
+                  <Button
+                    onClick={handleLost}
+                    variant="ghost"
+                    className="text-xs font-bold text-slate-400 hover:text-red-600 hover:bg-red-50 flex-1"
+                  >
+                    <XCircle className="w-3.5 h-3.5 mr-1.5" /> Marcar como
+                    Perdido
+                  </Button>
+                </div>{' '}
+              </div>
             </div>
           </div>
 
