@@ -15,7 +15,7 @@ import { cn } from '@/lib/utils'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '@/lib/supabase/client'
 import { exportLeadsToExcel } from '@/lib/export-utils'
-import { isGanhoOrCustomer } from '@/lib/crm-utils'
+import { isGanhoOrCustomer, pipelineStageToStatus } from '@/lib/crm-utils'
 import {
   Select,
   SelectContent,
@@ -71,7 +71,8 @@ const COLUMNS_CONFIG = [
 ]
 
 export default function Pipeline() {
-  const { moveLeadToStage, deleteLeadCascade } = useMainStore() as any
+  const { moveLeadToStage, deleteLeadCascade, fetchData } =
+    useMainStore() as any
   const navigate = useNavigate()
 
   const [dbAccounts, setDbAccounts] = useState<any[]>([])
@@ -190,20 +191,31 @@ export default function Pipeline() {
     e.preventDefault()
     const leadId = e.dataTransfer.getData('leadId')
     if (leadId) {
-      // Atualização otimista na tela local
+      const newStatus = pipelineStageToStatus(stage)
+
       setDbAccounts((prev) =>
-        prev.map((a) => (a.id === leadId ? { ...a, pipelineStage: stage } : a)),
+        prev.map((a) =>
+          a.id === leadId
+            ? { ...a, pipelineStage: stage, status: newStatus }
+            : a,
+        ),
       )
 
-      if (moveLeadToStage) {
-        moveLeadToStage(leadId, stage)
-      } else {
-        await supabase
-          .from('accounts')
-          .update({ pipelineStage: stage })
-          .eq('id', leadId)
+      try {
+        if (moveLeadToStage) {
+          await moveLeadToStage(leadId, stage)
+        } else {
+          await supabase
+            .from('accounts')
+            .update({ pipelineStage: stage, status: newStatus })
+            .eq('id', leadId)
+          fetchData?.()
+        }
+        window.dispatchEvent(new Event('lead_updated'))
+      } catch (err) {
+        console.error('Error moving lead:', err)
+        fetchAccounts()
       }
-      window.dispatchEvent(new Event('lead_updated'))
     }
   }
 

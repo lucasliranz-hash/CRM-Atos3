@@ -54,6 +54,14 @@ export function isGanhoOrCustomer(account: any): boolean {
   )
 }
 
+export function pipelineStageToStatus(stage: string): string {
+  const statusMap: Record<string, string> = {
+    Fechado: 'Ganho',
+    Perdido: 'Perdido',
+  }
+  return statusMap[stage] || stage
+}
+
 export function parseCurrencyInput(
   value: string | number | null | undefined,
 ): number {

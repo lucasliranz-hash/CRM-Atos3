@@ -130,6 +130,50 @@ export const useMainStore = create((set: any, get: any) => ({
     }))
   },
 
+  moveLeadToStage: async (id: string, stage: string) => {
+    const statusMap: Record<string, string> = {
+      Fechado: 'Ganho',
+      Perdido: 'Perdido',
+    }
+    const newStatus = statusMap[stage] || stage
+
+    const updates: any = {
+      pipelineStage: stage,
+      status: newStatus,
+    }
+
+    if (stage === 'Fechado') {
+      updates.nextActionStatus = 'Concluída'
+    }
+
+    set((state: any) => ({
+      accounts: state.accounts.map((a: any) =>
+        a.id === id ? { ...a, ...updates } : a,
+      ),
+    }))
+
+    const { data, error } = await supabase
+      .from('accounts')
+      .update(updates)
+      .eq('id', id)
+      .select()
+      .single()
+
+    if (error) {
+      get().fetchData()
+      throw error
+    }
+
+    const mapped = {
+      ...data,
+      pipelineStage: data.pipelineStage || data.stage || 'Prospecção',
+      status: data.status || 'Novo Lead',
+    }
+    set((state: any) => ({
+      accounts: state.accounts.map((a: any) => (a.id === id ? mapped : a)),
+    }))
+  },
+
   addActivity: async (act: any) => {
     const { data, error } = await supabase
       .from('activities')

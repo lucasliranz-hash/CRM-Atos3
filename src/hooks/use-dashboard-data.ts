@@ -84,6 +84,13 @@ export function useDashboardData() {
 
   useEffect(() => {
     getDashboardMetrics()
+    const handleEvent = () => getDashboardMetrics()
+    window.addEventListener('lead_updated', handleEvent)
+    window.addEventListener('lead_added', handleEvent)
+    return () => {
+      window.removeEventListener('lead_updated', handleEvent)
+      window.removeEventListener('lead_added', handleEvent)
+    }
   }, [getDashboardMetrics])
 
   return {
