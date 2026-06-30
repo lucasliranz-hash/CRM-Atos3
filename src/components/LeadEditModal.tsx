@@ -103,6 +103,7 @@ export function LeadEditModal({
       'nextActionDate',
       'nextActionTime',
       'nextActionNotes',
+      'lossReason',
     ]
 
     const payload: any = {}
@@ -124,6 +125,10 @@ export function LeadEditModal({
     if (payload.status === 'Ganho') {
       payload.pipelineStage = 'Fechado'
       payload.nextActionStatus = 'Concluída'
+    }
+
+    if (payload.status === 'Perdido') {
+      payload.pipelineStage = 'Perdido'
     }
 
     if (payload.pipelineStage === 'Fechado' && payload.status !== 'Perdido') {
@@ -581,6 +586,17 @@ export function LeadEditModal({
                           ))}
                         </SelectContent>
                       </Select>
+                    </div>
+                    <div className="space-y-2 md:col-span-2">
+                      <label className="text-[10px] font-bold text-slate-500 uppercase">
+                        Motivo da Perda
+                      </label>
+                      <Input
+                        name="lossReason"
+                        value={formData.lossReason || ''}
+                        onChange={handleChange}
+                        placeholder="Preencher apenas se perdido"
+                      />
                     </div>
                     <div className="space-y-2 md:col-span-2 mt-2 pt-4 border-t border-slate-100">
                       <h4 className="font-bold text-slate-900 mb-1">

@@ -16,6 +16,8 @@ import Proposals from './pages/Proposals'
 import ProposalEditor from './pages/ProposalEditor'
 import Orders from './pages/Orders'
 import OrderEditor from './pages/OrderEditor'
+import LostLeads from './pages/LostLeads'
+import Clients from './pages/Clients'
 import NotFound from './pages/NotFound'
 import Login from './pages/Login'
 import Signup from './pages/Signup'
@@ -54,6 +56,8 @@ const App = () => (
               <Route path="/orders" element={<Orders />} />
               <Route path="/orders/new" element={<OrderEditor />} />
               <Route path="/orders/:id" element={<OrderEditor />} />
+              <Route path="/lost-leads" element={<LostLeads />} />
+              <Route path="/clients" element={<Clients />} />
             </Route>
             <Route path="*" element={<NotFound />} />
           </Routes>

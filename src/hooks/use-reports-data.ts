@@ -10,11 +10,14 @@ import {
 } from 'date-fns'
 
 export type DateRange = 'today' | 'week' | 'month' | 'quarter' | 'year' | 'all'
+export type EntityFilter = 'all' | 'leads' | 'clients' | 'lost'
+
 export interface ReportFilters {
   dateRange: DateRange
   responsible: string
   segment: string
   stage: string
+  entity: EntityFilter
 }
 
 export function useReportsData(filters: ReportFilters) {
@@ -54,8 +57,28 @@ export function useReportsData(filters: ReportFilters) {
       return stage === filters.stage
     }
 
+    const filterByEntity = (a: any) => {
+      const status = (a.status || '').toLowerCase().trim()
+      if (filters.entity === 'leads')
+        return (
+          status !== 'ganho' &&
+          status !== 'perdido' &&
+          status !== 'cliente' &&
+          status !== 'customer'
+        )
+      if (filters.entity === 'clients')
+        return (
+          status === 'ganho' || status === 'cliente' || status === 'customer'
+        )
+      if (filters.entity === 'lost') return status === 'perdido'
+      return true
+    }
+
     const filteredAccounts = accounts.filter(
-      (a) => isDateInRange(a.createdAt) && isStageMatch(a.pipelineStage),
+      (a) =>
+        filterByEntity(a) &&
+        isDateInRange(a.createdAt) &&
+        isStageMatch(a.pipelineStage),
     )
     const filteredOpps = opportunities.filter((o) => isDateInRange(o.createdAt))
     const filteredActivities = activities.filter((a) => isDateInRange(a.date))

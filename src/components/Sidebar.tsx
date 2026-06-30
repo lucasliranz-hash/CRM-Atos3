@@ -12,6 +12,8 @@ import {
   FileText,
   ClipboardList,
   Store,
+  UserCheck,
+  UserX,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Progress } from '@/components/ui/progress'
@@ -36,6 +38,8 @@ const navItems = [
   { icon: BarChart, label: 'Relatórios', path: '/reports' },
   { icon: SettingsIcon, label: 'Configurações', path: '/settings' },
   { icon: Store, label: 'Empresa Emitente', path: '/settings/company' },
+  { icon: UserCheck, label: 'Clientes', path: '/clients' },
+  { icon: UserX, label: 'Leads Perdidos', path: '/lost-leads' },
 ]
 
 export function Sidebar() {

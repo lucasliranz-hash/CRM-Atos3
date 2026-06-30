@@ -32,6 +32,10 @@ export default function Reports() {
     return localStorage.getItem('crm_report_stage') || 'all'
   })
 
+  const [entityFilter, setEntityFilter] = useState(() => {
+    return localStorage.getItem('crm_report_entity') || 'all'
+  })
+
   const updateDateRange = (v: DateRange) => {
     setDateRange(v)
     localStorage.setItem('crm_report_date', v)
@@ -42,11 +46,17 @@ export default function Reports() {
     localStorage.setItem('crm_report_stage', v)
   }
 
+  const updateEntityFilter = (v: string) => {
+    setEntityFilter(v)
+    localStorage.setItem('crm_report_entity', v)
+  }
+
   const data = useReportsData({
     dateRange,
     responsible: 'all',
     segment: 'all',
     stage: stageFilter,
+    entity: entityFilter as any,
   })
 
   const handleExportPDF = () => {
@@ -84,6 +94,17 @@ export default function Reports() {
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
+          <Select value={entityFilter} onValueChange={updateEntityFilter}>
+            <SelectTrigger className="w-[160px] bg-white border-slate-200">
+              <SelectValue placeholder="Tipo de Registro" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todos os Registros</SelectItem>
+              <SelectItem value="leads">Apenas Leads</SelectItem>
+              <SelectItem value="clients">Apenas Clientes</SelectItem>
+              <SelectItem value="lost">Apenas Perdidos</SelectItem>
+            </SelectContent>
+          </Select>
           <Select value={stageFilter} onValueChange={updateStageFilter}>
             <SelectTrigger className="w-[160px] bg-white border-slate-200">
               <SelectValue placeholder="Etapa do Funil" />

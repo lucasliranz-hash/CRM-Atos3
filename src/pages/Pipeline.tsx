@@ -15,7 +15,11 @@ import { cn } from '@/lib/utils'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '@/lib/supabase/client'
 import { exportLeadsToExcel } from '@/lib/export-utils'
-import { isGanhoOrCustomer, pipelineStageToStatus } from '@/lib/crm-utils'
+import {
+  isGanhoOrCustomer,
+  pipelineStageToStatus,
+  isLostLead,
+} from '@/lib/crm-utils'
 import {
   Select,
   SelectContent,
@@ -88,10 +92,7 @@ export default function Pipeline() {
       setLoading(true)
       setErrorMsg('')
       // 1. No Pipeline, buscar apenas contas que não são "Ganho" (clientes fechados)
-      const { data, error } = await supabase
-        .from('accounts')
-        .select('*')
-        .neq('status', 'Ganho')
+      const { data, error } = await supabase.from('accounts').select('*')
 
       if (error) {
         throw error
@@ -122,7 +123,7 @@ export default function Pipeline() {
   // Processa as regras de exibição e fallback
   const mappedAccounts = useMemo(() => {
     return dbAccounts
-      .filter((account) => !isGanhoOrCustomer(account))
+      .filter((account) => !isGanhoOrCustomer(account) && !isLostLead(account))
       .map((account) => {
         // Regra: se não tiver etapa definida (ou tiver nome diferente), forçar para "Prospecção"
         let stage =
@@ -181,6 +182,10 @@ export default function Pipeline() {
 
   const ganhoCount = useMemo(
     () => dbAccounts.filter((a) => isGanhoOrCustomer(a)).length,
+    [dbAccounts],
+  )
+  const perdidoCount = useMemo(
+    () => dbAccounts.filter((a) => isLostLead(a)).length,
     [dbAccounts],
   )
 
@@ -265,7 +270,12 @@ export default function Pipeline() {
 
           {ganhoCount > 0 && (
             <span className="text-xs font-bold text-emerald-600 bg-emerald-50 px-3 py-2 rounded-md border border-emerald-200 whitespace-nowrap">
-              {ganhoCount} cliente(s) ganho(s) oculto(s)
+              {ganhoCount} cliente(s) oculto(s)
+            </span>
+          )}
+          {perdidoCount > 0 && (
+            <span className="text-xs font-bold text-red-600 bg-red-50 px-3 py-2 rounded-md border border-red-200 whitespace-nowrap">
+              {perdidoCount} perdido(s) oculto(s)
             </span>
           )}
 

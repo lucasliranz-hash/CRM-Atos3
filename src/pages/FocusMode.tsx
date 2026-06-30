@@ -1,6 +1,11 @@
 import { useMemo, useState } from 'react'
 import useMainStore from '@/stores/main'
-import { isToday, isOverdue, isGanhoOrCustomer } from '@/lib/crm-utils'
+import {
+  isToday,
+  isOverdue,
+  isGanhoOrCustomer,
+  isLostLead,
+} from '@/lib/crm-utils'
 import { Button } from '@/components/ui/button'
 import {
   CheckCircle2,
@@ -33,7 +38,9 @@ export default function FocusMode() {
   const focusTasks = useMemo(() => {
     const t: any[] = []
 
-    const activeAccounts = accounts.filter((a) => !isGanhoOrCustomer(a))
+    const activeAccounts = accounts.filter(
+      (a) => !isGanhoOrCustomer(a) && !isLostLead(a),
+    )
     const activeAccountIds = new Set(activeAccounts.map((a) => a.id))
 
     activities.forEach((act) => {

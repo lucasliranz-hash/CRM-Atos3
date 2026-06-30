@@ -18,7 +18,7 @@ import {
 } from '@/components/ui/popover'
 import { supabase } from '@/lib/supabase/client'
 import { cn } from '@/lib/utils'
-import { isGanhoOrCustomer } from '@/lib/crm-utils'
+import { isGanhoOrCustomer, isLostLead } from '@/lib/crm-utils'
 
 export function Header() {
   const navigate = useNavigate()
@@ -44,6 +44,10 @@ export function Header() {
         return 'Relatórios'
       case '/settings':
         return 'Configurações'
+      case '/lost-leads':
+        return 'Leads Perdidos'
+      case '/clients':
+        return 'Clientes'
       default:
         return ''
     }
@@ -85,7 +89,7 @@ export function Header() {
           .select('id, name, nextAction, nextActionDate, nextActionStatus')
           .not('nextAction', 'is', null)
           .neq('nextActionStatus', 'Concluída')
-          .neq('status', 'Ganho'),
+          .not('status', 'in', '("Ganho","Perdido")'),
       ])
 
       let allNotifs = notifRes.data || []
@@ -95,7 +99,7 @@ export function Header() {
         today.setHours(0, 0, 0, 0)
 
         const taskNotifs = accRes.data
-          .filter((a) => !isGanhoOrCustomer(a))
+          .filter((a) => !isGanhoOrCustomer(a) && !isLostLead(a))
           .filter((a) => {
             if (!a.nextActionDate) return false
             const d = new Date(a.nextActionDate)
@@ -147,12 +151,15 @@ export function Header() {
           .from('accounts')
           .select('id, status')
           .in('id', accIds)
-          .neq('status', 'Ganho')
 
-        const ganhoIds = new Set(
-          (accs || []).filter((a) => isGanhoOrCustomer(a)).map((a) => a.id),
+        const inactiveIds = new Set(
+          (accs || [])
+            .filter((a) => isGanhoOrCustomer(a) || isLostLead(a))
+            .map((a) => a.id),
         )
-        setAgenda(acts.filter((a) => !ganhoIds.has(a.accountId)).slice(0, 10))
+        setAgenda(
+          acts.filter((a) => !inactiveIds.has(a.accountId)).slice(0, 10),
+        )
       }
     } catch (e) {
       console.error(e)

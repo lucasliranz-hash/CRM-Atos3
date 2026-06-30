@@ -24,6 +24,7 @@ import {
   CalendarClock,
   History,
   Target,
+  RefreshCw,
 } from 'lucide-react'
 import {
   Dialog,
@@ -39,6 +40,13 @@ import { LeadEditModal } from '@/components/LeadEditModal'
 import { format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import { supabase } from '@/lib/supabase/client'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 
 export default function LeadDetails() {
   const { id } = useParams()
@@ -67,6 +75,8 @@ export default function LeadDetails() {
 
   const [dbError, setDbError] = useState('')
   const [loading, setLoading] = useState(true)
+  const [reopenOpen, setReopenOpen] = useState(false)
+  const [reopenStage, setReopenStage] = useState('Prospecção')
 
   const [leadActivities, setLeadActivities] = useState<any[]>([])
   const [leadProposals, setLeadProposals] = useState<any[]>([])
@@ -200,6 +210,18 @@ export default function LeadDetails() {
       toast({ title: 'Lead marcado como Ganho! Movido para Clientes.' })
       window.dispatchEvent(new Event('lead_updated'))
     }
+  }
+
+  const handleReopen = async () => {
+    await updateAccount(leadData.id, {
+      pipelineStage: reopenStage,
+      status: reopenStage,
+      lossReason: null,
+    })
+    toast({ title: 'Negociação reaberta!' })
+    setReopenOpen(false)
+    window.dispatchEvent(new Event('lead_updated'))
+    fetchAccount()
   }
 
   const leadOrders =
@@ -620,6 +642,16 @@ export default function LeadDetails() {
                   <XCircle className="w-3.5 h-3.5 mr-1.5" /> Marcar como Perdido
                 </Button>
               </div>
+              {(leadData.status === 'Perdido' ||
+                leadData.pipelineStage === 'Perdido') && (
+                <Button
+                  onClick={() => setReopenOpen(true)}
+                  className="w-full mt-3 font-bold bg-blue-500 hover:bg-blue-600 text-white text-xs"
+                >
+                  <RefreshCw className="w-3.5 h-3.5 mr-1.5" /> Reabrir
+                  Negociação
+                </Button>
+              )}
             </div>
           </div>
 
@@ -771,6 +803,48 @@ export default function LeadDetails() {
             defaultChannel={interactionDefaults.channel}
             defaultType={interactionDefaults.type}
           />
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={reopenOpen} onOpenChange={setReopenOpen}>
+        <DialogContent className="sm:max-w-[400px]">
+          <DialogHeader>
+            <DialogTitle>Reabrir Negociação</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <label className="text-xs font-bold text-slate-500 uppercase">
+              Etapa do Pipeline
+            </label>
+            <Select value={reopenStage} onValueChange={setReopenStage}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="Prospecção">Prospecção</SelectItem>
+                <SelectItem value="Contato realizado">
+                  Contato realizado
+                </SelectItem>
+                <SelectItem value="Reunião agendada">
+                  Reunião agendada
+                </SelectItem>
+                <SelectItem value="Proposta enviada">
+                  Proposta enviada
+                </SelectItem>
+                <SelectItem value="Negociação">Negociação</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="flex gap-2 justify-end">
+            <Button variant="outline" onClick={() => setReopenOpen(false)}>
+              Cancelar
+            </Button>
+            <Button
+              className="bg-blue-500 hover:bg-blue-600 text-white"
+              onClick={handleReopen}
+            >
+              Reabrir
+            </Button>
+          </div>
         </DialogContent>
       </Dialog>
     </div>

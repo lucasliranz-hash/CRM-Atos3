@@ -4,7 +4,7 @@ import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { cn } from '@/lib/utils'
-import { isGanhoOrCustomer } from '@/lib/crm-utils'
+import { isGanhoOrCustomer, isLostLead } from '@/lib/crm-utils'
 import {
   format,
   addMonths,
@@ -28,7 +28,9 @@ export default function CalendarView() {
   const scheduledEvents = useMemo(() => {
     const events: any[] = []
 
-    const activeAccounts = accounts.filter((a: any) => !isGanhoOrCustomer(a))
+    const activeAccounts = accounts.filter(
+      (a: any) => !isGanhoOrCustomer(a) && !isLostLead(a),
+    )
     const activeAccountIds = new Set(activeAccounts.map((a: any) => a.id))
 
     activities.forEach((act) => {

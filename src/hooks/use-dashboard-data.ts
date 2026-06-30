@@ -42,21 +42,22 @@ export function useDashboardData() {
         supabase.from('monthly_goals').select('*'),
       ])
 
-      const ganhoAccountIds = new Set(
+      const inactiveAccountIds = new Set(
         (accounts || [])
           .filter((a: any) => {
             const status = (a.status || '').toLowerCase().trim()
             return (
               status === 'ganho' ||
               status === 'cliente' ||
-              status === 'customer'
+              status === 'customer' ||
+              status === 'perdido'
             )
           })
           .map((a: any) => a.id),
       )
 
       const filteredActivities = (activities || []).filter(
-        (a: any) => !ganhoAccountIds.has(a.accountId),
+        (a: any) => !inactiveAccountIds.has(a.accountId),
       )
 
       if (accErr) throw accErr

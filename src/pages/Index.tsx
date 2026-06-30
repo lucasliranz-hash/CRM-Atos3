@@ -4,6 +4,7 @@ import {
   isToday,
   formatCurrency,
   isGanhoOrCustomer,
+  isLostLead,
 } from '@/lib/crm-utils'
 import { LeadEditModal } from '@/components/LeadEditModal'
 import { supabase } from '@/lib/supabase/client'
@@ -167,6 +168,16 @@ export default function Index() {
       0,
     )
 
+    const activeLeads = data.accounts.filter(
+      (a: any) => !isGanhoOrCustomer(a) && !isLostLead(a),
+    ).length
+    const clientsCount = data.accounts.filter((a: any) =>
+      isGanhoOrCustomer(a),
+    ).length
+    const lostLeadsCount = data.accounts.filter((a: any) =>
+      isLostLead(a),
+    ).length
+
     return {
       totalLeads,
       newLeadsMonth,
@@ -181,6 +192,9 @@ export default function Index() {
       monthlyRevenue,
       annualRevenue,
       totalSetupEquipment,
+      activeLeads,
+      clientsCount,
+      lostLeadsCount,
     }
   }, [data])
 
@@ -191,11 +205,13 @@ export default function Index() {
     start.setDate(now.getDate() - now.getDay())
     start.setHours(0, 0, 0, 0)
 
-    const ganhoAccountIds = new Set(
-      data.accounts.filter((a) => isGanhoOrCustomer(a)).map((a) => a.id),
+    const inactiveAccountIds = new Set(
+      data.accounts
+        .filter((a) => isGanhoOrCustomer(a) || isLostLead(a))
+        .map((a) => a.id),
     )
     const chartActivities = data.activities.filter(
-      (a: any) => !ganhoAccountIds.has(a.accountId),
+      (a: any) => !inactiveAccountIds.has(a.accountId),
     )
 
     return days.map((day, i) => {
@@ -259,7 +275,7 @@ export default function Index() {
   const tasks = useMemo(() => {
     const t: any[] = []
     const activeAccounts = data.accounts.filter(
-      (a: any) => !isGanhoOrCustomer(a),
+      (a: any) => !isGanhoOrCustomer(a) && !isLostLead(a),
     )
     data.activities.forEach((act: any) => {
       if (!act.completed && (isToday(act.date) || isOverdue(act.date))) {
@@ -535,6 +551,33 @@ export default function Index() {
               </h3>
             </CardContent>
           </Card>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <MetricCard
+            title="Leads Ativos"
+            value={metrics.activeLeads}
+            variance="Em negociação"
+            icon={Users}
+            colorClass="bg-blue-50 text-blue-600 group-hover:bg-blue-100"
+            onClick={() => navigate('/pipeline')}
+          />
+          <MetricCard
+            title="Clientes"
+            value={metrics.clientsCount}
+            variance="Ganhos"
+            icon={Briefcase}
+            colorClass="bg-emerald-50 text-emerald-600 group-hover:bg-emerald-100"
+            onClick={() => navigate('/clients')}
+          />
+          <MetricCard
+            title="Leads Perdidos"
+            value={metrics.lostLeadsCount}
+            variance="Arquivados"
+            icon={AlertCircle}
+            colorClass="bg-red-50 text-red-600 group-hover:bg-red-100"
+            onClick={() => navigate('/lost-leads')}
+          />
         </div>
 
         <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">

@@ -54,6 +54,17 @@ export function isGanhoOrCustomer(account: any): boolean {
   )
 }
 
+export function isLostLead(account: any): boolean {
+  if (!account) return false
+  const status = (account.status || '').toLowerCase().trim()
+  const pipelineStage = (account.pipelineStage || '').toLowerCase().trim()
+  return status === 'perdido' || pipelineStage === 'perdido'
+}
+
+export function isActiveLead(account: any): boolean {
+  return !isGanhoOrCustomer(account) && !isLostLead(account)
+}
+
 export function pipelineStageToStatus(stage: string): string {
   const statusMap: Record<string, string> = {
     Fechado: 'Ganho',
