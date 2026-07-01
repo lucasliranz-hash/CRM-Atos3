@@ -36,8 +36,8 @@ import { formatCurrency, isOverdue } from '@/lib/crm-utils'
 import { cn } from '@/lib/utils'
 import LeadInteractionForm from '@/components/LeadInteractionForm'
 import { ManualActionModal } from '@/components/ManualActionModal'
-import { LeadEditModal } from '@/components/LeadEditModal'
-import { format } from 'date-fns'
+import { ScheduleActionModal } from '@/components/ScheduleActionModal'
+import { LeadEditModal } from '@/components/LeadEditModal'import { format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import { supabase } from '@/lib/supabase/client'
 import {
@@ -68,6 +68,7 @@ export default function LeadDetails() {
   const [fullEditModalOpen, setFullEditModalOpen] = useState(false)
   const [interactionModalOpen, setInteractionModalOpen] = useState(false)
   const [manualActionOpen, setManualActionOpen] = useState(false)
+  const [scheduleActionOpen, setScheduleActionOpen] = useState(false)
   const [interactionDefaults, setInteractionDefaults] = useState<{
     channel: any
     type: any
@@ -453,7 +454,7 @@ export default function LeadDetails() {
                   Nenhuma ação futura agendada para este lead.
                 </p>
                 <Button
-                  onClick={() => openInteraction('WhatsApp', 'Follow-up')}
+                  onClick={() => setScheduleActionOpen(true)}
                   variant="outline"
                   className="font-bold text-slate-700 border-slate-300 bg-white"
                 >
@@ -776,6 +777,13 @@ export default function LeadDetails() {
         onOpenChange={setManualActionOpen}
         accountId={leadData.id}
         onSuccess={() => window.location.reload()}
+      />
+
+      <ScheduleActionModal
+        open={scheduleActionOpen}
+        onOpenChange={setScheduleActionOpen}
+        accountId={leadData.id}
+        onSuccess={() => fetchAccount()}
       />
 
       {fullEditModalOpen && (
