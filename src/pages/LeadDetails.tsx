@@ -241,6 +241,31 @@ export default function LeadDetails() {
       )
   const isActionOverdue = isOverdue(leadData.nextActionDate)
 
+  const nextPendingActivity = leadActivities.find(
+    (a: any) =>
+      !a.completed && a.status !== 'Concluída' && a.status !== 'Cancelada',
+  )
+
+  const displayAction =
+    leadData.nextAction && leadData.nextActionStatus !== 'Concluída'
+      ? {
+          text: leadData.nextAction,
+          date: leadData.nextActionDate,
+          time: leadData.nextActionTime,
+          notes: leadData.nextActionNotes,
+        }
+      : nextPendingActivity
+        ? {
+            text:
+              nextPendingActivity.type === 'Outro'
+                ? nextPendingActivity.custom_type
+                : nextPendingActivity.type,
+            date: nextPendingActivity.date,
+            time: null,
+            notes: nextPendingActivity.description,
+          }
+        : null
+
   return (
     <div className="max-w-6xl mx-auto space-y-6 pb-10 animate-in fade-in duration-500">
       <div className="flex items-center justify-between">
@@ -408,34 +433,30 @@ export default function LeadDetails() {
               </div>
             </div>
 
-            {leadData.nextAction &&
-            leadData.nextActionStatus !== 'Concluída' ? (
+            {displayAction ? (
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-slate-50 p-4 rounded-lg border border-slate-100">
                 <div>
                   <p className="font-bold text-slate-900 text-base">
-                    {leadData.nextAction}
+                    {displayAction.text}
                   </p>
                   <p className="text-sm font-medium text-slate-500 flex items-center mt-1">
                     <Clock className="w-3.5 h-3.5 mr-1.5" />
-                    {leadData.nextActionDate
-                      ? format(
-                          new Date(leadData.nextActionDate),
-                          "dd 'de' MMMM",
-                          { locale: ptBR },
-                        )
+                    {displayAction.date
+                      ? format(new Date(displayAction.date), "dd 'de' MMMM", {
+                          locale: ptBR,
+                        })
                       : 'Data não definida'}
-                    {leadData.nextActionTime &&
-                      ` às ${leadData.nextActionTime}`}
+                    {displayAction.time && ` às ${displayAction.time}`}
                   </p>
-                  {leadData.nextActionNotes && (
+                  {displayAction.notes && (
                     <p className="text-xs text-slate-500 mt-2 bg-white p-2 rounded border border-slate-200">
-                      {leadData.nextActionNotes}
+                      {displayAction.notes}
                     </p>
                   )}
                 </div>
                 <div className="flex gap-2 w-full sm:w-auto self-start">
                   <Button
-                    onClick={() => setFullEditModalOpen(true)}
+                    onClick={() => setScheduleActionOpen(true)}
                     variant="outline"
                     className="flex-1 sm:flex-none font-bold bg-white text-slate-700"
                   >
@@ -777,7 +798,7 @@ export default function LeadDetails() {
         open={manualActionOpen}
         onOpenChange={setManualActionOpen}
         accountId={leadData.id}
-        onSuccess={() => window.location.reload()}
+        onSuccess={() => fetchAccount()}
       />
 
       <ScheduleActionModal

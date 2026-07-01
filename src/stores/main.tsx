@@ -295,6 +295,14 @@ export function MainProvider({ children }: { children: ReactNode }) {
     }
   }, [user, profile?.loja_id, fetchSupabaseData, migrateLocalToSupabase])
 
+  useEffect(() => {
+    const handleLeadUpdated = () => {
+      if (user) fetchSupabaseData()
+    }
+    window.addEventListener('lead_updated', handleLeadUpdated)
+    return () => window.removeEventListener('lead_updated', handleLeadUpdated)
+  }, [user, fetchSupabaseData])
+
   const syncLeadToContact = async (lead: Account) => {
     if (!lead.contactName && !lead.name) return
     const existing = contacts.find(

@@ -76,11 +76,10 @@ export function ScheduleActionModal({
 
       const dateTime = new Date(`${date}T${time}:00`).toISOString()
 
-      const finalType = type === 'Outro' ? customType : type
-
       const payload = {
         accountId,
-        type: finalType,
+        type: type === 'Outro' ? 'Outro' : type,
+        custom_type: type === 'Outro' ? customType : null,
         date: dateTime,
         description: description || null,
         status: 'Pendente',
